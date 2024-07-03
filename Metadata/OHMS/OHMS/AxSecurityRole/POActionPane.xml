@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxSecurityRole xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>POActionPane</Name>
+	<Label>PO ActionPane</Label>
+	<DirectAccessPermissions />
+	<Duties />
+	<Privileges>
+		<AxSecurityPrivilegeReference>
+			<Name>PurchTableActionPane</Name>
+		</AxSecurityPrivilegeReference>
+	</Privileges>
+	<SubRoles />
+</AxSecurityRole>

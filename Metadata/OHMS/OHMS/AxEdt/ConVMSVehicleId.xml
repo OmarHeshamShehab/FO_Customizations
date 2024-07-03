@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxEdt xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns=""
+	i:type="AxEdtString">
+	<Name>ConVMSVehicleId</Name>
+	<Extends>Num</Extends>
+	<HelpText>@ConVMS:VehicleIDHT</HelpText>
+	<Label>@ConVMS:VehicleID</Label>
+	<ReferenceTable>ConVMSVehicleTable</ReferenceTable>
+	<ArrayElements />
+	<Relations />
+	<TableReferences>
+		<AxEdtTableReference>
+			<RelatedField>VehicleId</RelatedField>
+			<Table>ConVMSVehicleTable</Table>
+		</AxEdtTableReference>
+	</TableReferences>
+</AxEdt>

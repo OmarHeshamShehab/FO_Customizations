@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>RawMaterialWhereUsed</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// The RawMaterialWhereUsed class loads raw material data by extending the RunBaseBatch framework.
+/// </summary>
+class RawMaterialWhereUsed extends RunBaseBatch
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>description</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Provides a description of the RawMaterialWhereUsed class.
+    /// </summary>
+    /// <returns>A string describing the class functionality.</returns>
+    client server static ClassDescription description()
+    {
+        return "Load Raw Material Data";
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Entry point for the RawMaterialWhereUsed class.
+    /// </summary>
+    /// <param name="_args">Arguments passed to the method.</param>
+    static void main(Args _args)
+    {
+        RawMaterialWhereUsed objClass = new RawMaterialWhereUsed();
+
+        // Prompt for RunBase framework dialog
+        if (objClass.prompt())
+        {
+            // Run the process
+            objClass.run();
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>run</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Loads raw material data into the RawMaterialsTable by iterating through BOM, BOMTable, and BOMVersion tables.
+    /// </summary>
+    public void run()
+    {
+        BOM         bom;
+        BOMTable    bomtable;
+        BOMVersion  bomversion;
+        Description NumL;
+        RawMaterialsTable RawMaterialsTable;
+        int         Lines = 0;
+
+        // Start transaction
+        ttsbegin;
+
+        try
+        {
+            // Delete existing records in RawMaterialsTable
+            delete_from RawMaterialsTable;
+            
+            // Select and process BOM data
+            while select * from bomtable
+            join bomversion
+            where bomtable.BOMId == bomversion.BOMId
+            join bom
+                order by bom.ItemId
+            where bom.BOMId == bomtable.BOMId
+            {
+                ttsbegin;
+                Lines++;
+    
+                // Populate RawMaterialsTable fields with BOM data
+                RawMaterialsTable.BOMId                    = bom.BOMId;
+                RawMaterialsTable.LineCreationSequenceNumber = bom.LineCreationSequenceNumber;
+                RawMaterialsTable.ItemId                  = bomversion.ItemId;
+                RawMaterialsTable.Name                    = bomversion.Name;
+                RawMaterialsTable.PmfBatchSize            = bomversion.PmfBatchSize;
+                RawMaterialsTable.ItemId_bom              = bom.ItemId;
+                RawMaterialsTable.ItemNameDisplay         = bom.itemNameGrid();
+                RawMaterialsTable.UnitId                  = bom.UnitId;
+                RawMaterialsTable.BOMQty                  = bom.BOMQty;
+                RawMaterialsTable.ScrapVar                = bom.ScrapVar;
+                NumL                                      = strfmt("%1%2", strRep("0", 20), Lines);
+                NumL                                      = SubStr(NumL, strlen(NumL), -20);
+                RawMaterialsTable.LineNumber              = NumL;
+    
+                // Insert the record into RawMaterialsTable
+                RawMaterialsTable.insert();
+                ttscommit;
+            }
+
+            // Commit the transaction
+            ttsCommit;
+        }
+        catch
+        {
+            // Handle errors
+            error("Process failed");
+        }
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <BuildTasksDirectory Condition=" '$(BuildTasksDirectory)' == ''">$(MSBuildProgramFiles32)\MSBuild\Microsoft\Dynamics\AX</BuildTasksDirectory>
+    <Model>OHMS</Model>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <OutputPath>bin</OutputPath>
+    <SchemaVersion>2.0</SchemaVersion>
+    <GenerateCrossReferences>True</GenerateCrossReferences>
+    <RunAppCheckerRules>False</RunAppCheckerRules>
+    <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
+    <DeployOnline>False</DeployOnline>
+    <ProjectGuid>{71f86372-6e37-4b0a-91b4-450ba4b51a24}</ProjectGuid>
+    <Name>ConVehicleManagement</Name>
+    <RootNamespace>ConVehicleManagement</RootNamespace>
+    <StartupType>Class</StartupType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <Configuration>Debug</Configuration>
+    <DBSyncInBuild>True</DBSyncInBuild>
+    <GenerateFormAdaptors>False</GenerateFormAdaptors>
+    <Company>
+    </Company>
+    <Partition>initial</Partition>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DataEntityExpandParentChildRelations>False</DataEntityExpandParentChildRelations>
+    <DataEntityUseLabelTextAsFieldName>False</DataEntityUseLabelTextAsFieldName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Base Enums\" />
+    <Folder Include="EDT Dates\" />
+    <Folder Include="EDT Strings\" />
+    <Folder Include="Label Files\" />
+    <Folder Include="Tables\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AxEdt\ConVMSAcquiredDate">
+      <SubType>Content</SubType>
+      <Name>ConVMSAcquiredDate</Name>
+      <Link>EDT Dates\ConVMSAcquiredDate</Link>
+    </Content>
+    <Content Include="AxEdt\ConVMSVehicleGroupId">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleGroupId</Name>
+      <Link>EDT Strings\ConVMSVehicleGroupId</Link>
+    </Content>
+    <Content Include="AxEdt\ConVMSVehicleId">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleId</Name>
+      <Link>EDT Strings\ConVMSVehicleId</Link>
+    </Content>
+    <Content Include="AxEdt\ConVMSVehicleServiceDateConfirmed">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleServiceDateConfirmed</Name>
+      <Link>EDT Dates\ConVMSVehicleServiceDateConfirmed</Link>
+    </Content>
+    <Content Include="AxEdt\ConVMSVehicleServiceDateReq">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleServiceDateReq</Name>
+      <Link>EDT Dates\ConVMSVehicleServiceDateReq</Link>
+    </Content>
+    <Content Include="AxEdt\ConVMSVehicleServiceId">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleServiceId</Name>
+      <Link>EDT Strings\ConVMSVehicleServiceId</Link>
+    </Content>
+    <Content Include="AxEdt\ConVMSVehRegNum">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehRegNum</Name>
+      <Link>EDT Strings\ConVMSVehRegNum</Link>
+    </Content>
+    <Content Include="AxEnum\ConVMSVehicleServiceStatus">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleServiceStatus</Name>
+      <Link>Base Enums\ConVMSVehicleServiceStatus</Link>
+    </Content>
+    <Content Include="AxEnum\ConVMSVehicleType">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleType</Name>
+      <Link>Base Enums\ConVMSVehicleType</Link>
+    </Content>
+    <Content Include="AxLabelFile\ConVMS_en-US">
+      <SubType>Content</SubType>
+      <Name>ConVMS_en-US</Name>
+      <Link>Label Files\ConVMS_en-US</Link>
+    </Content>
+    <Content Include="AxTable\ConVMSParameters">
+      <SubType>Content</SubType>
+      <Name>ConVMSParameters</Name>
+      <Link>Tables\ConVMSParameters</Link>
+    </Content>
+    <Content Include="AxTable\ConVMSVehicleGroup">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleGroup</Name>
+      <Link>Tables\ConVMSVehicleGroup</Link>
+    </Content>
+    <Content Include="AxTable\ConVMSVehicleServiceLine">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleServiceLine</Name>
+      <Link>Tables\ConVMSVehicleServiceLine</Link>
+    </Content>
+    <Content Include="AxTable\ConVMSVehicleServiceTable">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleServiceTable</Name>
+      <Link>Tables\ConVMSVehicleServiceTable</Link>
+    </Content>
+    <Content Include="AxTable\ConVMSVehicleTable">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleTable</Name>
+      <Link>Tables\ConVMSVehicleTable</Link>
+    </Content>
+    <Content Include="ConVMS.en-US.label.txt">
+      <SubType>Content</SubType>
+      <Name>ConVMS.en-US.label.txt</Name>
+      <DependentUpon>AxLabelFile\ConVMS_en-US</DependentUpon>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="$(BuildTasksDirectory)\Microsoft.Dynamics.Framework.Tools.BuildTasks.17.0.targets" />
+</Project>

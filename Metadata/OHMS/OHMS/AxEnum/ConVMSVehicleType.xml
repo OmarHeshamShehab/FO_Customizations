@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxEnum xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>ConVMSVehicleType</Name>
+	<Help>@ConVMS:VehicleTypeHT</Help>
+	<Label>@ConVMS:VehicleType</Label>
+	<UseEnumValue>No</UseEnumValue>
+	<EnumValues>
+		<AxEnumValue>
+			<Name>NotSelected</Name>
+			<Label>@ConVMS:NotSelected</Label>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Bike</Name>
+			<Label>@ConVMS:Bike</Label>
+			<Value>1</Value>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Car</Name>
+			<Label>@ConVMS:Car</Label>
+			<Value>2</Value>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Truck</Name>
+			<Label>@ConVMS:Truck</Label>
+			<Value>3</Value>
+		</AxEnumValue>
+	</EnumValues>
+	<IsExtensible>true</IsExtensible>
+</AxEnum>

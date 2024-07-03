@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxView xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>View_moduleType_filter</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class View_moduleType_filter extends common
+{
+}
+
+]]></Declaration>
+		<Methods />
+	</SourceCode>
+	<SubscriberAccessLevel>
+		<Read>Allow</Read>
+	</SubscriberAccessLevel>
+	<FieldGroups>
+		<AxTableFieldGroup>
+			<Name>AutoReport</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoLookup</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoIdentification</Name>
+			<AutoPopulate>Yes</AutoPopulate>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoSummary</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoBrowse</Name>
+			<Fields />
+		</AxTableFieldGroup>
+	</FieldGroups>
+	<Fields>
+		<AxViewField xmlns=""
+			i:type="AxViewFieldBound">
+			<Name>ItemId</Name>
+			<DataField>ItemId</DataField>
+			<DataSource>InventTable</DataSource>
+		</AxViewField>
+		<AxViewField xmlns=""
+			i:type="AxViewFieldBound">
+			<Name>UnitId</Name>
+			<DataField>UnitId</DataField>
+			<DataSource>InventTableModule</DataSource>
+		</AxViewField>
+	</Fields>
+	<Indexes />
+	<Mappings />
+	<Relations />
+	<StateMachines />
+	<ViewMetadata>
+		<Name>Metadata</Name>
+		<SourceCode>
+			<Methods />
+		</SourceCode>
+		<DataSources>
+			<AxQuerySimpleRootDataSource>
+				<Name>InventTable</Name>
+				<DynamicFields>Yes</DynamicFields>
+				<Label>Invent Table</Label>
+				<Table>InventTable</Table>
+				<DataSources>
+					<AxQuerySimpleEmbeddedDataSource>
+						<Name>InventTableModule</Name>
+						<DynamicFields>Yes</DynamicFields>
+						<Label>InventTableModule</Label>
+						<Table>InventTableModule</Table>
+						<DataSources />
+						<DerivedDataSources />
+						<Fields />
+						<Ranges>
+							<AxQuerySimpleDataSourceRange>
+								<Name>ModuleType</Name>
+								<Field>ModuleType</Field>
+								<Value>invent</Value>
+							</AxQuerySimpleDataSourceRange>
+						</Ranges>
+						<JoinMode>OuterJoin</JoinMode>
+						<UseRelations>Yes</UseRelations>
+						<Relations />
+					</AxQuerySimpleEmbeddedDataSource>
+				</DataSources>
+				<DerivedDataSources />
+				<Fields />
+				<Ranges />
+				<GroupBy />
+				<Having />
+				<OrderBy />
+			</AxQuerySimpleRootDataSource>
+		</DataSources>
+	</ViewMetadata>
+</AxView>

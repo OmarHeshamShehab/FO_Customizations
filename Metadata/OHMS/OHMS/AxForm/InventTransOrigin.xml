@@ -1,0 +1,1034 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxForm xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="Microsoft.Dynamics.AX.Metadata.V6">
+	<Name>InventTransOrigin</Name>
+	<SourceCode>
+		<Methods xmlns="">
+			<Method>
+				<Name>classDeclaration</Name>
+				<Source><![CDATA[
+[Form]
+public class InventTransOrigin extends FormRun
+{
+    InventTransOrigin                    inventtransorigin;
+    InventTransOriginSalesLine           InventTransOriginSalesLine;
+    InventTransOriginPurchLine           InventTransOriginPurchLine;
+    InventTransOriginJournalTrans        InventTransOriginJournalTrans;
+    InventTransOriginProdTable           InventTransOriginProdTable;
+    InventTransOriginProdBOM             InventTransOriginProdBOM;
+    InventTrans                          inventtrans;
+    InventDim                            inventdim;
+    InventTableInfo                      InventTableInfo;
+    InventTransOriginTable               regtable;
+    SalesLine							 salesline;
+    PurchLine                            purchline;
+    InventJournalTrans                   InventJournalTrans;
+    ProdTable                            ProdTable;
+    DimensionAttributeValueSetStorage    dimStorage;
+    DimensionAttribute					 DimensionAttribute;
+    Counter					             i;
+    DimensionAttribute				     dimAttr;
+    DimensionAttributeValue				 dimAttrValue;
+    Common								 common;
+    DictTable						     dictTable;
+    str								     Name;
+    str								     value;
+    Description                          NumL;
+    RefRecId                             Lines = 0;
+    ItemsTransactionsEntityStaging        StagingTable;
+
+}
+]]></Source>
+			</Method>
+		</Methods>
+		<DataSources xmlns="" />
+		<DataControls xmlns="">
+			<Control>
+				<Name>ApplyFilter</Name>
+				<Type>Button</Type>
+				<Methods>
+					<Method>
+						<Name>clicked</Name>
+						<Source><![CDATA[
+        public void clicked()
+        {
+
+            super();
+
+
+            dialog				 dialog;
+            dialogGroup			 dialogGroup;
+            dialogField			 dialogFieldFromDate,dialogFieldToDate , dialogFieldItemId,dialogFieldStatusReceipt,dialogFieldStatusIssue,dialogFieldWarehouse;
+            TransDate			 fromDate , toDate;
+            ItemId				 ItemIdFilter;
+            InventLocationId	 locationidfilter;
+            StatusReceipt		 statusreceiptfilter;
+            StatusIssue			 statusissuefilter;
+
+
+
+
+            dialog						 = new Dialog("Simple Dialog");
+            dialogGroup					 = dialog.addGroup("Inventory Transactions");
+            dialogFieldFromDate			 = dialog.addField(extendedTypeStr(TransDate),'From Date');
+            dialogFieldToDate			 = dialog.addField(extendedTypeStr(TransDate),'To Date');
+            dialogFieldItemId			 = dialog.addField(extendedTypeStr(ItemId),'Item Number');
+            dialogFieldStatusReceipt	 = dialog.addField(enumStr(StatusReceipt),'Status Receipt');
+            dialogFieldStatusIssue		 = dialog.addField(enumStr(StatusIssue),'Status Issue ');
+            dialogFieldWarehouse		 = dialog.addField(extendedTypeStr(InventLocationId),'Warehouse');
+
+            if (dialog.run())
+            {
+                Lines                   = 0;
+                fromDate				= dialogFieldFromDate.value();
+                toDate					= dialogFieldToDate.value();
+                ItemIdFilter			= dialogFieldItemId.value();
+                LocationIdFilter		= dialogFieldWarehouse.value();
+                StatusIssueFilter		= dialogFieldStatusIssue.value();
+                StatusReceiptFilter		= dialogFieldStatusReceipt.value();
+
+                delete_from regTable;
+                delete_from StagingTable;
+                
+                while select * from inventTransOrigin
+                join inventTrans
+                    where inventTrans.InventTransOrigin == inventTransOrigin.RecId
+                            && (inventTrans.DatePhysical    >= fromDate				  ||	!fromDate)
+                            && (inventTrans.DatePhysical    <= toDate				  ||	!toDate)
+                            && (inventTrans.ItemId		    == ItemIdFilter			  ||	!ItemIdFilter)
+                            && (inventTrans.StatusIssue		== StatusIssueFilter	  ||	!StatusIssueFilter)
+                            && (inventTrans.StatusReceipt	== StatusReceiptFilter	  ||	!StatusReceiptFilter)
+                join inventDim
+                    where inventTrans.inventDimId == inventDim.inventDimId
+                            && (inventDim.InventLocationId  == LocationIdFilter		  ||	!LocationIdFilter)
+                join InventTableInfo
+                    where InventTableInfo.ItemId == inventTransOrigin.ItemId
+
+                {
+                     
+
+                    ttsbegin;
+
+                    
+                    Lines++;
+                    regTable.clear();
+
+                   
+                    regTable.ItemId                                          =       inventtrans.ItemId;
+                    regtable.inventDimId                                     =       inventtrans.inventDimId;
+                    regtable.Name                                            =       inventtableinfo.Name;
+                    regtable.CostAmountAdjustment                            =       inventtrans.CostAmountAdjustment;
+                    regtable.CostAmountPhysical                              =       inventtrans.CostAmountPhysical;
+                    regtable.CostAmountPosted                                =       inventtrans.CostAmountPosted;
+                    regtable.CostAmountSettled                               =       inventtrans.CostAmountSettled;
+                    regtable.DateFinancial                                   =       inventtrans.DateFinancial;
+                    regtable.DatePhysical                                    =       inventtrans.DatePhysical;
+                    regtable.inventBatchId                                   =       inventdim.inventBatchId;
+                    regtable.InventLocationId                                =       inventdim.InventLocationId;
+                    regtable.InventTransId                                   =       inventtransorigin.InventTransId;
+                    regtable.MarkingRefInventTransOrigin                     =       inventtrans.MarkingRefInventTransOrigin;
+                    regtable.PdsCWQty                                        =       inventtrans.PdsCWQty;
+                    regtable.Qty                                             =       inventtrans.Qty;
+                    regtable.QtySettled                                      =       inventtrans.QtySettled;
+                    regtable.ReferenceCategory                               =       inventtransorigin.ReferenceCategory;
+                    regtable.ReferenceId                                     =       inventtransorigin.ReferenceId;
+                    regtable.ReturnInventTransOrigin                         =       inventtrans.ReturnInventTransOrigin;
+                    regtable.StatusIssue                                     =       inventtrans.StatusIssue;
+                    regtable.StatusReceipt                                   =       inventtrans.StatusReceipt;
+                    regtable.UnitId                                          =       inventtableinfo.UnitId;
+                    regtable.ValueOpen                                       =       inventtrans.ValueOpen;
+                    regtable.Voucher                                         =       inventtrans.Voucher;
+                    regtable.VoucherPhysical                                 =       inventtrans.VoucherPhysical;
+                    regtable.wMSLocationId                                   =       inventdim.wMSLocationId;
+                    regtable.InventTransOrigin                               =       inventtrans.InventTransOrigin;
+                    regtable.CostValue										 =		 inventtrans.costValue();
+                    regtable.UnitCost										 =		 abs(regtable.CostValue / regtable.Qty);
+                    NumL                                                     =      strfmt("%1%2" ,strRep("0",20) , int642Str(Lines));
+                    NumL                                                     =      SubStr(NumL , strlen(NumL) , -20);
+                    regtable.LineNumber                                      =       NumL;
+                    if (InventTransType::Sales == regtable.ReferenceCategory)
+                    {
+                        salesline  =  InventTransOriginSalesLine::salesLine(InventTransOrigin.RecId);
+                        dimStorage = DimensionAttributeValueSetStorage::find(salesline.DefaultDimension);
+
+                        for (i=1 ; i<= dimStorage.elements() ; i++)
+                        {
+                            name = '';
+                            value = '';
+
+                            select * from dimAttrValue
+                                where dimAttrValue.RecId == dimStorage.getValueByIndex(i)
+                                    join dimAttr
+                                where dimAttr.RecId == dimAttrValue.DimensionAttribute;
+
+                            if (dimAttr && dimAttrValue)
+                            {
+                                dictTable = new DictTable(dimAttr.BackingEntityType);
+                                common = dictTable.makeRecord();
+
+                                if (common.TableId)
+                                {
+                                    select common where common.(dimAttr.KeyAttribute) == dimAttrValue.EntityInstance;
+                                    name = common.(dimAttr.NameAttribute);
+                                    value = common.(dimAttr.ValueAttribute);
+                                }
+                            }
+                            /*      if ( dimAttr.Name == 'Branch')
+                            {
+                                regtable.BranchCode = value;
+                                regtable.BranchName = name;
+                            }
+                            if ( dimAttr.Name == 'Channel')
+                            {
+                                regtable.ChannelCode = value;
+                                regtable.ChannelName = name;
+                            }*/
+                            if ( dimAttr.Name == 'Cost_Center')
+                            {
+                                regtable.CostCenterCode = value;
+                                regtable.CostCenterName = name;
+                            }
+                            /*  if ( dimAttr.Name == 'Customer')
+                            {
+                                regtable.CustomerCode = value;
+                                regtable.CustomerName = name;
+                            }
+                            if ( dimAttr.Name == 'Product')
+                            {
+                                regtable.ProductCode = value;
+                                regtable.ProductName = name;
+                            }
+                            if ( dimAttr.Name == 'Worker')
+                            {
+                                regtable.WorkerCode = value;
+                                regtable.WorkerName = name;
+                            }*/
+                            if ( dimAttr.Name == 'Vendor')
+                            {
+                                regtable.VendorCode = value;
+                                regtable.VendorName = name;
+                            }
+                            if ( dimAttr.Name == 'FixedAsset')
+                            {
+                                regtable.FixedAssetCode = value;
+                                regtable.FixedAssetName = name;
+                            }
+
+                            
+                        }
+                       
+                    }
+
+                    else if (InventTransType::Purch == regtable.ReferenceCategory)
+                    {
+                        purchline   =  InventTransOriginPurchLine::purchline(InventTransOrigin.RecId);
+                        dimStorage = DimensionAttributeValueSetStorage::find(purchline.DefaultDimension);
+                        for (i=1 ; i<= dimStorage.elements() ; i++)
+                        {
+                            name = '';
+                            value = '';
+
+                            select * from dimAttrValue
+                                where dimAttrValue.RecId == dimStorage.getValueByIndex(i)
+                                    join dimAttr
+                                where dimAttr.RecId == dimAttrValue.DimensionAttribute;
+
+                            if (dimAttr && dimAttrValue)
+                            {
+                                dictTable = new DictTable(dimAttr.BackingEntityType);
+                                common = dictTable.makeRecord();
+
+                                if (common.TableId)
+                                {
+                                    select common where common.(dimAttr.KeyAttribute) == dimAttrValue.EntityInstance;
+                                    name = common.(dimAttr.NameAttribute);
+                                    value = common.(dimAttr.ValueAttribute);
+                                }
+                            }
+                            /*  if ( dimAttr.Name == 'Branch')
+                            {
+                                regtable.BranchCode = value;
+                                regtable.BranchName = name;
+                            }
+                            if ( dimAttr.Name == 'Channel')
+                            {
+                                regtable.ChannelCode = value;
+                                regtable.ChannelName = name;
+                            }*/
+                            if ( dimAttr.Name == 'Cost_Center')
+                            {
+                                regtable.CostCenterCode = value;
+                                regtable.CostCenterName = name;
+                            }
+                            /*  if ( dimAttr.Name == 'Customer')
+                            {
+                                regtable.CustomerCode = value;
+                                regtable.CustomerName = name;
+                            }
+                            if ( dimAttr.Name == 'Product')
+                            {
+                                regtable.ProductCode = value;
+                                regtable.ProductName = name;
+                            }
+                            if ( dimAttr.Name == 'Worker')
+                            {
+                                regtable.WorkerCode = value;
+                                regtable.WorkerName = name;
+                            }*/
+                            if ( dimAttr.Name == 'Vendor')
+                            {
+                                regtable.VendorCode = value;
+                                regtable.VendorName = name;
+                            }
+                            if ( dimAttr.Name == 'FixedAsset')
+                            {
+                                regtable.FixedAssetCode = value;
+                                regtable.FixedAssetName = name;
+                            }
+                        }
+                       
+                    }
+                    else if (InventTransType::InventCounting == regtable.ReferenceCategory || InventTransType::InventTransaction == regtable.ReferenceCategory )
+                    {
+                        inventjournaltrans   = InventTransOriginJournalTrans::inventjournaltrans(inventtransorigin.RecId);
+                        dimStorage = DimensionAttributeValueSetStorage::find(inventjournaltrans.DefaultDimension);
+                        regtable.MainAccountId = MainAccount::findByLedgerDimension( inventjournaltrans.LedgerDimension).MainAccountId;
+                        regtable.MainAccountName = MainAccount::findByLedgerDimension( inventjournaltrans.LedgerDimension).Name;
+                           
+                        for (i=1 ; i<= dimStorage.elements() ; i++)
+                        {
+                            name = '';
+                            value = '';
+
+                            select * from dimAttrValue
+                                where dimAttrValue.RecId == dimStorage.getValueByIndex(i)
+                                    join dimAttr
+                                where dimAttr.RecId == dimAttrValue.DimensionAttribute;
+
+                            if (dimAttr && dimAttrValue)
+                            {
+                                dictTable = new DictTable(dimAttr.BackingEntityType);
+                                common = dictTable.makeRecord();
+
+                                if (common.TableId)
+                                {
+                                    select common where common.(dimAttr.KeyAttribute) == dimAttrValue.EntityInstance;
+                                    name = common.(dimAttr.NameAttribute);
+                                    value = common.(dimAttr.ValueAttribute);
+                                }
+                            }
+                            /*      if ( dimAttr.Name == 'Branch')
+                            {
+                            regtable.BranchCode = value;
+                            regtable.BranchName = name;
+                            }
+                            if ( dimAttr.Name == 'Channel')
+                            {
+                            regtable.ChannelCode = value;
+                            regtable.ChannelName = name;
+                            }*/
+                            if ( dimAttr.Name == 'Cost_Center')
+                            {
+                                regtable.CostCenterCode = value;
+                                regtable.CostCenterName = name;
+                            }
+                            /*  if ( dimAttr.Name == 'Customer')
+                            {
+                            regtable.CustomerCode = value;
+                            regtable.CustomerName = name;
+                            }
+                            if ( dimAttr.Name == 'Product')
+                            {
+                            regtable.ProductCode = value;
+                            regtable.ProductName = name;
+                            }
+                            if ( dimAttr.Name == 'Worker')
+                            {
+                            regtable.WorkerCode = value;
+                            regtable.WorkerName = name;
+                            }*/
+                            if ( dimAttr.Name == 'Vendor')
+                            {
+                                regtable.VendorCode = value;
+                                regtable.VendorName = name;
+                            }
+                            if ( dimAttr.Name == 'FixedAsset')
+                            {
+                                regtable.FixedAssetCode = value;
+                                regtable.FixedAssetName = name;
+                            }
+                            
+
+                        }
+                       
+                    }
+                    else if (InventTransType::Production == regtable.ReferenceCategory )
+                    {
+                        ProdTable   =  InventTransOriginProdTable::ProdTable(InventTransOrigin.RecId);
+                        
+                        dimStorage  = DimensionAttributeValueSetStorage::find(prodtable.DefaultDimension);
+                        for (i=1 ; i<= dimStorage.elements() ; i++)
+                        {
+                            name = '';
+                            value = '';
+
+                            select * from dimAttrValue
+                                where dimAttrValue.RecId == dimStorage.getValueByIndex(i)
+                                    join dimAttr
+                                where dimAttr.RecId == dimAttrValue.DimensionAttribute;
+
+                            if (dimAttr && dimAttrValue)
+                            {
+                                dictTable = new DictTable(dimAttr.BackingEntityType);
+                                common = dictTable.makeRecord();
+
+                                if (common.TableId)
+                                {
+                                    select common where common.(dimAttr.KeyAttribute) == dimAttrValue.EntityInstance;
+                                    name = common.(dimAttr.NameAttribute);
+                                    value = common.(dimAttr.ValueAttribute);
+                                }
+                            }
+                            /*      if ( dimAttr.Name == 'Branch')
+                            {
+                            regtable.BranchCode = value;
+                            regtable.BranchName = name;
+                            }
+                            if ( dimAttr.Name == 'Channel')
+                            {
+                            regtable.ChannelCode = value;
+                            regtable.ChannelName = name;
+                            }*/
+                            if ( dimAttr.Name == 'Cost_Center')
+                            {
+                                regtable.CostCenterCode = value;
+                                regtable.CostCenterName = name;
+                            }
+                            /*  if ( dimAttr.Name == 'Customer')
+                            {
+                            regtable.CustomerCode = value;
+                            regtable.CustomerName = name;
+                            }
+                            if ( dimAttr.Name == 'Product')
+                            {
+                            regtable.ProductCode = value;
+                            regtable.ProductName = name;
+                            }
+                            if ( dimAttr.Name == 'Worker')
+                            {
+                            regtable.WorkerCode = value;
+                            regtable.WorkerName = name;
+                            }*/
+                            if ( dimAttr.Name == 'Vendor')
+                            {
+                                regtable.VendorCode = value;
+                                regtable.VendorName = name;
+                            }
+                            if ( dimAttr.Name == 'FixedAsset')
+                            {
+                                regtable.FixedAssetCode = value;
+                                regtable.FixedAssetName = name;
+                            }
+
+                        }
+                       
+                    }
+                    regtable.insert();
+                    ttscommit;
+                }
+                
+            }
+            InventTransOriginTable_ds.executeQuery();
+        }
+
+]]></Source>
+					</Method>
+				</Methods>
+			</Control>
+		</DataControls>
+		<Members xmlns="" />
+	</SourceCode>
+	<DataSources>
+		<AxFormDataSource xmlns="">
+			<Name>InventTransOriginTable</Name>
+			<Table>InventTransOriginTable</Table>
+			<Fields>
+				<AxFormDataSourceField>
+					<DataField>CostAmountAdjustment</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>CostAmountPhysical</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>CostAmountPosted</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>CostAmountSettled</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>DataAreaId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>DateFinancial</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>DatePhysical</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>inventBatchId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>InventLocationId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>InventTransId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>InventTransOrigin</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>ItemId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>LineNumber</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>MarkingRefInventTransOrigin</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>Name</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>Partition</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>PdsCWQty</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>Qty</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>QtySettled</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>RecId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>ReferenceCategory</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>ReferenceId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>ReturnInventTransOrigin</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>StatusIssue</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>StatusReceipt</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>TableId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>UnitId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>ValueOpen</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>Voucher</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>VoucherPhysical</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>wMSLocationId</DataField>
+				</AxFormDataSourceField>
+			</Fields>
+			<ReferencedDataSources />
+			<Index>RecId</Index>
+			<DataSourceLinks />
+			<DerivedDataSources />
+		</AxFormDataSource>
+	</DataSources>
+	<Design>
+		<Caption xmlns="">Inventory Transactions</Caption>
+		<DataSource xmlns="">InventTransOriginTable</DataSource>
+		<HideIfEmpty xmlns="">No</HideIfEmpty>
+		<ShowDeleteButton xmlns="">No</ShowDeleteButton>
+		<ShowNewButton xmlns="">No</ShowNewButton>
+		<ViewEditMode xmlns="">View</ViewEditMode>
+		<Controls xmlns="">
+			<AxFormControl xmlns=""
+				i:type="AxFormActionPaneControl">
+				<Name>ActionPane</Name>
+				<Type>ActionPane</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+						i:type="AxFormButtonGroupControl">
+						<Name>ButtonGroup</Name>
+						<Type>ButtonGroup</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+								i:type="AxFormButtonControl">
+								<Name>ApplyFilter</Name>
+								<Type>Button</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<Text>Apply Filter</Text>
+							</AxFormControl>
+						</Controls>
+					</AxFormControl>
+				</Controls>
+				<DataSource>InventTransOriginTable</DataSource>
+			</AxFormControl>
+			<AxFormControl xmlns=""
+				i:type="AxFormGridControl">
+				<Name>Grid</Name>
+				<AllowEdit>No</AllowEdit>
+				<Type>Grid</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_ItemId</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>ItemId</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_Name</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>Name</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormRealControl">
+						<Name>Grid_CostAmountAdjustment</Name>
+						<Type>Real</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>CostAmountAdjustment</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormRealControl">
+						<Name>Grid_CostAmountPhysical</Name>
+						<Type>Real</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>CostAmountPhysical</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormRealControl">
+						<Name>Grid_CostAmountPosted</Name>
+						<Type>Real</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>CostAmountPosted</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormRealControl">
+						<Name>Grid_CostAmountSettled</Name>
+						<Type>Real</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>CostAmountSettled</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormDateControl">
+						<Name>Grid_DateFinancial</Name>
+						<Type>Date</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>DateFinancial</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormDateControl">
+						<Name>Grid_DatePhysical</Name>
+						<Type>Date</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>DatePhysical</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_inventBatchId</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>inventBatchId</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_InventLocationId</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>InventLocationId</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_InventTransId</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>InventTransId</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormInt64Control">
+						<Name>Grid_MarkingRefInventTransOrigin</Name>
+						<Type>Int64</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>MarkingRefInventTransOrigin</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormRealControl">
+						<Name>Grid_PdsCWQty</Name>
+						<Type>Real</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>PdsCWQty</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormRealControl">
+						<Name>Grid_Qty</Name>
+						<Type>Real</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>Qty</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormRealControl">
+						<Name>Grid_QtySettled</Name>
+						<Type>Real</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>QtySettled</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormComboBoxControl">
+						<Name>Grid_ReferenceCategory</Name>
+						<Type>ComboBox</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>ReferenceCategory</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+						<Items />
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_ReferenceId</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>ReferenceId</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormInt64Control">
+						<Name>Grid_ReturnInventTransOrigin</Name>
+						<Type>Int64</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>ReturnInventTransOrigin</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormComboBoxControl">
+						<Name>Grid_StatusIssue</Name>
+						<Type>ComboBox</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>StatusIssue</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+						<Items />
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormComboBoxControl">
+						<Name>Grid_StatusReceipt</Name>
+						<Type>ComboBox</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>StatusReceipt</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+						<Items />
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_UnitId</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>UnitId</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormComboBoxControl">
+						<Name>Grid_ValueOpen</Name>
+						<Type>ComboBox</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>ValueOpen</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+						<Items />
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_Voucher</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>Voucher</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_VoucherPhysical</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>VoucherPhysical</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_wMSLocationId</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>wMSLocationId</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormInt64Control">
+						<Name>Grid_InventTransOrigin</Name>
+						<Type>Int64</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>InventTransOrigin</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormRealControl">
+						<Name>Grid_UnitCost</Name>
+						<Type>Real</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>UnitCost</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormRealControl">
+						<Name>Grid_CostValue</Name>
+						<Type>Real</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>CostValue</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_CostCenterCode</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>CostCenterCode</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_CostCenterName</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>CostCenterName</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_VendorCode</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>VendorCode</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_VendorName</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>VendorName</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_FixedAssetCode</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>FixedAssetCode</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_FixedAssetName</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>FixedAssetName</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_MainAccountId</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>MainAccountId</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_MainAccountName</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>MainAccountName</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_BranchCode</Name>
+						<Type>String</Type>
+						<Visible>No</Visible>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>BranchCode</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_BranchName</Name>
+						<Type>String</Type>
+						<Visible>No</Visible>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>BranchName</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_CustomerCode</Name>
+						<Type>String</Type>
+						<Visible>No</Visible>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>CustomerCode</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_CustomerName</Name>
+						<Type>String</Type>
+						<Visible>No</Visible>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>CustomerName</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_ProductCode</Name>
+						<Type>String</Type>
+						<Visible>No</Visible>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>ProductCode</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_ProductName</Name>
+						<Type>String</Type>
+						<Visible>No</Visible>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>ProductName</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_WorkerCode</Name>
+						<Type>String</Type>
+						<Visible>No</Visible>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>WorkerCode</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_WorkerName</Name>
+						<Type>String</Type>
+						<Visible>No</Visible>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>WorkerName</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_ChannelCode</Name>
+						<Type>String</Type>
+						<Visible>No</Visible>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>ChannelCode</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>Grid_ChannelName</Name>
+						<Type>String</Type>
+						<Visible>No</Visible>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>ChannelName</DataField>
+						<DataSource>InventTransOriginTable</DataSource>
+					</AxFormControl>
+				</Controls>
+				<DataGroup>OverView</DataGroup>
+				<DataSource>InventTransOriginTable</DataSource>
+				<DefaultAction>ApplyFilter</DefaultAction>
+			</AxFormControl>
+		</Controls>
+	</Design>
+	<Parts />
+</AxForm>

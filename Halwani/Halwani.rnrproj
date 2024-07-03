@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <BuildTasksDirectory Condition=" '$(BuildTasksDirectory)' == ''">$(MSBuildProgramFiles32)\MSBuild\Microsoft\Dynamics\AX</BuildTasksDirectory>
+    <Model>OHMS</Model>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <OutputPath>bin</OutputPath>
+    <SchemaVersion>2.0</SchemaVersion>
+    <GenerateCrossReferences>True</GenerateCrossReferences>
+    <RunAppCheckerRules>False</RunAppCheckerRules>
+    <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
+    <DeployOnline>False</DeployOnline>
+    <ProjectGuid>{f1a99591-85f8-4320-906d-d03b85759755}</ProjectGuid>
+    <Name>Halwani</Name>
+    <RootNamespace>Halwani</RootNamespace>
+    <StartupType>Class</StartupType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <Configuration>Debug</Configuration>
+    <DBSyncInBuild>True</DBSyncInBuild>
+    <GenerateFormAdaptors>False</GenerateFormAdaptors>
+    <Company>
+    </Company>
+    <Partition>initial</Partition>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DataEntityExpandParentChildRelations>False</DataEntityExpandParentChildRelations>
+    <DataEntityUseLabelTextAsFieldName>False</DataEntityUseLabelTextAsFieldName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Action Menu Items\" />
+    <Folder Include="Classes\" />
+    <Folder Include="Data Entities\" />
+    <Folder Include="Display Menu Items\" />
+    <Folder Include="Extended Data Types\" />
+    <Folder Include="Forms\" />
+    <Folder Include="Label Files\" />
+    <Folder Include="Menu Extensions\" />
+    <Folder Include="Resources\" />
+    <Folder Include="Security Privileges\" />
+    <Folder Include="Security Roles\" />
+    <Folder Include="Tables\" />
+    <Folder Include="Views\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AxClass\RawMaterialWhereUsed">
+      <SubType>Content</SubType>
+      <Name>RawMaterialWhereUsed</Name>
+      <Link>Classes\RawMaterialWhereUsed</Link>
+    </Content>
+    <Content Include="AxClass\RunBaseDemo">
+      <SubType>Content</SubType>
+      <Name>RunBaseDemo</Name>
+      <Link>Classes\RunBaseDemo</Link>
+    </Content>
+    <Content Include="AxDataEntityView\BomDetails">
+      <SubType>Content</SubType>
+      <Name>BomDetails</Name>
+      <Link>Data Entities\BomDetails</Link>
+    </Content>
+    <Content Include="AxDataEntityView\InventTransOriginEntity">
+      <SubType>Content</SubType>
+      <Name>InventTransOriginEntity</Name>
+      <Link>Data Entities\InventTransOriginEntity</Link>
+    </Content>
+    <Content Include="AxDataEntityView\InventTransOriginTableEntity">
+      <SubType>Content</SubType>
+      <Name>InventTransOriginTableEntity</Name>
+      <Link>Data Entities\InventTransOriginTableEntity</Link>
+    </Content>
+    <Content Include="AxDataEntityView\ItemsTransactionsEntity">
+      <SubType>Content</SubType>
+      <Name>ItemsTransactionsEntity</Name>
+      <Link>Data Entities\ItemsTransactionsEntity</Link>
+    </Content>
+    <Content Include="AxDataEntityView\RawMaterialsTableEntity">
+      <SubType>Content</SubType>
+      <Name>RawMaterialsTableEntity</Name>
+      <Link>Data Entities\RawMaterialsTableEntity</Link>
+    </Content>
+    <Content Include="AxDataEntityView\RawMaterialsWhereUsed">
+      <SubType>Content</SubType>
+      <Name>RawMaterialsWhereUsed</Name>
+      <Link>Data Entities\RawMaterialsWhereUsed</Link>
+    </Content>
+    <Content Include="AxEdt\CostAmountAdjusted_HLW">
+      <SubType>Content</SubType>
+      <Name>CostAmountAdjusted_HLW</Name>
+      <Link>Extended Data Types\CostAmountAdjusted_HLW</Link>
+    </Content>
+    <Content Include="AxEdt\CostAmountPhysical_Hlw">
+      <SubType>Content</SubType>
+      <Name>CostAmountPhysical_Hlw</Name>
+      <Link>Extended Data Types\CostAmountPhysical_Hlw</Link>
+    </Content>
+    <Content Include="AxEdt\CostAmountPosted_Hlw">
+      <SubType>Content</SubType>
+      <Name>CostAmountPosted_Hlw</Name>
+      <Link>Extended Data Types\CostAmountPosted_Hlw</Link>
+    </Content>
+    <Content Include="AxEdt\CostAmountSettled_Hlw">
+      <SubType>Content</SubType>
+      <Name>CostAmountSettled_Hlw</Name>
+      <Link>Extended Data Types\CostAmountSettled_Hlw</Link>
+    </Content>
+    <Content Include="AxEdt\Cost_HLW">
+      <SubType>Content</SubType>
+      <Name>Cost_HLW</Name>
+      <Link>Extended Data Types\Cost_HLW</Link>
+    </Content>
+    <Content Include="AxEdt\InventQtySettled_Hlw">
+      <SubType>Content</SubType>
+      <Name>InventQtySettled_Hlw</Name>
+      <Link>Extended Data Types\InventQtySettled_Hlw</Link>
+    </Content>
+    <Content Include="AxEdt\InventQty_Hlw">
+      <SubType>Content</SubType>
+      <Name>InventQty_Hlw</Name>
+      <Link>Extended Data Types\InventQty_Hlw</Link>
+    </Content>
+    <Content Include="AxEdt\PdsCWInventQty_Hlw">
+      <SubType>Content</SubType>
+      <Name>PdsCWInventQty_Hlw</Name>
+      <Link>Extended Data Types\PdsCWInventQty_Hlw</Link>
+    </Content>
+    <Content Include="AxForm\IncrementalForm">
+      <SubType>Content</SubType>
+      <Name>IncrementalForm</Name>
+      <Link>Forms\IncrementalForm</Link>
+    </Content>
+    <Content Include="AxForm\InventTransOrigin">
+      <SubType>Content</SubType>
+      <Name>InventTransOrigin</Name>
+      <Link>Forms\InventTransOrigin</Link>
+    </Content>
+    <Content Include="AxForm\RawMaterialWhereUsed">
+      <SubType>Content</SubType>
+      <Name>RawMaterialWhereUsed</Name>
+      <Link>Forms\RawMaterialWhereUsed</Link>
+    </Content>
+    <Content Include="AxLabelFile\Labels-EN_en-US">
+      <SubType>Content</SubType>
+      <Name>Labels-EN_en-US</Name>
+      <Link>Label Files\Labels-EN_en-US</Link>
+    </Content>
+    <Content Include="AxLabelFile\RightExperts_en-US">
+      <SubType>Content</SubType>
+      <Name>RightExperts_en-US</Name>
+      <Link>Label Files\RightExperts_en-US</Link>
+    </Content>
+    <Content Include="AxMenuExtension\ProductInformationManagement.Extension">
+      <SubType>Content</SubType>
+      <Name>ProductInformationManagement.Extension</Name>
+      <Link>Menu Extensions\ProductInformationManagement.Extension</Link>
+    </Content>
+    <Content Include="AxMenuItemAction\batchprocessing">
+      <SubType>Content</SubType>
+      <Name>batchprocessing</Name>
+      <Link>Action Menu Items\batchprocessing</Link>
+    </Content>
+    <Content Include="AxMenuItemAction\LoadData">
+      <SubType>Content</SubType>
+      <Name>LoadData</Name>
+      <Link>Action Menu Items\LoadData</Link>
+    </Content>
+    <Content Include="AxMenuItemDisplay\IncrementalMenuItem">
+      <SubType>Content</SubType>
+      <Name>IncrementalMenuItem</Name>
+      <Link>Display Menu Items\IncrementalMenuItem</Link>
+    </Content>
+    <Content Include="AxMenuItemDisplay\InventTransOrigin">
+      <SubType>Content</SubType>
+      <Name>InventTransOrigin</Name>
+      <Link>Display Menu Items\InventTransOrigin</Link>
+    </Content>
+    <Content Include="AxMenuItemDisplay\RawMaterialWhereUsed">
+      <SubType>Content</SubType>
+      <Name>RawMaterialWhereUsed</Name>
+      <Link>Display Menu Items\RawMaterialWhereUsed</Link>
+    </Content>
+    <Content Include="AxResource\BOMDetailsTemplate">
+      <SubType>Content</SubType>
+      <Name>BOMDetailsTemplate</Name>
+      <Link>Resources\BOMDetailsTemplate</Link>
+    </Content>
+    <Content Include="AxResource\ItemsTransactionsTemplate">
+      <SubType>Content</SubType>
+      <Name>ItemsTransactionsTemplate</Name>
+      <Link>Resources\ItemsTransactionsTemplate</Link>
+    </Content>
+    <Content Include="AxResource\RawMaterialsWhereUsedTemplate">
+      <SubType>Content</SubType>
+      <Name>RawMaterialsWhereUsedTemplate</Name>
+      <Link>Resources\RawMaterialsWhereUsedTemplate</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\BomDetails">
+      <SubType>Content</SubType>
+      <Name>BomDetails</Name>
+      <Link>Security Privileges\BomDetails</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\InventTransOriginEntity">
+      <SubType>Content</SubType>
+      <Name>InventTransOriginEntity</Name>
+      <Link>Security Privileges\InventTransOriginEntity</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\InventTransOriginTableEntity">
+      <SubType>Content</SubType>
+      <Name>InventTransOriginTableEntity</Name>
+      <Link>Security Privileges\InventTransOriginTableEntity</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\ItemsTransactionsEntity">
+      <SubType>Content</SubType>
+      <Name>ItemsTransactionsEntity</Name>
+      <Link>Security Privileges\ItemsTransactionsEntity</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\PurchTableActionPane">
+      <SubType>Content</SubType>
+      <Name>PurchTableActionPane</Name>
+      <Link>Security Privileges\PurchTableActionPane</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\RawMaterialsTableEntity">
+      <SubType>Content</SubType>
+      <Name>RawMaterialsTableEntity</Name>
+      <Link>Security Privileges\RawMaterialsTableEntity</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\RawMaterialsWhereUsed">
+      <SubType>Content</SubType>
+      <Name>RawMaterialsWhereUsed</Name>
+      <Link>Security Privileges\RawMaterialsWhereUsed</Link>
+    </Content>
+    <Content Include="AxSecurityRole\POActionPane">
+      <SubType>Content</SubType>
+      <Name>POActionPane</Name>
+      <Link>Security Roles\POActionPane</Link>
+    </Content>
+    <Content Include="AxTable\BomTableDetailsStaging">
+      <SubType>Content</SubType>
+      <Name>BomTableDetailsStaging</Name>
+      <Link>Tables\BomTableDetailsStaging</Link>
+    </Content>
+    <Content Include="AxTable\IncrementalTable">
+      <SubType>Content</SubType>
+      <Name>IncrementalTable</Name>
+      <Link>Tables\IncrementalTable</Link>
+    </Content>
+    <Content Include="AxTable\InventTransOriginTable">
+      <SubType>Content</SubType>
+      <Name>InventTransOriginTable</Name>
+      <Link>Tables\InventTransOriginTable</Link>
+    </Content>
+    <Content Include="AxTable\InventTransOriginTableStaging">
+      <SubType>Content</SubType>
+      <Name>InventTransOriginTableStaging</Name>
+      <Link>Tables\InventTransOriginTableStaging</Link>
+    </Content>
+    <Content Include="AxTable\ItemsTransactionsEntityStaging">
+      <SubType>Content</SubType>
+      <Name>ItemsTransactionsEntityStaging</Name>
+      <Link>Tables\ItemsTransactionsEntityStaging</Link>
+    </Content>
+    <Content Include="AxTable\RawMaterialsTable">
+      <SubType>Content</SubType>
+      <Name>RawMaterialsTable</Name>
+      <Link>Tables\RawMaterialsTable</Link>
+    </Content>
+    <Content Include="AxTable\RawMaterialsTableStaging">
+      <SubType>Content</SubType>
+      <Name>RawMaterialsTableStaging</Name>
+      <Link>Tables\RawMaterialsTableStaging</Link>
+    </Content>
+    <Content Include="AxTable\SalesExport">
+      <SubType>Content</SubType>
+      <Name>SalesExport</Name>
+      <Link>Tables\SalesExport</Link>
+    </Content>
+    <Content Include="AxTable\Stg_InventTransOriginEntity">
+      <SubType>Content</SubType>
+      <Name>Stg_InventTransOriginEntity</Name>
+      <Link>Tables\Stg_InventTransOriginEntity</Link>
+    </Content>
+    <Content Include="AxView\BomTableRelation">
+      <SubType>Content</SubType>
+      <Name>BomTableRelation</Name>
+      <Link>Views\BomTableRelation</Link>
+    </Content>
+    <Content Include="AxView\InventTableInfo">
+      <SubType>Content</SubType>
+      <Name>InventTableInfo</Name>
+      <Link>Views\InventTableInfo</Link>
+    </Content>
+    <Content Include="AxView\InventTransactions">
+      <SubType>Content</SubType>
+      <Name>InventTransactions</Name>
+      <Link>Views\InventTransactions</Link>
+    </Content>
+    <Content Include="AxView\View_moduleType_filter">
+      <SubType>Content</SubType>
+      <Name>View_moduleType_filter</Name>
+      <Link>Views\View_moduleType_filter</Link>
+    </Content>
+    <Content Include="BOM details.xlsx">
+      <SubType>Content</SubType>
+      <Name>BOM details.xlsx</Name>
+      <DependentUpon>AxResource\BOMDetailsTemplate</DependentUpon>
+    </Content>
+    <Content Include="Items Transactions Entity.xlsx">
+      <SubType>Content</SubType>
+      <Name>Items Transactions Entity.xlsx</Name>
+      <DependentUpon>AxResource\ItemsTransactionsTemplate</DependentUpon>
+    </Content>
+    <Content Include="Labels-EN.en-US.label.txt">
+      <SubType>Content</SubType>
+      <Name>Labels-EN.en-US.label.txt</Name>
+      <DependentUpon>AxLabelFile\Labels-EN_en-US</DependentUpon>
+    </Content>
+    <Content Include="RawMaterialsWhereUsed.xlsx">
+      <SubType>Content</SubType>
+      <Name>RawMaterialsWhereUsed.xlsx</Name>
+      <DependentUpon>AxResource\RawMaterialsWhereUsedTemplate</DependentUpon>
+    </Content>
+    <Content Include="RightExperts.en-US.label.txt">
+      <SubType>Content</SubType>
+      <Name>RightExperts.en-US.label.txt</Name>
+      <DependentUpon>AxLabelFile\RightExperts_en-US</DependentUpon>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="$(BuildTasksDirectory)\Microsoft.Dynamics.Framework.Tools.BuildTasks.17.0.targets" />
+</Project>

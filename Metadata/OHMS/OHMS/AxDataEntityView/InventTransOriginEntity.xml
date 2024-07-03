@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxDataEntityView xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>InventTransOriginEntity</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class InventTransOriginEntity extends common
+{
+}
+
+]]></Declaration>
+		<Methods />
+	</SourceCode>
+	<ConfigurationKey>LogisticsBasic</ConfigurationKey>
+	<FormRef>InventTrans</FormRef>
+	<Label>@Labels-EN:Halw12</Label>
+	<DataManagementEnabled>Yes</DataManagementEnabled>
+	<DataManagementStagingTable>Stg_InventTransOriginEntity</DataManagementStagingTable>
+	<EntityCategory>Transaction</EntityCategory>
+	<PrimaryCompanyContext>DataAreaId</PrimaryCompanyContext>
+	<PrimaryKey>EntityKey</PrimaryKey>
+	<DeleteActions />
+	<FieldGroups>
+		<AxTableFieldGroup>
+			<Name>AutoReport</Name>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>ItemId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ItemName</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>CostAmountAdjustment</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>CostAmountPhysical</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>CostAmountPosted</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>CostAmountSettled</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>DateFinancial</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>DatePhysical</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>inventBatchId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>InventLocationId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>InventTransId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>MarkingRefInventTransOrigin</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>PdsCWQty</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>Qty</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>QtySettled</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ReferenceCategory</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ReferenceId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ReturnInventTransOrigin</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>StatusIssue</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>StatusReceipt</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>UnitId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ValueOpen</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>Voucher</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>VoucherPhysical</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>wMSLocationId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>InventTransOrigin</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoLookup</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoIdentification</Name>
+			<AutoPopulate>Yes</AutoPopulate>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoSummary</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoBrowse</Name>
+			<Fields />
+		</AxTableFieldGroup>
+	</FieldGroups>
+	<Fields>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>ItemId</Name>
+			<DataField>ItemId</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>ItemName</Name>
+			<DataField>Name</DataField>
+			<DataSource>InventTableInfo</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>CostAmountAdjustment</Name>
+			<DataField>CostAmountAdjustment</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>CostAmountPhysical</Name>
+			<DataField>CostAmountPhysical</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>CostAmountPosted</Name>
+			<DataField>CostAmountPosted</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>CostAmountSettled</Name>
+			<DataField>CostAmountSettled</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>DateFinancial</Name>
+			<DataField>DateFinancial</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>DatePhysical</Name>
+			<DataField>DatePhysical</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>inventBatchId</Name>
+			<DataField>inventBatchId</DataField>
+			<DataSource>InventDim</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>InventLocationId</Name>
+			<DataField>InventLocationId</DataField>
+			<DataSource>InventDim</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>InventTransId</Name>
+			<DataField>InventTransId</DataField>
+			<DataSource>InventTransOrigin</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>MarkingRefInventTransOrigin</Name>
+			<DataField>MarkingRefInventTransOrigin</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>PdsCWQty</Name>
+			<DataField>PdsCWQty</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>Qty</Name>
+			<DataField>Qty</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>QtySettled</Name>
+			<DataField>QtySettled</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>ReferenceCategory</Name>
+			<DataField>ReferenceCategory</DataField>
+			<DataSource>InventTransOrigin</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>ReferenceId</Name>
+			<DataField>ReferenceId</DataField>
+			<DataSource>InventTransOrigin</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>ReturnInventTransOrigin</Name>
+			<DataField>ReturnInventTransOrigin</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>StatusIssue</Name>
+			<DataField>StatusIssue</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>StatusReceipt</Name>
+			<DataField>StatusReceipt</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>UnitId</Name>
+			<DataField>UnitId</DataField>
+			<DataSource>InventTableInfo</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>ValueOpen</Name>
+			<DataField>ValueOpen</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>Voucher</Name>
+			<DataField>Voucher</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>VoucherPhysical</Name>
+			<DataField>VoucherPhysical</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>wMSLocationId</Name>
+			<DataField>wMSLocationId</DataField>
+			<DataSource>InventDim</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>InventTransOrigin</Name>
+			<DataField>InventTransOrigin</DataField>
+			<DataSource>InventTrans</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>ItemId_TransOrigin</Name>
+			<DataField>ItemId</DataField>
+			<DataSource>InventTransOrigin</DataSource>
+		</AxDataEntityViewField>
+	</Fields>
+	<Keys>
+		<AxDataEntityViewKey>
+			<Name>EntityKey</Name>
+			<Fields>
+				<AxDataEntityViewKeyField>
+					<DataField>InventTransId</DataField>
+				</AxDataEntityViewKeyField>
+				<AxDataEntityViewKeyField>
+					<DataField>ItemId_TransOrigin</DataField>
+				</AxDataEntityViewKeyField>
+			</Fields>
+		</AxDataEntityViewKey>
+	</Keys>
+	<Mappings />
+	<Ranges />
+	<Relations />
+	<StateMachines />
+	<ViewMetadata>
+		<Name>Metadata</Name>
+		<SourceCode>
+			<Methods>
+				<Method>
+					<Name>classDeclaration</Name>
+					<Source><![CDATA[
+[Query]
+public class Metadata extends QueryRun
+{
+}
+]]></Source>
+				</Method>
+			</Methods>
+		</SourceCode>
+		<DataSources>
+			<AxQuerySimpleRootDataSource>
+				<Name>InventTransOrigin</Name>
+				<DynamicFields>Yes</DynamicFields>
+				<Table>InventTransOrigin</Table>
+				<DataSources>
+					<AxQuerySimpleEmbeddedDataSource>
+						<Name>InventTrans</Name>
+						<DynamicFields>Yes</DynamicFields>
+						<Table>InventTrans</Table>
+						<DataSources>
+							<AxQuerySimpleEmbeddedDataSource>
+								<Name>InventDim</Name>
+								<DynamicFields>Yes</DynamicFields>
+								<Table>InventDim</Table>
+								<DataSources />
+								<DerivedDataSources />
+								<Fields />
+								<Ranges />
+								<Relations>
+									<AxQuerySimpleDataSourceRelation>
+										<Name>QueryDataSourceRelation1</Name>
+										<Field>inventDimId</Field>
+										<JoinDataSource>InventTrans</JoinDataSource>
+										<RelatedField>inventDimId</RelatedField>
+									</AxQuerySimpleDataSourceRelation>
+								</Relations>
+							</AxQuerySimpleEmbeddedDataSource>
+							<AxQuerySimpleEmbeddedDataSource>
+								<Name>InventTableInfo</Name>
+								<DynamicFields>Yes</DynamicFields>
+								<Table>InventTableInfo</Table>
+								<DataSources />
+								<DerivedDataSources />
+								<Fields />
+								<Ranges />
+								<Relations>
+									<AxQuerySimpleDataSourceRelation>
+										<Name>QueryDataSourceRelation1</Name>
+										<Field>ItemId</Field>
+										<JoinDataSource>InventTrans</JoinDataSource>
+										<RelatedField>ItemId</RelatedField>
+									</AxQuerySimpleDataSourceRelation>
+								</Relations>
+							</AxQuerySimpleEmbeddedDataSource>
+						</DataSources>
+						<DerivedDataSources />
+						<Fields />
+						<Ranges />
+						<Relations>
+							<AxQuerySimpleDataSourceRelation>
+								<Name>QueryDataSourceRelation1</Name>
+								<Field>RecId</Field>
+								<JoinDataSource>InventTransOrigin</JoinDataSource>
+								<RelatedField>InventTransOrigin</RelatedField>
+							</AxQuerySimpleDataSourceRelation>
+						</Relations>
+					</AxQuerySimpleEmbeddedDataSource>
+				</DataSources>
+				<DerivedDataSources />
+				<Fields />
+				<Ranges />
+				<GroupBy />
+				<Having />
+				<OrderBy />
+			</AxQuerySimpleRootDataSource>
+		</DataSources>
+	</ViewMetadata>
+</AxDataEntityView>

@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxDataEntityView xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>BomDetails</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class BomDetails extends common
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>postLoad</Name>
+				<Source><![CDATA[
+    /// <summary>
+    ///
+    /// </summary>
+    public void postLoad()
+    {
+        super();
+        this.ItemName = InventTable::find(this.ItemId).itemName();
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+	<ConfigurationKey>BOM</ConfigurationKey>
+	<FormRef>PmfBomFormulaGoToMainTable</FormRef>
+	<Label>BomDetails</Label>
+	<SubscriberAccessLevel>
+		<Read>Allow</Read>
+	</SubscriberAccessLevel>
+	<EntityCategory>Transaction</EntityCategory>
+	<IsPublic>Yes</IsPublic>
+	<PrimaryCompanyContext>DataAreaId</PrimaryCompanyContext>
+	<PrimaryKey>EntityKey</PrimaryKey>
+	<PublicCollectionName>BomDetails</PublicCollectionName>
+	<PublicEntityName>BomDetails</PublicEntityName>
+	<DeleteActions />
+	<FieldGroups>
+		<AxTableFieldGroup>
+			<Name>AutoReport</Name>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>ItemName</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>BOMId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>Name</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>Approved</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>BOMQty</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>PmfScalable</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ItemId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>LineNum</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>UnitId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ScrapVar</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>PmfBatchSize</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>InventSiteId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>BomVersion_ItemId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>Active</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoLookup</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoIdentification</Name>
+			<AutoPopulate>Yes</AutoPopulate>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoSummary</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoBrowse</Name>
+			<Fields />
+		</AxTableFieldGroup>
+	</FieldGroups>
+	<Fields>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>BOMId</Name>
+			<Label>BOM ID</Label>
+			<DataField>BOMId</DataField>
+			<DataSource>BOMTable</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>Name</Name>
+			<Label>FP name</Label>
+			<DataField>Name</DataField>
+			<DataSource>BOMTable</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>Approved</Name>
+			<Label>Approved</Label>
+			<DataField>Approved</DataField>
+			<DataSource>BOMTable</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>BOMQty</Name>
+			<Label>RM quantity</Label>
+			<DataField>BOMQty</DataField>
+			<DataSource>BOM</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>PmfScalable</Name>
+			<Label>Scalable</Label>
+			<DataField>PmfScalable</DataField>
+			<DataSource>BOM</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>ItemId</Name>
+			<Label>RM item number</Label>
+			<DataField>ItemId</DataField>
+			<DataSource>BOM</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>LineNum</Name>
+			<Label>Line number</Label>
+			<DataField>LineNum</DataField>
+			<DataSource>BOM</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>UnitId</Name>
+			<Label>RM unit</Label>
+			<DataField>UnitId</DataField>
+			<DataSource>BOM</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>ScrapVar</Name>
+			<Label>Scrap quantity</Label>
+			<DataField>ScrapVar</DataField>
+			<DataSource>BOM</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>PmfBatchSize</Name>
+			<Label>Formula size</Label>
+			<DataField>PmfBatchSize</DataField>
+			<DataSource>BOMVersion</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>InventSiteId</Name>
+			<Label>Site</Label>
+			<DataField>InventSiteId</DataField>
+			<DataSource>InventDim</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>BomVersion_ItemId</Name>
+			<Label>FP item number</Label>
+			<DataField>ItemId</DataField>
+			<DataSource>BOMVersion</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>Active</Name>
+			<Label>Active</Label>
+			<DataField>Active</DataField>
+			<DataSource>BOMVersion</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewUnmappedFieldString">
+			<Name>ItemName</Name>
+			<Label>RM Name</Label>
+			<ExtendedDataType>ItemNameDisplay</ExtendedDataType>
+			<IsComputedField>No</IsComputedField>
+		</AxDataEntityViewField>
+	</Fields>
+	<Keys>
+		<AxDataEntityViewKey>
+			<Name>EntityKey</Name>
+			<Fields>
+				<AxDataEntityViewKeyField>
+					<DataField>BOMId</DataField>
+				</AxDataEntityViewKeyField>
+			</Fields>
+		</AxDataEntityViewKey>
+	</Keys>
+	<Mappings />
+	<Ranges />
+	<Relations />
+	<StateMachines />
+	<ViewMetadata>
+		<Name>Metadata</Name>
+		<SourceCode>
+			<Methods>
+				<Method>
+					<Name>classDeclaration</Name>
+					<Source><![CDATA[
+[Query]
+public class Metadata extends QueryRun
+{
+}
+]]></Source>
+				</Method>
+			</Methods>
+		</SourceCode>
+		<DataSources>
+			<AxQuerySimpleRootDataSource>
+				<Name>BOMTable</Name>
+				<DynamicFields>Yes</DynamicFields>
+				<Table>BOMTable</Table>
+				<DataSources>
+					<AxQuerySimpleEmbeddedDataSource>
+						<Name>BOMConfigRoute</Name>
+						<DynamicFields>Yes</DynamicFields>
+						<Table>BOMConfigRoute</Table>
+						<DataSources />
+						<DerivedDataSources />
+						<Fields />
+						<Ranges />
+						<JoinMode>OuterJoin</JoinMode>
+						<Relations>
+							<AxQuerySimpleDataSourceRelation>
+								<Name>QueryDataSourceRelation1</Name>
+								<Field>BOMId</Field>
+								<JoinDataSource>BOMTable</JoinDataSource>
+								<RelatedField>BOMId</RelatedField>
+							</AxQuerySimpleDataSourceRelation>
+						</Relations>
+					</AxQuerySimpleEmbeddedDataSource>
+					<AxQuerySimpleEmbeddedDataSource>
+						<Name>BOMVersion</Name>
+						<DynamicFields>Yes</DynamicFields>
+						<Table>BOMVersion</Table>
+						<DataSources />
+						<DerivedDataSources />
+						<Fields />
+						<Ranges />
+						<JoinMode>OuterJoin</JoinMode>
+						<Relations>
+							<AxQuerySimpleDataSourceRelation>
+								<Name>QueryDataSourceRelation1</Name>
+								<Field>BOMId</Field>
+								<JoinDataSource>BOMTable</JoinDataSource>
+								<RelatedField>BOMId</RelatedField>
+							</AxQuerySimpleDataSourceRelation>
+						</Relations>
+					</AxQuerySimpleEmbeddedDataSource>
+					<AxQuerySimpleEmbeddedDataSource>
+						<Name>BOM</Name>
+						<DynamicFields>Yes</DynamicFields>
+						<Table>BOM</Table>
+						<DataSources>
+							<AxQuerySimpleEmbeddedDataSource>
+								<Name>PmfBOMStep</Name>
+								<DynamicFields>Yes</DynamicFields>
+								<Table>PmfBOMStep</Table>
+								<DataSources />
+								<DerivedDataSources />
+								<Fields />
+								<Ranges />
+								<JoinMode>OuterJoin</JoinMode>
+								<Relations>
+									<AxQuerySimpleDataSourceRelation>
+										<Name>QueryDataSourceRelation1</Name>
+										<Field>RecId</Field>
+										<JoinDataSource>BOM</JoinDataSource>
+										<RelatedField>BOMRefRecId</RelatedField>
+									</AxQuerySimpleDataSourceRelation>
+								</Relations>
+							</AxQuerySimpleEmbeddedDataSource>
+							<AxQuerySimpleEmbeddedDataSource>
+								<Name>InventDim</Name>
+								<DynamicFields>Yes</DynamicFields>
+								<Table>InventDim</Table>
+								<DataSources />
+								<DerivedDataSources />
+								<Fields />
+								<Ranges />
+								<Relations>
+									<AxQuerySimpleDataSourceRelation>
+										<Name>QueryDataSourceRelation1</Name>
+										<Field>InventDimId</Field>
+										<JoinDataSource>BOM</JoinDataSource>
+										<RelatedField>inventDimId</RelatedField>
+									</AxQuerySimpleDataSourceRelation>
+								</Relations>
+							</AxQuerySimpleEmbeddedDataSource>
+						</DataSources>
+						<DerivedDataSources />
+						<Fields />
+						<Ranges />
+						<JoinMode>OuterJoin</JoinMode>
+						<Relations>
+							<AxQuerySimpleDataSourceRelation>
+								<Name>QueryDataSourceRelation1</Name>
+								<Field>BOMId</Field>
+								<JoinDataSource>BOMTable</JoinDataSource>
+								<RelatedField>BOMId</RelatedField>
+							</AxQuerySimpleDataSourceRelation>
+						</Relations>
+					</AxQuerySimpleEmbeddedDataSource>
+					<AxQuerySimpleEmbeddedDataSource>
+						<Name>EcoResBOMDimBasedConfigurationNomenclature</Name>
+						<DynamicFields>Yes</DynamicFields>
+						<Table>EcoResBOMDimBasedConfigurationNomenclature</Table>
+						<DataSources />
+						<DerivedDataSources />
+						<Fields />
+						<Ranges />
+						<JoinMode>OuterJoin</JoinMode>
+						<Relations>
+							<AxQuerySimpleDataSourceRelation>
+								<Name>QueryDataSourceRelation1</Name>
+								<Field>BOMId</Field>
+								<JoinDataSource>BOMTable</JoinDataSource>
+								<RelatedField>BOMId</RelatedField>
+							</AxQuerySimpleDataSourceRelation>
+						</Relations>
+					</AxQuerySimpleEmbeddedDataSource>
+				</DataSources>
+				<DerivedDataSources />
+				<Fields />
+				<Ranges>
+					<AxQuerySimpleDataSourceRange>
+						<Name>BOMId</Name>
+						<Field>BOMId</Field>
+					</AxQuerySimpleDataSourceRange>
+				</Ranges>
+				<GroupBy />
+				<Having />
+				<OrderBy />
+			</AxQuerySimpleRootDataSource>
+		</DataSources>
+	</ViewMetadata>
+</AxDataEntityView>

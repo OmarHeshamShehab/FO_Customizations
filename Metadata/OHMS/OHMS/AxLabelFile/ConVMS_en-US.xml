@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxLabelFile xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>ConVMS_en-US</Name>
+	<LabelContentFileName>ConVMS.en-US.label.txt</LabelContentFileName>
+	<LabelFileId>ConVMS</LabelFileId>
+	<RelativeUriInModelStore>OHMS\OHMS\AxLabelFile\LabelResources\en-US\ConVMS.en-US.label.txt</RelativeUriInModelStore>
+</AxLabelFile>

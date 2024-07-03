@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxEdt xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns=""
+	i:type="AxEdtString">
+	<Name>ConVMSVehicleGroupId</Name>
+	<Extends>SysGroup</Extends>
+	<HelpText>@ConVMS:VehicleGroupHT</HelpText>
+	<Label>@ConVMS:VehicleGroup</Label>
+	<ReferenceTable>ConVMSVehicleGroup</ReferenceTable>
+	<ArrayElements />
+	<Relations />
+	<TableReferences>
+		<AxEdtTableReference>
+			<RelatedField>VehicleGroupId</RelatedField>
+			<Table>ConVMSVehicleGroup</Table>
+		</AxEdtTableReference>
+	</TableReferences>
+</AxEdt>

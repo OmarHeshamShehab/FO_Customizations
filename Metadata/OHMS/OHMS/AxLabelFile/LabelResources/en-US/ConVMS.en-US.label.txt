@@ -1,0 +1,40 @@
+﻿AcqDateMustBeTodayOrLater=The acquisition date must be today or later
+Bike=Motorbike
+Car=Car
+ConVMSAcquiredDate=Date acquired
+ConVMSAcquiredDateHT=The date that the vehicle was acquired
+ConVMSVehicleServiceDateConfirmed=Confirmed service date
+ConVMSVehicleServiceDateConfirmedHT=Confirmation Date for Vehicle Service 
+ConVMSVehicleServiceDateReq=Requested service date
+ConVMSVehicleServiceDateReqHT=Specifies the date Requested for Vehicle service
+ConVMSVehicleServiceId=Service Id
+ConVMSVehicleServiceIdHT=This Field Holds Vehicle Service Identification Number
+ConVMSVehicleServiceLine=Vehicle service order lines
+ConVMSVehicleServiceLineHT=ConVMSVehicleServiceLine contains vehicle service order line record
+ConVMSVehicleServiceStatusHT=The service order status
+ConVMSVehicleServiceTable=Vehicle service orders
+ConVMSVehicleServiceTableHT= ConVMSVehicleServiceTable contains vehicle service order records
+ConVMSVehicleTable=The vehicles label ID should be VehicleTable
+ConVMSVehicleTableHT=ConVMSVehicleTable contains vehicle records. If there is anything special\r\nabout this table, it should be added here.
+ConVMSVehRegNum=Registration
+ ;add a comment that this is a vehicle registration number
+ConVMSVehRegNumHT=The vehicle registration number
+NotSelected=Not Selected
+Servicedates=Service Dates
+SOchangeFailed=Service order cannot be changed
+Truck=Truck
+VehicleGroup=Vehicle Group
+VehicleGroupHT=Used to group vehicles for sorting, filtering, and reporting
+VehicleGroupTable=Vehicle groups
+ ;This is the plural name that appears to the user.
+VehicleGroupTableDD=The ConVMSVehicleGroup table contains definitions of vehicle groups
+VehicleID=Vehicle ID
+ ;This is the label that will be presented to the user
+VehicleIDHT=A unique reference for the vehicle record
+ ;This is the help text shown to the user when this
+Vehiclemanagementparameter=Vehicle management parameter
+VehiclemanagementparameterHT=The ConVMSParameters table contains settings used within the vehicle management solution
+VehicleType=Vehicle Type
+VehicleTypeHT=Defines the basic type of vehicle, used to govern static vehicle type specific properties
+VehTransComplete=Complete Inspection
+VehTransCompleteHT=Complete, and finalize the vehicle inspection

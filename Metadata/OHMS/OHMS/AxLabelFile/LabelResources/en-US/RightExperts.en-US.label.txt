@@ -1,0 +1,8 @@
+﻿RES1=Yes
+ ;New Comment
+RES2=No
+ ;New Comment
+RES3=Is Sales Order Exported?
+ ;New Comment
+RES4=SalesExport
+ ;New Comment

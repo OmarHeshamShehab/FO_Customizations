@@ -1,0 +1,2 @@
+Halw12=Items Transactions Entity
+ ;Items Transactions Entity

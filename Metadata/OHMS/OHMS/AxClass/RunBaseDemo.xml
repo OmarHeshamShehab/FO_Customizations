@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>RunBaseDemo</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// This class demonstrates the use of the RunBaseBatch framework
+/// by incrementing a field in a table by one.
+/// </summary>
+class RunBaseDemo extends RunBaseBatch
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>description</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Provides a description of the class.
+    /// </summary>
+    /// <returns>A string describing the class functionality.</returns>
+    client server static ClassDescription description()
+    {
+        return "Increment the Field by one";
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Entry point for the class.
+    /// </summary>
+    /// <param name="_args">Arguments passed to the method.</param>
+    static void main(Args _args)
+    {
+        RunBaseDemo objClass = new RunBaseDemo();
+
+        // Prompt for RunBase framework dialog
+        if (objClass.prompt())
+        {
+            // Run the process
+            objClass.run();
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>run</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Increments the Increment field of each record in the IncrementalTable by one.
+    /// </summary>
+    public void run()
+    {
+        IncrementalTable _incrementaltable;
+        int x = 1;
+
+        // Start transaction
+        ttsbegin;
+
+        try
+        {
+            // Select all records for update
+            while select forUpdate * from _incrementaltable
+            {
+                if (_incrementaltable.Increment == _incrementaltable.Increment)
+                {
+                    // Increment the field by x
+                    _incrementaltable.Increment = _incrementaltable.Increment + x;
+                    _incrementaltable.update();
+                }
+            }
+
+            // End transaction
+            ttsCommit;
+        }
+        catch
+        {
+            // Handle errors
+            error("Process failed");
+        }
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
