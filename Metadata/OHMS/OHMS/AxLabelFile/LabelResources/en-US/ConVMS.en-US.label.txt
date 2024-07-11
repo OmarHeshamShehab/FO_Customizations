@@ -3,6 +3,7 @@ Bike=Motorbike
 Car=Car
 ConVMSAcquiredDate=Date acquired
 ConVMSAcquiredDateHT=The date that the vehicle was acquired
+ConVMSParametersHT=maintaining the vehicle management settings and number sequences
 ConVMSVehicleServiceDateConfirmed=Confirmed service date
 ConVMSVehicleServiceDateConfirmedHT=Confirmation Date for Vehicle Service 
 ConVMSVehicleServiceDateReq=Requested service date
@@ -19,8 +20,10 @@ ConVMSVehicleTableHT=ConVMSVehicleTable contains vehicle records. If there is an
 ConVMSVehRegNum=Registration
  ;add a comment that this is a vehicle registration number
 ConVMSVehRegNumHT=The vehicle registration number
+Generalparameters=General Parameters
 NotSelected=Not Selected
 Servicedates=Service Dates
+ServiceOrders=Service Orders
 SOchangeFailed=Service order cannot be changed
 Truck=Truck
 VehicleGroup=Vehicle Group
@@ -32,8 +35,10 @@ VehicleID=Vehicle ID
  ;This is the label that will be presented to the user
 VehicleIDHT=A unique reference for the vehicle record
  ;This is the help text shown to the user when this
+Vehiclemanagement=Vehicle Management
 Vehiclemanagementparameter=Vehicle management parameter
 VehiclemanagementparameterHT=The ConVMSParameters table contains settings used within the vehicle management solution
+Vehiclemanagementparameters=Vehicle Management Parameters
 VehicleType=Vehicle Type
 VehicleTypeHT=Defines the basic type of vehicle, used to govern static vehicle type specific properties
 VehTransComplete=Complete Inspection

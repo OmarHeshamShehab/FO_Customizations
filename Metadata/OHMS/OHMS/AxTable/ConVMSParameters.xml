@@ -82,6 +82,7 @@ public class ConVMSParameters extends common
 		</Methods>
 	</SourceCode>
 	<DeveloperDocumentation>@ConVMS:VehiclemanagementparameterHT</DeveloperDocumentation>
+	<FormRef>ConVMSParameters</FormRef>
 	<Label>@ConVMS:Vehiclemanagementparameter</Label>
 	<SubscriberAccessLevel>
 		<Read>Allow</Read>

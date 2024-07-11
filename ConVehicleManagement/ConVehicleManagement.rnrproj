@@ -34,9 +34,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Base Enums\" />
+    <Folder Include="Display Menu Items\" />
     <Folder Include="EDT Dates\" />
     <Folder Include="EDT Strings\" />
+    <Folder Include="Forms\" />
     <Folder Include="Label Files\" />
+    <Folder Include="Menu Extensions\" />
+    <Folder Include="Menus\" />
     <Folder Include="Tables\" />
   </ItemGroup>
   <ItemGroup>
@@ -85,10 +89,30 @@
       <Name>ConVMSVehicleType</Name>
       <Link>Base Enums\ConVMSVehicleType</Link>
     </Content>
+    <Content Include="AxForm\ConVMSParameters">
+      <SubType>Content</SubType>
+      <Name>ConVMSParameters</Name>
+      <Link>Forms\ConVMSParameters</Link>
+    </Content>
     <Content Include="AxLabelFile\ConVMS_en-US">
       <SubType>Content</SubType>
       <Name>ConVMS_en-US</Name>
       <Link>Label Files\ConVMS_en-US</Link>
+    </Content>
+    <Content Include="AxMenuExtension\MainMenu.OHMS">
+      <SubType>Content</SubType>
+      <Name>MainMenu.OHMS</Name>
+      <Link>Menu Extensions\MainMenu.OHMS</Link>
+    </Content>
+    <Content Include="AxMenuItemDisplay\ConVMSParameters">
+      <SubType>Content</SubType>
+      <Name>ConVMSParameters</Name>
+      <Link>Display Menu Items\ConVMSParameters</Link>
+    </Content>
+    <Content Include="AxMenu\ConVMSVehicleManagement">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleManagement</Name>
+      <Link>Menus\ConVMSVehicleManagement</Link>
     </Content>
     <Content Include="AxTable\ConVMSParameters">
       <SubType>Content</SubType>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxMenu xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="Microsoft.Dynamics.AX.Metadata.V1">
+	<Name>ConVMSVehicleManagement</Name>
+	<Label>@ConVMS:Vehiclemanagement</Label>
+	<Elements>
+		<AxMenuElement xmlns=""
+			i:type="AxMenuElementSubMenu">
+			<Name>Workspaces</Name>
+			<Label>@AccountsReceivable:CreditAndCollectionMenuExtensionWorkspaces</Label>
+			<Elements />
+		</AxMenuElement>
+		<AxMenuElement xmlns=""
+			i:type="AxMenuElementSubMenu">
+			<Name>Vehicles</Name>
+			<Label>@Brazil:FB_AssetCreditGroupVehicles</Label>
+			<Elements />
+		</AxMenuElement>
+		<AxMenuElement xmlns=""
+			i:type="AxMenuElementSubMenu">
+			<Name>ServiceOrders</Name>
+			<Label>@ConVMS:ServiceOrders</Label>
+			<Elements />
+		</AxMenuElement>
+		<AxMenuElement xmlns=""
+			i:type="AxMenuElementSubMenu">
+			<Name>PeriodicTasks</Name>
+			<Label>@SYS76406</Label>
+			<Elements />
+		</AxMenuElement>
+		<AxMenuElement xmlns=""
+			i:type="AxMenuElementSubMenu">
+			<Name>InquiriesAndReports</Name>
+			<Label>@SYS3850</Label>
+			<Elements />
+		</AxMenuElement>
+		<AxMenuElement xmlns=""
+			i:type="AxMenuElementSubMenu">
+			<Name>Setup</Name>
+			<Label>@SYS333869</Label>
+			<Elements>
+				<AxMenuElement xmlns=""
+					i:type="AxMenuElementMenuItem">
+					<Name>ConVMSParameters</Name>
+					<MenuItemName>ConVMSParameters</MenuItemName>
+				</AxMenuElement>
+			</Elements>
+		</AxMenuElement>
+	</Elements>
+</AxMenu>
