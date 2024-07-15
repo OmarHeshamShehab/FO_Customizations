@@ -112,6 +112,7 @@ public class ConVMSVehicleTable extends common
 		</Methods>
 	</SourceCode>
 	<DeveloperDocumentation>@ConVMS:ConVMSVehicleTableHT</DeveloperDocumentation>
+	<FormRef>ConVMSVehicleTable</FormRef>
 	<Label>@ConVMS:ConVMSVehicleTable</Label>
 	<SubscriberAccessLevel>
 		<Read>Allow</Read>

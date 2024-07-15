@@ -13,7 +13,13 @@
 			i:type="AxMenuElementSubMenu">
 			<Name>Vehicles</Name>
 			<Label>@Brazil:FB_AssetCreditGroupVehicles</Label>
-			<Elements />
+			<Elements>
+				<AxMenuElement xmlns=""
+					i:type="AxMenuElementMenuItem">
+					<Name>ConVMSVehicleTable</Name>
+					<MenuItemName>ConVMSVehicleTable</MenuItemName>
+				</AxMenuElement>
+			</Elements>
 		</AxMenuElement>
 		<AxMenuElement xmlns=""
 			i:type="AxMenuElementSubMenu">
@@ -42,6 +48,11 @@
 					i:type="AxMenuElementMenuItem">
 					<Name>ConVMSParameters</Name>
 					<MenuItemName>ConVMSParameters</MenuItemName>
+				</AxMenuElement>
+				<AxMenuElement xmlns=""
+					i:type="AxMenuElementMenuItem">
+					<Name>ConVMSVehicleGroup</Name>
+					<MenuItemName>ConVMSVehicleGroup</MenuItemName>
 				</AxMenuElement>
 			</Elements>
 		</AxMenuElement>

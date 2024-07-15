@@ -94,6 +94,16 @@
       <Name>ConVMSParameters</Name>
       <Link>Forms\ConVMSParameters</Link>
     </Content>
+    <Content Include="AxForm\ConVMSVehicleGroup">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleGroup</Name>
+      <Link>Forms\ConVMSVehicleGroup</Link>
+    </Content>
+    <Content Include="AxForm\ConVMSVehicleTable">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleTable</Name>
+      <Link>Forms\ConVMSVehicleTable</Link>
+    </Content>
     <Content Include="AxLabelFile\ConVMS_en-US">
       <SubType>Content</SubType>
       <Name>ConVMS_en-US</Name>
@@ -108,6 +118,16 @@
       <SubType>Content</SubType>
       <Name>ConVMSParameters</Name>
       <Link>Display Menu Items\ConVMSParameters</Link>
+    </Content>
+    <Content Include="AxMenuItemDisplay\ConVMSVehicleGroup">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleGroup</Name>
+      <Link>Display Menu Items\ConVMSVehicleGroup</Link>
+    </Content>
+    <Content Include="AxMenuItemDisplay\ConVMSVehicleTable">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleTable</Name>
+      <Link>Display Menu Items\ConVMSVehicleTable</Link>
     </Content>
     <Content Include="AxMenu\ConVMSVehicleManagement">
       <SubType>Content</SubType>

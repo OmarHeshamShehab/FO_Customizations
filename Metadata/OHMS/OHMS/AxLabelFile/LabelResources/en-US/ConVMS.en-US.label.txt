@@ -15,12 +15,14 @@ ConVMSVehicleServiceLineHT=ConVMSVehicleServiceLine contains vehicle service ord
 ConVMSVehicleServiceStatusHT=The service order status
 ConVMSVehicleServiceTable=Vehicle service orders
 ConVMSVehicleServiceTableHT= ConVMSVehicleServiceTable contains vehicle service order records
-ConVMSVehicleTable=The vehicles label ID should be VehicleTable
-ConVMSVehicleTableHT=ConVMSVehicleTable contains vehicle records. If there is anything special\r\nabout this table, it should be added here.
+ConVMSVehicleTable=Vehicle Table
+ConVMSVehicleTableForm=Vehicle Form
+ConVMSVehicleTableHT=ConVMSVehicleTable contains vehicle records.
 ConVMSVehRegNum=Registration
  ;add a comment that this is a vehicle registration number
 ConVMSVehRegNumHT=The vehicle registration number
 Generalparameters=General Parameters
+GeneralVehicleDetails=General Vehicle Details
 NotSelected=Not Selected
 Servicedates=Service Dates
 ServiceOrders=Service Orders
@@ -28,7 +30,7 @@ SOchangeFailed=Service order cannot be changed
 Truck=Truck
 VehicleGroup=Vehicle Group
 VehicleGroupHT=Used to group vehicles for sorting, filtering, and reporting
-VehicleGroupTable=Vehicle groups
+VehicleGroupTable=Vehicle Groups
  ;This is the plural name that appears to the user.
 VehicleGroupTableDD=The ConVMSVehicleGroup table contains definitions of vehicle groups
 VehicleID=Vehicle ID

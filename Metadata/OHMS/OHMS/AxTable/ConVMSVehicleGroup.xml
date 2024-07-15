@@ -56,6 +56,7 @@ public class ConVMSVehicleGroup extends common
 		</Methods>
 	</SourceCode>
 	<DeveloperDocumentation>@ConVMS:VehicleGroupTableDD</DeveloperDocumentation>
+	<FormRef>ConVMSVehicleGroup</FormRef>
 	<Label>@ConVMS:VehicleGroupTable</Label>
 	<SubscriberAccessLevel>
 		<Read>Allow</Read>
