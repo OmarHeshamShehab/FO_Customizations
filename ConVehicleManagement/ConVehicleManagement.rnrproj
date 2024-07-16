@@ -99,6 +99,11 @@
       <Name>ConVMSVehicleGroup</Name>
       <Link>Forms\ConVMSVehicleGroup</Link>
     </Content>
+    <Content Include="AxForm\ConVMSVehicleServiceTable">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleServiceTable</Name>
+      <Link>Forms\ConVMSVehicleServiceTable</Link>
+    </Content>
     <Content Include="AxForm\ConVMSVehicleTable">
       <SubType>Content</SubType>
       <Name>ConVMSVehicleTable</Name>
