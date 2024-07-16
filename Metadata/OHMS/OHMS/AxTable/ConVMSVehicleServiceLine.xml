@@ -159,6 +159,9 @@ public class ConVMSVehicleServiceLine extends common
 				<AxTableFieldGroupField>
 					<DataField>LineNum</DataField>
 				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ServiceId</DataField>
+				</AxTableFieldGroupField>
 			</Fields>
 		</AxTableFieldGroup>
 	</FieldGroups>

@@ -25,7 +25,13 @@
 			i:type="AxMenuElementSubMenu">
 			<Name>ServiceOrders</Name>
 			<Label>@ConVMS:ServiceOrders</Label>
-			<Elements />
+			<Elements>
+				<AxMenuElement xmlns=""
+					i:type="AxMenuElementMenuItem">
+					<Name>ConVMSVehicleServiceTable</Name>
+					<MenuItemName>ConVMSVehicleServiceTable</MenuItemName>
+				</AxMenuElement>
+			</Elements>
 		</AxMenuElement>
 		<AxMenuElement xmlns=""
 			i:type="AxMenuElementSubMenu">

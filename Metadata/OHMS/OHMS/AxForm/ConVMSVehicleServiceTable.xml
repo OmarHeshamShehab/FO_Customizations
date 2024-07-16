@@ -164,8 +164,691 @@ public class ConVMSVehicleServiceTable extends FormRun
 		<DataSource xmlns="">ConVMSVehicleServiceTable</DataSource>
 		<Pattern xmlns="">DetailsTransaction</Pattern>
 		<PatternVersion xmlns="">1.4</PatternVersion>
+		<Style xmlns="">DetailsFormTransaction</Style>
 		<TitleDataSource xmlns="">ConVMSVehicleServiceTable</TitleDataSource>
-		<Controls xmlns="" />
+		<Controls xmlns="">
+			<AxFormControl xmlns=""
+				i:type="AxFormActionPaneControl">
+				<Name>HeaderActionPane</Name>
+				<Type>ActionPane</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls />
+			</AxFormControl>
+			<AxFormControl xmlns=""
+				i:type="AxFormGroupControl">
+				<Name>NavigationListGroup</Name>
+				<HeightMode>SizeToAvailable</HeightMode>
+				<Type>Group</Type>
+				<Visible>No</Visible>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl>
+						<Name>NavgationQuickFilter</Name>
+						<WidthMode>SizeToAvailable</WidthMode>
+						<FormControlExtension>
+							<Name>QuickFilterControl</Name>
+							<ExtensionComponents />
+							<ExtensionProperties>
+								<AxFormControlExtensionProperty>
+									<Name>targetControlName</Name>
+									<Type>String</Type>
+									<Value>NavigationGrid</Value>
+								</AxFormControlExtensionProperty>
+								<AxFormControlExtensionProperty>
+									<Name>placeholderText</Name>
+									<Type>String</Type>
+								</AxFormControlExtensionProperty>
+								<AxFormControlExtensionProperty>
+									<Name>defaultColumnName</Name>
+									<Type>String</Type>
+									<Value>ConVMSVehicleServiceTable_Name</Value>
+								</AxFormControlExtensionProperty>
+							</ExtensionProperties>
+						</FormControlExtension>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormGridControl">
+						<Name>NavigationGrid</Name>
+						<AllowEdit>No</AllowEdit>
+						<Type>Grid</Type>
+						<WidthMode>SizeToContent</WidthMode>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+								i:type="AxFormStringControl">
+								<Name>ConVMSVehicleServiceTable_ServiceId</Name>
+								<Type>String</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<DataField>ServiceId</DataField>
+								<DataSource>ConVMSVehicleServiceTable</DataSource>
+							</AxFormControl>
+							<AxFormControl xmlns=""
+								i:type="AxFormStringControl">
+								<Name>ConVMSVehicleServiceTable_Name</Name>
+								<Type>String</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<DataField>Name</DataField>
+								<DataSource>ConVMSVehicleServiceTable</DataSource>
+							</AxFormControl>
+						</Controls>
+						<DataSource>ConVMSVehicleServiceTable</DataSource>
+						<MultiSelect>No</MultiSelect>
+						<ShowRowLabels>No</ShowRowLabels>
+						<Style>List</Style>
+					</AxFormControl>
+				</Controls>
+				<FrameType>None</FrameType>
+				<Style>SidePanel</Style>
+			</AxFormControl>
+			<AxFormControl xmlns=""
+				i:type="AxFormTabControl">
+				<Name>MainTab</Name>
+				<Type>Tab</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+						i:type="AxFormTabPageControl">
+						<Name>DetailsPanelTabPage</Name>
+						<Type>TabPage</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+								i:type="AxFormGroupControl">
+								<Name>DetailsPanelTitleGroup</Name>
+								<Type>Group</Type>
+								<WidthMode>SizeToAvailable</WidthMode>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl xmlns=""
+										i:type="AxFormStringControl">
+										<Name>DetailsPanelHeaderTitle</Name>
+										<Skip>Yes</Skip>
+										<Type>String</Type>
+										<WidthMode>SizeToAvailable</WidthMode>
+										<FormControlExtension
+											i:nil="true" />
+										<DataMethod>titleFields</DataMethod>
+										<DataSource>ConVMSVehicleServiceLine</DataSource>
+										<ShowLabel>No</ShowLabel>
+										<Style>TitleField</Style>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormGroupControl">
+										<Name>DetailsPanelStatusGroup</Name>
+										<ExtendedStyle>entityStatus</ExtendedStyle>
+										<Type>Group</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<Controls>
+											<AxFormControl xmlns=""
+												i:type="AxFormComboBoxControl">
+												<Name>DetailsPanelTitle_ServiceStatus</Name>
+												<Type>ComboBox</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<DataField>ServiceStatus</DataField>
+												<DataSource>ConVMSVehicleServiceTable</DataSource>
+												<Items />
+											</AxFormControl>
+										</Controls>
+										<ArrangeMethod>HorizontalRight</ArrangeMethod>
+										<Breakable>No</Breakable>
+										<FrameType>None</FrameType>
+										<ViewEditMode>View</ViewEditMode>
+									</AxFormControl>
+								</Controls>
+								<ArrangeMethod>HorizontalLeft</ArrangeMethod>
+								<FrameType>None</FrameType>
+								<Style>DetailTitleContainer</Style>
+							</AxFormControl>
+							<AxFormControl xmlns=""
+								i:type="AxFormTabControl">
+								<Name>HeaderAndLinePanelTab</Name>
+								<Type>Tab</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl xmlns=""
+										i:type="AxFormTabPageControl">
+										<Name>LinesPanelTabPage</Name>
+										<Type>TabPage</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<Controls>
+											<AxFormControl xmlns=""
+												i:type="AxFormTabControl">
+												<Name>LineViewTab</Name>
+												<Type>Tab</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<Controls>
+													<AxFormControl xmlns=""
+														i:type="AxFormTabPageControl">
+														<Name>LineViewHeader</Name>
+														<Pattern>FieldsFieldGroups</Pattern>
+														<PatternVersion>1.1</PatternVersion>
+														<Type>TabPage</Type>
+														<FormControlExtension
+															i:nil="true" />
+														<Controls>
+															<AxFormControl xmlns=""
+																i:type="AxFormGroupControl">
+																<Name>Details</Name>
+																<Type>Group</Type>
+																<FormControlExtension
+																	i:nil="true" />
+																<Controls>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormStringControl">
+																		<Name>Details_ServiceId</Name>
+																		<Type>String</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>ServiceId</DataField>
+																		<DataSource>ConVMSVehicleServiceTable</DataSource>
+																	</AxFormControl>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormStringControl">
+																		<Name>Details_VehicleId</Name>
+																		<Type>String</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>VehicleId</DataField>
+																		<DataSource>ConVMSVehicleServiceTable</DataSource>
+																	</AxFormControl>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormStringControl">
+																		<Name>Details_Name</Name>
+																		<Type>String</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>Name</DataField>
+																		<DataSource>ConVMSVehicleServiceTable</DataSource>
+																	</AxFormControl>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormComboBoxControl">
+																		<Name>Details_ServiceStatus</Name>
+																		<Type>ComboBox</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>ServiceStatus</DataField>
+																		<DataSource>ConVMSVehicleServiceTable</DataSource>
+																		<Items />
+																	</AxFormControl>
+																</Controls>
+																<DataGroup>Details</DataGroup>
+																<DataSource>ConVMSVehicleServiceTable</DataSource>
+															</AxFormControl>
+															<AxFormControl xmlns=""
+																i:type="AxFormGroupControl">
+																<Name>ServiceDates</Name>
+																<Type>Group</Type>
+																<FormControlExtension
+																	i:nil="true" />
+																<Controls>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormDateControl">
+																		<Name>ServiceDates_ServiceDateReq</Name>
+																		<Type>Date</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>ServiceDateReq</DataField>
+																		<DataSource>ConVMSVehicleServiceTable</DataSource>
+																	</AxFormControl>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormDateControl">
+																		<Name>ServiceDates_ServiceDateConfirmed</Name>
+																		<Type>Date</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>ServiceDateConfirmed</DataField>
+																		<DataSource>ConVMSVehicleServiceTable</DataSource>
+																	</AxFormControl>
+																</Controls>
+																<DataGroup>ServiceDates</DataGroup>
+																<DataSource>ConVMSVehicleServiceTable</DataSource>
+															</AxFormControl>
+														</Controls>
+														<ColumnsMode>Fill</ColumnsMode>
+														<Caption>@ConVMS:Vehicleserviceorderdetails</Caption>
+													</AxFormControl>
+													<AxFormControl xmlns=""
+														i:type="AxFormTabPageControl">
+														<Name>LineViewLinesPage</Name>
+														<HeightMode>SizeToAvailable</HeightMode>
+														<Type>TabPage</Type>
+														<FormControlExtension
+															i:nil="true" />
+														<Controls>
+															<AxFormControl xmlns=""
+																i:type="AxFormActionPaneControl">
+																<Name>LinesActionPane</Name>
+																<Type>ActionPane</Type>
+																<FormControlExtension
+																	i:nil="true" />
+																<Controls>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormButtonGroupControl">
+																		<Name>LineActionRecordActions</Name>
+																		<Type>ButtonGroup</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<Controls>
+																			<AxFormControl xmlns=""
+																				i:type="AxFormCommandButtonControl">
+																				<Name>LineActionAddLine</Name>
+																				<Type>CommandButton</Type>
+																				<FormControlExtension
+																					i:nil="true" />
+																				<Command>New</Command>
+																				<NormalImage>AddLine</NormalImage>
+																				<Text>@SYS319116</Text>
+																			</AxFormControl>
+																			<AxFormControl xmlns=""
+																				i:type="AxFormCommandButtonControl">
+																				<Name>LineActionRemove</Name>
+																				<Type>CommandButton</Type>
+																				<FormControlExtension
+																					i:nil="true" />
+																				<Command>DeleteRecord</Command>
+																				<NormalImage>Delete</NormalImage>
+																				<Text>@SYS135131</Text>
+																			</AxFormControl>
+																		</Controls>
+																	</AxFormControl>
+																</Controls>
+																<Style>Strip</Style>
+															</AxFormControl>
+															<AxFormControl xmlns=""
+																i:type="AxFormGridControl">
+																<Name>LinesGrid</Name>
+																<Type>Grid</Type>
+																<FormControlExtension
+																	i:nil="true" />
+																<Controls>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormStringControl">
+																		<Name>LinesGrid_ServiceId</Name>
+																		<Type>String</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>ServiceId</DataField>
+																		<DataSource>ConVMSVehicleServiceLine</DataSource>
+																	</AxFormControl>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormStringControl">
+																		<Name>LinesGrid_ItemId</Name>
+																		<Type>String</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>ItemId</DataField>
+																		<DataSource>ConVMSVehicleServiceLine</DataSource>
+																	</AxFormControl>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormStringControl">
+																		<Name>LinesGrid_ItemName</Name>
+																		<Type>String</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>ItemName</DataField>
+																		<DataSource>ConVMSVehicleServiceLine</DataSource>
+																	</AxFormControl>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormComboBoxControl">
+																		<Name>LinesGrid_ServiceStatus</Name>
+																		<Type>ComboBox</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>ServiceStatus</DataField>
+																		<DataSource>ConVMSVehicleServiceLine</DataSource>
+																		<Items />
+																	</AxFormControl>
+																</Controls>
+																<DataGroup>Overview</DataGroup>
+																<DataSource>ConVMSVehicleServiceLine</DataSource>
+																<Style>Tabular</Style>
+																<VisibleRows>5</VisibleRows>
+																<VisibleRowsMode>Fixed</VisibleRowsMode>
+															</AxFormControl>
+														</Controls>
+														<Caption>@ConVMS:serviceorderlines</Caption>
+														<DataSource>ConVMSVehicleServiceLine</DataSource>
+														<FastTabExpanded>Always</FastTabExpanded>
+													</AxFormControl>
+													<AxFormControl xmlns=""
+														i:type="AxFormTabPageControl">
+														<Name>LineViewLineDetailsTabPage</Name>
+														<Type>TabPage</Type>
+														<FormControlExtension
+															i:nil="true" />
+														<Controls>
+															<AxFormControl xmlns=""
+																i:type="AxFormTabControl">
+																<Name>LineViewDatailsTab</Name>
+																<Type>Tab</Type>
+																<FormControlExtension
+																	i:nil="true" />
+																<Controls>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormTabPageControl">
+																		<Name>LineViewDetailsTabDetails</Name>
+																		<Pattern>FieldsFieldGroups</Pattern>
+																		<PatternVersion>1.1</PatternVersion>
+																		<Type>TabPage</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<Controls>
+																			<AxFormControl xmlns=""
+																				i:type="AxFormGroupControl">
+																				<Name>Overview</Name>
+																				<Type>Group</Type>
+																				<FormControlExtension
+																					i:nil="true" />
+																				<Controls>
+																					<AxFormControl xmlns=""
+																						i:type="AxFormStringControl">
+																						<Name>Overview_ServiceId</Name>
+																						<Type>String</Type>
+																						<FormControlExtension
+																							i:nil="true" />
+																						<DataField>ServiceId</DataField>
+																						<DataSource>ConVMSVehicleServiceLine</DataSource>
+																					</AxFormControl>
+																					<AxFormControl xmlns=""
+																						i:type="AxFormStringControl">
+																						<Name>Overview_ItemId</Name>
+																						<Type>String</Type>
+																						<FormControlExtension
+																							i:nil="true" />
+																						<DataField>ItemId</DataField>
+																						<DataSource>ConVMSVehicleServiceLine</DataSource>
+																					</AxFormControl>
+																					<AxFormControl xmlns=""
+																						i:type="AxFormStringControl">
+																						<Name>Overview_ItemName</Name>
+																						<Type>String</Type>
+																						<FormControlExtension
+																							i:nil="true" />
+																						<DataField>ItemName</DataField>
+																						<DataSource>ConVMSVehicleServiceLine</DataSource>
+																					</AxFormControl>
+																					<AxFormControl xmlns=""
+																						i:type="AxFormComboBoxControl">
+																						<Name>Overview_ServiceStatus</Name>
+																						<Type>ComboBox</Type>
+																						<FormControlExtension
+																							i:nil="true" />
+																						<DataField>ServiceStatus</DataField>
+																						<DataSource>ConVMSVehicleServiceLine</DataSource>
+																						<Items />
+																					</AxFormControl>
+																				</Controls>
+																				<DataGroup>Overview</DataGroup>
+																				<DataSource>ConVMSVehicleServiceLine</DataSource>
+																			</AxFormControl>
+																			<AxFormControl xmlns=""
+																				i:type="AxFormGroupControl">
+																				<Name>AutoIdentification</Name>
+																				<Type>Group</Type>
+																				<FormControlExtension
+																					i:nil="true" />
+																				<Controls />
+																				<DataGroup>AutoIdentification</DataGroup>
+																				<DataSource>ConVMSVehicleServiceLine</DataSource>
+																			</AxFormControl>
+																		</Controls>
+																		<ColumnsMode>Fill</ColumnsMode>
+																		<Caption>@SYS104281</Caption>
+																	</AxFormControl>
+																</Controls>
+															</AxFormControl>
+														</Controls>
+														<Caption>@ConVMS:Serviceorderlinedetails</Caption>
+														<DataSource>ConVMSVehicleServiceLine</DataSource>
+													</AxFormControl>
+												</Controls>
+												<Style>FastTabs</Style>
+											</AxFormControl>
+										</Controls>
+										<PanelStyle>DetailsLine</PanelStyle>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormTabPageControl">
+										<Name>HeaderPanelTabPage</Name>
+										<Type>TabPage</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<Controls>
+											<AxFormControl xmlns=""
+												i:type="AxFormTabControl">
+												<Name>FormTabControl1</Name>
+												<Type>Tab</Type>
+												<FormControlExtension
+													i:nil="true" />
+												<Controls>
+													<AxFormControl xmlns=""
+														i:type="AxFormTabPageControl">
+														<Name>HeaderDetailsTabDetails</Name>
+														<Pattern>FieldsFieldGroups</Pattern>
+														<PatternVersion>1.1</PatternVersion>
+														<Type>TabPage</Type>
+														<FormControlExtension
+															i:nil="true" />
+														<Controls>
+															<AxFormControl xmlns=""
+																i:type="AxFormGroupControl">
+																<Name>HeaderDetailsTabDetails_Details</Name>
+																<Type>Group</Type>
+																<FormControlExtension
+																	i:nil="true" />
+																<Controls>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormStringControl">
+																		<Name>Details1_ServiceId</Name>
+																		<Type>String</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>ServiceId</DataField>
+																		<DataSource>ConVMSVehicleServiceTable</DataSource>
+																	</AxFormControl>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormStringControl">
+																		<Name>Details1_VehicleId</Name>
+																		<Type>String</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>VehicleId</DataField>
+																		<DataSource>ConVMSVehicleServiceTable</DataSource>
+																	</AxFormControl>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormStringControl">
+																		<Name>Details1_Name</Name>
+																		<Type>String</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>Name</DataField>
+																		<DataSource>ConVMSVehicleServiceTable</DataSource>
+																	</AxFormControl>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormComboBoxControl">
+																		<Name>Details1_ServiceStatus</Name>
+																		<Type>ComboBox</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>ServiceStatus</DataField>
+																		<DataSource>ConVMSVehicleServiceTable</DataSource>
+																		<Items />
+																	</AxFormControl>
+																</Controls>
+																<DataGroup>Details</DataGroup>
+																<DataSource>ConVMSVehicleServiceTable</DataSource>
+															</AxFormControl>
+															<AxFormControl xmlns=""
+																i:type="AxFormGroupControl">
+																<Name>HeaderDetailsTabDetails_ServiceDates</Name>
+																<Type>Group</Type>
+																<FormControlExtension
+																	i:nil="true" />
+																<Controls>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormDateControl">
+																		<Name>ServiceDates1_ServiceDateReq</Name>
+																		<Type>Date</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>ServiceDateReq</DataField>
+																		<DataSource>ConVMSVehicleServiceTable</DataSource>
+																	</AxFormControl>
+																	<AxFormControl xmlns=""
+																		i:type="AxFormDateControl">
+																		<Name>ServiceDates1_ServiceDateConfirmed</Name>
+																		<Type>Date</Type>
+																		<FormControlExtension
+																			i:nil="true" />
+																		<DataField>ServiceDateConfirmed</DataField>
+																		<DataSource>ConVMSVehicleServiceTable</DataSource>
+																	</AxFormControl>
+																</Controls>
+																<DataGroup>ServiceDates</DataGroup>
+																<DataSource>ConVMSVehicleServiceTable</DataSource>
+															</AxFormControl>
+														</Controls>
+														<ColumnsMode>Fill</ColumnsMode>
+														<Caption>@SYS152435</Caption>
+													</AxFormControl>
+												</Controls>
+												<DataSource>ConVMSVehicleServiceTable</DataSource>
+												<Style>FastTabs</Style>
+											</AxFormControl>
+										</Controls>
+										<PanelStyle>DetailsHeader</PanelStyle>
+									</AxFormControl>
+								</Controls>
+								<ShowTabs>No</ShowTabs>
+							</AxFormControl>
+						</Controls>
+						<PanelStyle>Details</PanelStyle>
+						<Style>DetailsFormDetails</Style>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormTabPageControl">
+						<Name>GridPanelTabPage</Name>
+						<Type>TabPage</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+								i:type="AxFormGroupControl">
+								<Name>GridPanelQuickFilterGroup</Name>
+								<Pattern>CustomAndQuickFilters</Pattern>
+								<PatternVersion>1.1</PatternVersion>
+								<Type>Group</Type>
+								<WidthMode>SizeToAvailable</WidthMode>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl>
+										<Name>GridPanelQuickFilter</Name>
+										<FormControlExtension>
+											<Name>QuickFilterControl</Name>
+											<ExtensionComponents />
+											<ExtensionProperties>
+												<AxFormControlExtensionProperty>
+													<Name>targetControlName</Name>
+													<Type>String</Type>
+													<Value>MainGrid</Value>
+												</AxFormControlExtensionProperty>
+												<AxFormControlExtensionProperty>
+													<Name>placeholderText</Name>
+													<Type>String</Type>
+												</AxFormControlExtensionProperty>
+												<AxFormControlExtensionProperty>
+													<Name>defaultColumnName</Name>
+													<Type>String</Type>
+												</AxFormControlExtensionProperty>
+											</ExtensionProperties>
+										</FormControlExtension>
+									</AxFormControl>
+								</Controls>
+								<ArrangeMethod>HorizontalLeft</ArrangeMethod>
+								<FrameType>None</FrameType>
+								<Style>CustomFilter</Style>
+								<ViewEditMode>Edit</ViewEditMode>
+							</AxFormControl>
+							<AxFormControl xmlns=""
+								i:type="AxFormGridControl">
+								<Name>MainGrid</Name>
+								<Type>Grid</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl xmlns=""
+										i:type="AxFormStringControl">
+										<Name>MainGrid_ServiceId</Name>
+										<Type>String</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>ServiceId</DataField>
+										<DataSource>ConVMSVehicleServiceTable</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormStringControl">
+										<Name>MainGrid_VehicleId</Name>
+										<Type>String</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>VehicleId</DataField>
+										<DataSource>ConVMSVehicleServiceTable</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormStringControl">
+										<Name>MainGrid_Name</Name>
+										<Type>String</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>Name</DataField>
+										<DataSource>ConVMSVehicleServiceTable</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormComboBoxControl">
+										<Name>MainGrid_ServiceStatus</Name>
+										<Type>ComboBox</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>ServiceStatus</DataField>
+										<DataSource>ConVMSVehicleServiceTable</DataSource>
+										<Items />
+									</AxFormControl>
+								</Controls>
+								<DataGroup>Overview</DataGroup>
+								<DataSource>ConVMSVehicleServiceTable</DataSource>
+								<DefaultAction>MainGridDefaultAction</DefaultAction>
+							</AxFormControl>
+							<AxFormControl xmlns=""
+								i:type="AxFormCommandButtonControl">
+								<Name>MainGridDefaultAction</Name>
+								<Type>CommandButton</Type>
+								<Visible>No</Visible>
+								<FormControlExtension
+									i:nil="true" />
+								<Command>DetailsView</Command>
+							</AxFormControl>
+						</Controls>
+						<PanelStyle>Grid</PanelStyle>
+						<Style>DetailsFormGrid</Style>
+					</AxFormControl>
+				</Controls>
+				<ShowTabs>No</ShowTabs>
+			</AxFormControl>
+		</Controls>
 	</Design>
 	<Parts />
 </AxForm>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Diagnostics
+  GenerationTime="2024-07-16T22:10:20.2724012+03:00">
+  <Items>
+    <Diagnostic>
+      <DiagnosticType>FormPatternValidation</DiagnosticType>
+      <Severity>Error</Severity>
+      <Path>AxForm/ConVMSVehicleServiceTable/Design</Path>
+      <Moniker>PatternControlMissingChild</Moniker>
+      <Message>Control 'AxForm/ConVMSVehicleServiceTable/Design' is missing child 'Application Bar' required by pattern 'Details Transaction'.</Message>
+    </Diagnostic>
+  </Items>
+  <Aliases />
+</Diagnostics>

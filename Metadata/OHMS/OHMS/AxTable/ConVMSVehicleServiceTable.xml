@@ -152,6 +152,7 @@ public class ConVMSVehicleServiceTable extends common
 		</Methods>
 	</SourceCode>
 	<DeveloperDocumentation>@ConVMS:ConVMSVehicleServiceTableHT</DeveloperDocumentation>
+	<FormRef>ConVMSVehicleServiceTable</FormRef>
 	<Label>@ConVMS:ConVMSVehicleServiceTable</Label>
 	<SubscriberAccessLevel>
 		<Read>Allow</Read>

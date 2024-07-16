@@ -129,6 +129,11 @@
       <Name>ConVMSVehicleGroup</Name>
       <Link>Display Menu Items\ConVMSVehicleGroup</Link>
     </Content>
+    <Content Include="AxMenuItemDisplay\ConVMSVehicleServiceTable">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleServiceTable</Name>
+      <Link>Display Menu Items\ConVMSVehicleServiceTable</Link>
+    </Content>
     <Content Include="AxMenuItemDisplay\ConVMSVehicleTable">
       <SubType>Content</SubType>
       <Name>ConVMSVehicleTable</Name>
