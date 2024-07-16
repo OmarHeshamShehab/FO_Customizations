@@ -21,9 +21,9 @@ public class ConVMSVehicleTable extends FormRun
 						<Name>create</Name>
 						<Source><![CDATA[
         /// <summary>
-        ///
+        /// Creates a new instance of the form.
         /// </summary>
-        /// <param name = "_append"></param>
+        /// <param name="_append">Indicates whether to append the new form instance.</param>
         public void create(boolean _append = false)
         {
             element.viewOptionHelper().setViewOption(FormViewOption::Details);
@@ -242,7 +242,63 @@ public class ConVMSVehicleTable extends FormRun
 												<Type>Group</Type>
 												<FormControlExtension
 													i:nil="true" />
-												<Controls />
+												<Controls>
+													<AxFormControl xmlns=""
+														i:type="AxFormStringControl">
+														<Name>Details_VehicleId</Name>
+														<Type>String</Type>
+														<FormControlExtension
+															i:nil="true" />
+														<DataField>VehicleId</DataField>
+														<DataSource>ConVMSVehicleTable</DataSource>
+													</AxFormControl>
+													<AxFormControl xmlns=""
+														i:type="AxFormStringControl">
+														<Name>Details_Name</Name>
+														<Type>String</Type>
+														<FormControlExtension
+															i:nil="true" />
+														<DataField>Name</DataField>
+														<DataSource>ConVMSVehicleTable</DataSource>
+													</AxFormControl>
+													<AxFormControl xmlns=""
+														i:type="AxFormStringControl">
+														<Name>Details_VehicleGroupId</Name>
+														<Type>String</Type>
+														<FormControlExtension
+															i:nil="true" />
+														<DataField>VehicleGroupId</DataField>
+														<DataSource>ConVMSVehicleTable</DataSource>
+													</AxFormControl>
+													<AxFormControl xmlns=""
+														i:type="AxFormComboBoxControl">
+														<Name>Details_VehicleType</Name>
+														<Type>ComboBox</Type>
+														<FormControlExtension
+															i:nil="true" />
+														<DataField>VehicleType</DataField>
+														<DataSource>ConVMSVehicleTable</DataSource>
+														<Items />
+													</AxFormControl>
+													<AxFormControl xmlns=""
+														i:type="AxFormStringControl">
+														<Name>Details_VehRegNum</Name>
+														<Type>String</Type>
+														<FormControlExtension
+															i:nil="true" />
+														<DataField>VehRegNum</DataField>
+														<DataSource>ConVMSVehicleTable</DataSource>
+													</AxFormControl>
+													<AxFormControl xmlns=""
+														i:type="AxFormDateControl">
+														<Name>Details_AcquiredDate</Name>
+														<Type>Date</Type>
+														<FormControlExtension
+															i:nil="true" />
+														<DataField>AcquiredDate</DataField>
+														<DataSource>ConVMSVehicleTable</DataSource>
+													</AxFormControl>
+												</Controls>
 												<DataGroup>Details</DataGroup>
 												<DataSource>ConVMSVehicleTable</DataSource>
 											</AxFormControl>

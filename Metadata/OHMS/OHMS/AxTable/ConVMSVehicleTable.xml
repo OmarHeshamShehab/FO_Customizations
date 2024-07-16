@@ -176,7 +176,26 @@ public class ConVMSVehicleTable extends common
 		<AxTableFieldGroup>
 			<Name>Details</Name>
 			<Label>@SYS104281</Label>
-			<Fields />
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>VehicleId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>Name</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>VehicleGroupId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>VehicleType</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>VehRegNum</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>AcquiredDate</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
 		</AxTableFieldGroup>
 	</FieldGroups>
 	<Fields>
