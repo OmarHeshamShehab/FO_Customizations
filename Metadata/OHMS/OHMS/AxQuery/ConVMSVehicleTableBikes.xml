@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxQuery xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns=""
+	i:type="AxQueryComposite">
+	<Name>ConVMSVehicleTableBikes</Name>
+	<SourceCode>
+		<Methods>
+			<Method>
+				<Name>classDeclaration</Name>
+				<Source><![CDATA[
+[Query]
+public class ConVMSVehicleTableBikes extends QueryRun
+{
+}
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+	<Query>ConVMSVehicleTableAll</Query>
+	<Havings />
+	<Ranges>
+		<AxQueryCompositeRange>
+			<Name>CompositeQueryRange1</Name>
+			<DataSource>ConVMSVehicleTable</DataSource>
+			<Field>VehicleType</Field>
+			<Value>Bike</Value>
+		</AxQueryCompositeRange>
+	</Ranges>
+</AxQuery>

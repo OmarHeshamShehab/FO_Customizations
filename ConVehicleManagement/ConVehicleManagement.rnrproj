@@ -34,6 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Base Enums\" />
+    <Folder Include="Composite Queries\" />
     <Folder Include="Display Menu Items\" />
     <Folder Include="EDT Dates\" />
     <Folder Include="EDT Strings\" />
@@ -41,7 +42,9 @@
     <Folder Include="Label Files\" />
     <Folder Include="Menu Extensions\" />
     <Folder Include="Menus\" />
+    <Folder Include="Simple Queries\" />
     <Folder Include="Tables\" />
+    <Folder Include="Tiles\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AxEdt\ConVMSAcquiredDate">
@@ -99,6 +102,11 @@
       <Name>ConVMSVehicleGroup</Name>
       <Link>Forms\ConVMSVehicleGroup</Link>
     </Content>
+    <Content Include="AxForm\ConVMSVehicleServiceOpenPart">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleServiceOpenPart</Name>
+      <Link>Forms\ConVMSVehicleServiceOpenPart</Link>
+    </Content>
     <Content Include="AxForm\ConVMSVehicleServiceTable">
       <SubType>Content</SubType>
       <Name>ConVMSVehicleServiceTable</Name>
@@ -129,6 +137,11 @@
       <Name>ConVMSVehicleGroup</Name>
       <Link>Display Menu Items\ConVMSVehicleGroup</Link>
     </Content>
+    <Content Include="AxMenuItemDisplay\ConVMSVehicleServiceOpenPart">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleServiceOpenPart</Name>
+      <Link>Display Menu Items\ConVMSVehicleServiceOpenPart</Link>
+    </Content>
     <Content Include="AxMenuItemDisplay\ConVMSVehicleServiceTable">
       <SubType>Content</SubType>
       <Name>ConVMSVehicleServiceTable</Name>
@@ -139,10 +152,25 @@
       <Name>ConVMSVehicleTable</Name>
       <Link>Display Menu Items\ConVMSVehicleTable</Link>
     </Content>
+    <Content Include="AxMenuItemDisplay\ConVMSVehicleTableBikes">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleTableBikes</Name>
+      <Link>Display Menu Items\ConVMSVehicleTableBikes</Link>
+    </Content>
     <Content Include="AxMenu\ConVMSVehicleManagement">
       <SubType>Content</SubType>
       <Name>ConVMSVehicleManagement</Name>
       <Link>Menus\ConVMSVehicleManagement</Link>
+    </Content>
+    <Content Include="AxQuery\ConVMSVehicleTableAll">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleTableAll</Name>
+      <Link>Simple Queries\ConVMSVehicleTableAll</Link>
+    </Content>
+    <Content Include="AxQuery\ConVMSVehicleTableBikes">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleTableBikes</Name>
+      <Link>Composite Queries\ConVMSVehicleTableBikes</Link>
     </Content>
     <Content Include="AxTable\ConVMSParameters">
       <SubType>Content</SubType>
@@ -168,6 +196,21 @@
       <SubType>Content</SubType>
       <Name>ConVMSVehicleTable</Name>
       <Link>Tables\ConVMSVehicleTable</Link>
+    </Content>
+    <Content Include="AxTile\ConVMSVehicleBikesTile">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleBikesTile</Name>
+      <Link>Tiles\ConVMSVehicleBikesTile</Link>
+    </Content>
+    <Content Include="AxTile\ConVMSVehiclesAllTile">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehiclesAllTile</Name>
+      <Link>Tiles\ConVMSVehiclesAllTile</Link>
+    </Content>
+    <Content Include="AxTile\ConVMSVehicleTableBikes">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleTableBikes</Name>
+      <Link>Tiles\ConVMSVehicleTableBikes</Link>
     </Content>
     <Content Include="ConVMS.en-US.label.txt">
       <SubType>Content</SubType>

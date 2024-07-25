@@ -1,5 +1,7 @@
 ﻿AcqDateMustBeTodayOrLater=The acquisition date must be today or later
+Allvehicles=All vehicles 
 Bike=Motorbike
+Bikes=Bikes
 Car=Car
 ConVMSAcquiredDate=Date acquired
 ConVMSAcquiredDateHT=The date that the vehicle was acquired
@@ -12,6 +14,7 @@ ConVMSVehicleServiceId=Service Id
 ConVMSVehicleServiceIdHT=This Field Holds Vehicle Service Identification Number
 ConVMSVehicleServiceLine=Vehicle service order lines
 ConVMSVehicleServiceLineHT=ConVMSVehicleServiceLine contains vehicle service order line record
+ConVMSVehicleServiceOpenPart=Basic Vehicle Service 
 ConVMSVehicleServiceStatusHT=The service order status
 ConVMSVehicleServiceTable=Vehicle service orders
 ConVMSVehicleServiceTableHT= ConVMSVehicleServiceTable contains vehicle service order records
