@@ -32,6 +32,32 @@ public class ConVMSVehicleTable extends FormRun
 
 ]]></Source>
 					</Method>
+					<Method>
+						<Name>init</Name>
+						<Source><![CDATA[
+        public void init()
+        {
+            super();
+            // we don't care what the type of the calling element is, only if it is
+            // (or implements) our interface
+            if (element.args().caller() is ConVMSVehicleGroupFilterableI)
+            {
+                ConVMSVehicleGroupFilterableI filterable = element.args().caller();
+                if (filterable.VehicleGroupId() != '')
+                {
+                    // get the instance of the query data source
+                    // builder so we can get a query range to filter on
+                    QueryBuildDataSource qbds = ConVMSVehicleTable_Ds.queryBuildDataSource();
+                    // Use SysQuery to find or create a range on the
+                    // VehicleGroupId field
+                    QueryBuildRange vehGroupRange = SysQuery::findOrCreateRange(qbds, fieldNum(ConVMSVehicleTable, VehicleGroupId));
+                    vehGroupRange.value(filterable.VehicleGroupId());
+                }
+            }
+        }
+
+]]></Source>
+					</Method>
 				</Methods>
 				<Fields />
 			</DataSource>

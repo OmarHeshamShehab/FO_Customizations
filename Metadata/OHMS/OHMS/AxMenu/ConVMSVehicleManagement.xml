@@ -7,7 +7,13 @@
 			i:type="AxMenuElementSubMenu">
 			<Name>Workspaces</Name>
 			<Label>@AccountsReceivable:CreditAndCollectionMenuExtensionWorkspaces</Label>
-			<Elements />
+			<Elements>
+				<AxMenuElement xmlns=""
+					i:type="AxMenuElementTile">
+					<Name>ConVMSVehicleWorkspaceTile</Name>
+					<Tile>ConVMSVehicleWorkspaceTile</Tile>
+				</AxMenuElement>
+			</Elements>
 		</AxMenuElement>
 		<AxMenuElement xmlns=""
 			i:type="AxMenuElementSubMenu">

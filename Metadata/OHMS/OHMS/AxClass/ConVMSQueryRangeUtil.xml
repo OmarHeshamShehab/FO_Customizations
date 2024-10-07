@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>ConVMSQueryRangeUtil</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+internal final class ConVMSQueryRangeUtil
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>RelativeDate</Name>
+				<Source><![CDATA[
+    [QueryRangeFunction]
+    public static date RelativeDate(int relativeDays = 0)
+    {
+        utcdatetime currentDateTime;
+        currentDateTime = DateTimeUtil::applyTimeZoneOffset(DateTimeUtil::getSystemDateTime(),
+                                                            DateTimeUtil::getUserPreferredTimeZone());
+        return DateTimeUtil::date(DateTimeUtil::addDays(currentDateTime,relativeDays));
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

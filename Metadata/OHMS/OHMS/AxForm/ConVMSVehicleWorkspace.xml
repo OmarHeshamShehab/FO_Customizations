@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxForm xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="Microsoft.Dynamics.AX.Metadata.V6">
+	<Name>ConVMSVehicleWorkspace</Name>
+	<SourceCode>
+		<Methods xmlns="">
+			<Method>
+				<Name>classDeclaration</Name>
+				<Source><![CDATA[
+[Form]
+public class ConVMSVehicleWorkspace extends FormRun implements SysIFilterProvider,ConVMSVehicleGroupFilterableI
+{
+    SysFilterChangeEvent changeEvent;
+   
+
+}
+]]></Source>
+			</Method>
+			<Method>
+				<Name>init</Name>
+				<Source><![CDATA[
+    public void init()
+    {
+        super();
+        // restore the value of the filter from the user's saved data
+        SysFilterLastValueHelper::getLastValue(VehicleGroupFilter);
+        // initialise the changeEvent variable
+        changeEvent = SysFilterChangeEvent::newFromFormControl(VehicleGroupFilter);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>close</Name>
+				<Source><![CDATA[
+    // override close so that it saves the last value used in the
+    // filter control
+    public void close()
+    {
+        super();
+        // save the last filter option chosen by the user for next time
+        // the form is opened
+        SysFilterLastValueHelper::saveLastValue(VehicleGroupFilter);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmChangeEvent</Name>
+				<Source><![CDATA[
+    public SysFilterChangeEvent parmChangeEvent()
+    {
+        return changeEvent;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmFilter</Name>
+				<Source><![CDATA[
+    public SysIFilter parmFilter()
+    {
+        SysIFilter filter = SysFilterFactory::createEmptyFilter();
+        SysFilterValueResolutionMethod filterValueResolutionMethod = SysFilterValueResolutionMethod::All;
+        ConVMSVehicleGroup vehGroup = ConVMSVehicleGroup::Find(VehicleGroupFilter.text());
+        SysIFilterValue filterValue = SysFilterValueFactory::createFilterValueForString(vehGroup.VehicleGroupId, 
+                                                                                        extendedTypeNum(ConVMSVehicleGroupId));
+        if (vehGroup)
+        {
+            filterValueResolutionMethod = SysFilterValueResolutionMethod::None;
+        }
+        filter.addItem(filterValue, SysFilterOperator::Equal, filterValueResolutionMethod);
+        return filter;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>VehicleGroupId</Name>
+				<Source><![CDATA[
+    public ConVMSVehicleGroupId VehicleGroupId()
+    {
+        return VehicleGroupFilter.text();
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+		<DataSources xmlns="" />
+		<DataControls xmlns="" />
+		<Members xmlns="" />
+	</SourceCode>
+	<DataSources />
+	<Design>
+		<Caption xmlns="">@ConVMS:Vehiclemanagement</Caption>
+		<Pattern xmlns="">WorkspaceOperational</Pattern>
+		<PatternVersion xmlns="">1.1</PatternVersion>
+		<ShowDeleteButton xmlns="">No</ShowDeleteButton>
+		<ShowNewButton xmlns="">No</ShowNewButton>
+		<Style xmlns="">Workspace</Style>
+		<ViewEditMode xmlns="">View</ViewEditMode>
+		<Controls xmlns="">
+			<AxFormControl xmlns=""
+				i:type="AxFormGroupControl">
+				<Name>WorkspacePageFilterGroup</Name>
+				<Pattern>WorkspacePageFilterGroup</Pattern>
+				<PatternVersion>1.0</PatternVersion>
+				<Type>Group</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>VehicleGroupFilter</Name>
+						<AutoDeclaration>Yes</AutoDeclaration>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<ExtendedDataType>ConVMSVehicleGroupId</ExtendedDataType>
+					</AxFormControl>
+				</Controls>
+				<FrameType>None</FrameType>
+				<Style>CustomFilter</Style>
+				<ViewEditMode>Edit</ViewEditMode>
+			</AxFormControl>
+			<AxFormControl xmlns=""
+				i:type="AxFormTabControl">
+				<Name>PanoramaTab</Name>
+				<ExtendedStyle>tab_simpleFastTab</ExtendedStyle>
+				<Type>Tab</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+						i:type="AxFormTabPageControl">
+						<Name>PanoramaSectionTiles</Name>
+						<ExtendedStyle>workspace_tileLayout</ExtendedStyle>
+						<Pattern>SectionTiles</Pattern>
+						<PatternVersion>1.1</PatternVersion>
+						<Type>TabPage</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+								i:type="AxFormMenuFunctionButtonControl">
+								<Name>ConVMSVehiclesAllTile</Name>
+								<Type>MenuFunctionButton</Type>
+								<FormControlExtension>
+									<Name>TileButtonControl</Name>
+									<ExtensionComponents />
+									<ExtensionProperties>
+										<AxFormControlExtensionProperty>
+											<Name>tile</Name>
+											<Type>String</Type>
+											<Value>ConVMSVehiclesAllTile</Value>
+										</AxFormControlExtensionProperty>
+										<AxFormControlExtensionProperty>
+											<Name>tileDisplay</Name>
+											<Type>Enum</Type>
+											<TypeName>TileDisplay</TypeName>
+										</AxFormControlExtensionProperty>
+									</ExtensionProperties>
+								</FormControlExtension>
+								<CopyCallerQuery>Yes</CopyCallerQuery>
+							</AxFormControl>
+						</Controls>
+						<ArrangeMethod>HorizontalLeft</ArrangeMethod>
+						<Caption>@SYS319419</Caption>
+						<FastTabExpanded>Yes</FastTabExpanded>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormTabPageControl">
+						<Name>PanoramaSectionTabbedList</Name>
+						<Pattern>SectionTabbedList</Pattern>
+						<PatternVersion>1.1</PatternVersion>
+						<Type>TabPage</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+								i:type="AxFormTabControl">
+								<Name>TabbedListTab</Name>
+								<Height>500</Height>
+								<HeightMode>Manual</HeightMode>
+								<Type>Tab</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl xmlns=""
+										i:type="AxFormTabPageControl">
+										<Name>TabbedListPageOrders</Name>
+										<Type>TabPage</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<Controls>
+											<AxFormControl xmlns=""
+												i:type="AxFormContainerControl">
+												<Name>ConVMSVehicleServiceOpenPart</Name>
+												<HeightMode>SizeToAvailable</HeightMode>
+												<Type>Container</Type>
+												<FormControlExtension>
+													<Name>FormPartControl</Name>
+													<ExtensionComponents>
+														<AxFormControlExtensionComponent xmlns=""
+															i:type="AxFormControlExtensionComponentComposite">
+															<Name>dataLinks</Name>
+															<ExtensionComponents />
+														</AxFormControlExtensionComponent>
+													</ExtensionComponents>
+													<ExtensionProperties>
+														<AxFormControlExtensionProperty>
+															<Name>targetName</Name>
+															<Type>String</Type>
+															<Value>ConVMSVehicleServiceOpenPart</Value>
+														</AxFormControlExtensionProperty>
+														<AxFormControlExtensionProperty>
+															<Name>autoRefreshInterval</Name>
+															<Type>Int32</Type>
+															<Value>0</Value>
+														</AxFormControlExtensionProperty>
+														<AxFormControlExtensionProperty>
+															<Name>parmRunMode</Name>
+															<Type>Enum</Type>
+															<TypeName>FormPartControlRunMode</TypeName>
+															<Value>Local</Value>
+														</AxFormControlExtensionProperty>
+													</ExtensionProperties>
+												</FormControlExtension>
+												<Controls />
+											</AxFormControl>
+										</Controls>
+										<Caption>@ConVMS:ServiceOrders</Caption>
+									</AxFormControl>
+								</Controls>
+								<ArrangeMethod>Vertical</ArrangeMethod>
+								<Style>VerticalTabs</Style>
+							</AxFormControl>
+						</Controls>
+						<Caption>@ConVMS:ServiceOrders</Caption>
+						<FastTabExpanded>Yes</FastTabExpanded>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormTabPageControl">
+						<Name>PanoramaSectionRelatedLinks</Name>
+						<Pattern>SectionRelatedLinks</Pattern>
+						<PatternVersion>1.1</PatternVersion>
+						<Type>TabPage</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+								i:type="AxFormGroupControl">
+								<Name>LinksSetupGroup</Name>
+								<Type>Group</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl xmlns=""
+										i:type="AxFormMenuFunctionButtonControl">
+										<Name>ConVMSParameters</Name>
+										<Type>MenuFunctionButton</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<ButtonDisplay>TextOnly</ButtonDisplay>
+										<MenuItemName>ConVMSParameters</MenuItemName>
+										<Style>Link</Style>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormMenuFunctionButtonControl">
+										<Name>ConVMSVehicleGroup</Name>
+										<Type>MenuFunctionButton</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<ButtonDisplay>TextOnly</ButtonDisplay>
+										<MenuItemName>ConVMSVehicleGroup</MenuItemName>
+										<Style>Link</Style>
+									</AxFormControl>
+								</Controls>
+								<Caption>@SYS12687</Caption>
+							</AxFormControl>
+						</Controls>
+						<ColumnsMode>Fill</ColumnsMode>
+						<Caption>@SYS111665</Caption>
+						<FastTabExpanded>Yes</FastTabExpanded>
+					</AxFormControl>
+				</Controls>
+				<Style>FastTabs</Style>
+			</AxFormControl>
+		</Controls>
+	</Design>
+	<Parts />
+</AxForm>

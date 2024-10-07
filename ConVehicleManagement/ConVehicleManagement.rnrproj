@@ -34,6 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Base Enums\" />
+    <Folder Include="Classes\" />
     <Folder Include="Composite Queries\" />
     <Folder Include="Display Menu Items\" />
     <Folder Include="EDT Dates\" />
@@ -47,6 +48,16 @@
     <Folder Include="Tiles\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="AxClass\ConVMSQueryRangeUtil">
+      <SubType>Content</SubType>
+      <Name>ConVMSQueryRangeUtil</Name>
+      <Link>Classes\ConVMSQueryRangeUtil</Link>
+    </Content>
+    <Content Include="AxClass\ConVMSVehicleGroupFilterableI">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleGroupFilterableI</Name>
+      <Link>Classes\ConVMSVehicleGroupFilterableI</Link>
+    </Content>
     <Content Include="AxEdt\ConVMSAcquiredDate">
       <SubType>Content</SubType>
       <Name>ConVMSAcquiredDate</Name>
@@ -117,6 +128,11 @@
       <Name>ConVMSVehicleTable</Name>
       <Link>Forms\ConVMSVehicleTable</Link>
     </Content>
+    <Content Include="AxForm\ConVMSVehicleWorkspace">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleWorkspace</Name>
+      <Link>Forms\ConVMSVehicleWorkspace</Link>
+    </Content>
     <Content Include="AxLabelFile\ConVMS_en-US">
       <SubType>Content</SubType>
       <Name>ConVMS_en-US</Name>
@@ -126,6 +142,11 @@
       <SubType>Content</SubType>
       <Name>MainMenu.OHMS</Name>
       <Link>Menu Extensions\MainMenu.OHMS</Link>
+    </Content>
+    <Content Include="AxMenuExtension\navpanemenu.OHMS">
+      <SubType>Content</SubType>
+      <Name>navpanemenu.OHMS</Name>
+      <Link>Menu Extensions\navpanemenu.OHMS</Link>
     </Content>
     <Content Include="AxMenuItemDisplay\ConVMSParameters">
       <SubType>Content</SubType>
@@ -156,6 +177,11 @@
       <SubType>Content</SubType>
       <Name>ConVMSVehicleTableBikes</Name>
       <Link>Display Menu Items\ConVMSVehicleTableBikes</Link>
+    </Content>
+    <Content Include="AxMenuItemDisplay\ConVMSVehicleWorkspace">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleWorkspace</Name>
+      <Link>Display Menu Items\ConVMSVehicleWorkspace</Link>
     </Content>
     <Content Include="AxMenu\ConVMSVehicleManagement">
       <SubType>Content</SubType>
@@ -211,6 +237,11 @@
       <SubType>Content</SubType>
       <Name>ConVMSVehicleTableBikes</Name>
       <Link>Tiles\ConVMSVehicleTableBikes</Link>
+    </Content>
+    <Content Include="AxTile\ConVMSVehicleWorkspaceTile">
+      <SubType>Content</SubType>
+      <Name>ConVMSVehicleWorkspaceTile</Name>
+      <Link>Tiles\ConVMSVehicleWorkspaceTile</Link>
     </Content>
     <Content Include="ConVMS.en-US.label.txt">
       <SubType>Content</SubType>
