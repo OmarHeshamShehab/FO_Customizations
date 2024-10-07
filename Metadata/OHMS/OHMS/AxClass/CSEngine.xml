@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>CSEngine</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class CSEngine
+{
+    // Global variables used for error handling
+    str errorMsg;
+    int infologStartLine;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>getData</Name>
+				<Source><![CDATA[
+    // Entry point for the custom service method getData
+    public CSResponse getData(CSRequest _request)
+    {
+        // Validating request body data
+        str isValidMsg = this.validateRequestGetData(_request);
+
+        // Evaluating request is valid
+        if (isValidMsg == 'true')
+        {
+            // Processing the request
+            return this.processRequestGetData(_request);
+        }
+        else
+        {
+            // Returning response for invalid data in request body
+            return this.createResponse(false, isValidMsg, '');
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>createResponse</Name>
+				<Source><![CDATA[
+    // Methond to generate response body
+    private CSResponse createResponse(boolean _success, str _errorMessage, str _data)
+    {
+        var response = new CSResponse();
+
+        response.parmSuccess(_success);
+        response.parmErrorMessage(_errorMessage);
+        response.parmData(_data);
+
+        return response;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getInfologStr</Name>
+				<Source><![CDATA[
+    // Method for obtaining error message
+    private str getInfologStr(int _infologStartLine)
+    {
+        SysInfologEnumerator    enumerator;
+        SysInfologMessageStruct msgStruct;
+        str                     error;
+        container               infologData;
+
+        int infologCurrentLine = infologLine();
+
+        if (infologCurrentLine > _infologStartLine)
+        {
+            infologData = infolog.copy(_infologStartLine + 1, infologCurrentLine);
+        }
+
+        if (infologData)
+        {
+            enumerator = SysInfologEnumerator::newData(infologData);
+            
+            while (enumerator.moveNext())
+            {
+                msgStruct = new SysInfologMessageStruct(enumerator.currentMessage());
+                error = strfmt("@SYS324543", error, msgStruct.message());
+            }
+        }
+        return error;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>addErrorMsg</Name>
+				<Source><![CDATA[
+    // Method for adding error message to the global variable
+    private void addErrorMsg(str _errorMsg)
+    {
+        errorMsg += _errorMsg;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>validateRequestGetData</Name>
+				<Source><![CDATA[
+    // Method for validating the request body data
+    private str validateRequestGetData(CSRequest _request)
+    {
+        str         isValid;
+        DataAreaId  dataAreaId;
+        str         data;
+
+        dataAreaId  = _request.parmDataAreaId();
+        data        = _request.parmData();
+        isValid     = 'true';
+
+        if (!CompanyInfo::findDataArea(dataAreaId))
+        {
+            return 'dataAreaId does not exist.';
+        }
+        if (data == '')
+        {
+            return 'No data in the request body.';
+        }
+
+        return isValid;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>processRequestGetData</Name>
+				<Source><![CDATA[
+    // Method for executing custom logic for the request getData
+    private CSResponse processRequestGetData(CSRequest _request)
+    {
+        str responseData;
+
+        responseData    = '';
+
+        // Setting the infolog scope to capture Error message for the current operation only
+        infologStartLine = infologLine();
+
+        try
+        {
+            // For executing company specific logic
+            changecompany(_request.parmDataAreaId())
+            {
+                // For creating the JSON response body
+                responseData = this.generateJSONResponseForGetData(_request);
+            }
+        }
+        // Exception handling for CLRError
+        catch (Exception::CLRError)
+        {
+            System.Exception exception = CLRInterop::getLastException();
+
+            return this.createResponse(false, exception.Message, '');
+        }
+        // Exception handling for Error
+        catch (Exception::Error)
+        {
+            this.addErrorMsg(this.getInfologStr(infologStartLine));
+
+            return this.createResponse(false, errorMsg, '');
+        }
+
+        // Success state of the operation getData and returning the response
+        return this.createResponse(true, '', responseData);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>generateJSONResponseForGetData</Name>
+				<Source><![CDATA[
+    // Method for generating the JSON response data for the request getData
+    private str generateJSONResponseForGetData(CSRequest _request)
+    {
+        str                             jsonString;
+        System.IO.StringWriter          stringWriter;
+        Newtonsoft.Json.JsonTextWriter  jsonWriter;
+
+        stringWriter    = new System.IO.StringWriter();
+        jsonWriter      = new Newtonsoft.Json.JsonTextWriter(stringWriter);
+
+        jsonString         = '';
+
+        jsonWriter.WriteStartObject();
+
+        jsonWriter.WritePropertyName("JSONArray");
+        jsonWriter.WriteStartArray();
+
+        for (int i = 0; i < 2; i++)
+        {
+            jsonWriter.WriteStartObject();
+            jsonWriter.WritePropertyName("dataAreaId");
+            jsonWriter.WriteValue(curExt());
+            jsonWriter.WritePropertyName("Data");
+            jsonWriter.WriteValue(_request.parmData());
+            jsonWriter.WriteEndObject();
+        }
+
+        jsonWriter.WriteEndArray();
+        jsonWriter.WriteEndObject();
+
+        jsonString = stringWriter.ToString();
+        jsonString = FormJsonSerializer::serializePrimitive(jsonString);
+
+        return jsonString;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

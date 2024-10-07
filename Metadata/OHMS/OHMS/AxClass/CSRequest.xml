@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>CSRequest</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+[DataContractAttribute]
+class CSRequest
+{
+    // Variables used in request body
+    private str dataAreaId;
+    private str data;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>parmDataAreaId</Name>
+				<Source><![CDATA[
+    // For storing dataAreaId value from request body
+    [DataMember("dataAreaId")]
+    public str parmDataAreaId(str _value = dataAreaId)
+    {
+        if (!prmIsDefault(_value))
+        {
+            dataAreaId = _value;
+        }
+
+        return dataAreaId;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmData</Name>
+				<Source><![CDATA[
+    // For storing Data value from request body
+    [DataMember("Data")]
+    public str parmData(str _value = data)
+    {
+        if (!prmIsDefault(_value))
+        {
+            data = _value;
+        }
+
+        return data;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

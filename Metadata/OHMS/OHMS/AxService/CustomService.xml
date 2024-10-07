@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxService xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>CustomService</Name>
+	<Class>CSEngine</Class>
+	<ExternalName>CustomService</ExternalName>
+	<ServiceOperations>
+		<AxServiceOperation>
+			<Name>getData</Name>
+			<Method>getData</Method>
+			<SubscriberAccessLevel>
+				<Read>Allow</Read>
+			</SubscriberAccessLevel>
+		</AxServiceOperation>
+	</ServiceOperations>
+</AxService>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>CSResponse</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+[DataContractAttribute]
+class CSResponse
+{
+    // Variable used in response body
+    private boolean     success;
+    private str         errorMessage;
+    private str         data;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>parmSuccess</Name>
+				<Source><![CDATA[
+    // For storing Success status value for response body
+    [DataMember("Success")]
+    public Boolean parmSuccess(Boolean _value = success)
+    {
+        if (!prmIsDefault(_value))
+        {
+            success = _value;
+        }
+
+        return success;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmErrorMessage</Name>
+				<Source><![CDATA[
+    // For storing ErrorMessage value for response body
+    [DataMember("ErrorMessage")]
+    public str parmErrorMessage(str _value = errorMessage)
+    {
+        if (!prmIsDefault(_value))
+        {
+            errorMessage = _value;
+        }
+
+        return errorMessage;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmData</Name>
+				<Source><![CDATA[
+    // For storing Data value for response body
+    [DataMember("Data")]
+    public str parmData(str _value = data)
+    {
+        if (!prmIsDefault(_value))
+        {
+            data = _value;
+        }
+
+        return data;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
