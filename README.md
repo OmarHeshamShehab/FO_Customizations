@@ -6,7 +6,6 @@ This repository, developed under the acronym **OHMS** (Omar Hesham Mohamed Sheha
 - [Project Overview](#project-overview)
 - [File and Folder Description](#file-and-folder-description)
   - [ConVehicleManagement](#convehiclemanagement)
-  - [CustomService](#customservice)
   - [Halwani](#halwani)
   - [Metadata](#metadata)
 
@@ -20,9 +19,6 @@ These customizations include solutions for specific modules, integrations, and f
 
 ### ConVehicleManagement
    - **Description**: This folder contains customizations and configurations related to vehicle management in D365 Finance and Operations. It may include modules for tracking, maintenance scheduling, and other vehicle-related functionalities.
-
-### CustomService
-   - **Description**: This folder holds the code and documentation for custom services developed for integration or custom business processes within D365 Finance and Operations.
 
 ### Halwani
    - **Description**: This folder includes customizations tailored for a specific client named Halwani. These customizations likely address unique business processes, reporting needs, or integrations required by the client.
