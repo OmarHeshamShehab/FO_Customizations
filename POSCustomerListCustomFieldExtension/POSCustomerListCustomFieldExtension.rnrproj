@@ -4,7 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <BuildTasksDirectory Condition=" '$(BuildTasksDirectory)' == ''">$(MSBuildProgramFiles32)\MSBuild\Microsoft\Dynamics\AX</BuildTasksDirectory>
-    <Model>OHMS</Model>
+    <Model>FleetManagement</Model>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <OutputPath>bin</OutputPath>
     <SchemaVersion>2.0</SchemaVersion>
@@ -12,10 +12,9 @@
     <RunAppCheckerRules>False</RunAppCheckerRules>
     <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
     <DeployOnline>False</DeployOnline>
-    <ProjectGuid>{604c43ad-0497-4ec8-babc-7c792d5cac9b}</ProjectGuid>
-    <Name>FinOpsBasics</Name>
-    <RootNamespace>FinOpsBasics</RootNamespace>
-    <StartupType>Class</StartupType>
+    <ProjectGuid>{aba6f1a6-2c82-4125-94bf-cbd078351485}</ProjectGuid>
+    <Name>POSCustomerListCustomFieldExtension</Name>
+    <RootNamespace>POSCustomerListCustomFieldExtension</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <Configuration>Debug</Configuration>
