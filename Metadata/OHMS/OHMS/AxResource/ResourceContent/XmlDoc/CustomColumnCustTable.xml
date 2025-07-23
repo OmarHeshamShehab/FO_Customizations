@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RetailCdxSeedData
+    Name="AX7"
+    ChannelDBSchema="ext"
+    ChannelDBMajorVersion="7">
+	<Subjobs>
+		<!--
+      Extend the existing CustTable subjob (Id must match exactly),
+      override the target to your ext.CONTOSOCUSTTABLEEXTENSION table,
+      and include RecId so SQL knows how to insert/update.
+    -->
+		<Subjob
+			Id="CustTable"
+			TargetTableName="CONTOSOCUSTTABLEEXTENSION"
+			TargetTableSchema="ext"
+			OverrideTarget="true">
+			<AxFields>
+				<Field Name="RecId"/>
+				<Field Name="REFNOEXT"/>
+			</AxFields>
+		</Subjob>
+	</Subjobs>
+</RetailCdxSeedData>

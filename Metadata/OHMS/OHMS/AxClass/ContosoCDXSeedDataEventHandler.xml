@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>ContosoCDXSeedDataEventHandler</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Event handler to register CDX seed data extension during CDX initialization.
+/// </summary>
+class ContosoCDXSeedDataEventHandler
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>RetailCDXSeedDataBase_registerCDXSeedDataExtension</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Registers the extension CDX seed data resource to be used during CDX seed data generation.
+    /// </summary>
+    /// <param name="originalCDXSeedDataResource">Name of the main CDX seed data file (usually RetailCDXSeedDataAX7)</param>
+    /// <param name="resources">List of resource names to be used during CDX init</param>
+    [SubscribesTo(classStr(RetailCDXSeedDataBase), delegateStr(RetailCDXSeedDataBase, registerCDXSeedDataExtension))]
+    public static void RetailCDXSeedDataBase_registerCDXSeedDataExtension(str originalCDXSeedDataResource, List resources)
+    {
+        // Ensure the extension is only registered during standard CDX initialization
+        if (originalCDXSeedDataResource == classStr(RetailCDXSeedDataAX7))
+        {
+            resources.addEnd(resourceStr(CustomColumnCustTable_AX7));
+        }
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

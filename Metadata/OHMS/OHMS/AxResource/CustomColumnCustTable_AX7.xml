@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxResource xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>CustomColumnCustTable_AX7</Name>
+	<FileName>CustomColumnCustTable.xml</FileName>
+	<RelativeUriInModelStore>OHMS\OHMS\AxResource\ResourceContent\XmlDoc\CustomColumnCustTable.xml</RelativeUriInModelStore>
+	<TypeOfResource>XmlDoc</TypeOfResource>
+</AxResource>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RetailCdxSeedData Name="AX7" ChannelDBSchema="ext" ChannelDBMajorVersion="7">
+  <Subjobs>
+    <Subjob Id="CONTOSOCUSTTABLEEXTENSION" AxTableName="CONTOSOCUSTTABLEEXTENSION" TargetTableSchema="ext">
+      <ScheduledByJobs>
+        <ScheduledByJob>1010</ScheduledByJob>
+      </ScheduledByJobs>
+      <AxFields>
+        <Field Name="RECID" />
+        <Field Name="REFNOEXT" />
+        <Field Name="REPLICATIONCOUNTERFROMORIGIN" />
+        <Field Name="ROWVERSION" />
+      </AxFields>
+    </Subjob>
+  </Subjobs>
+</RetailCdxSeedData>

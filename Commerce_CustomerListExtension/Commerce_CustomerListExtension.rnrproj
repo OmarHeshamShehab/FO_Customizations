@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <BuildTasksDirectory Condition=" '$(BuildTasksDirectory)' == ''">$(MSBuildProgramFiles32)\MSBuild\Microsoft\Dynamics\AX</BuildTasksDirectory>
+    <Model>OHMS</Model>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <OutputPath>bin</OutputPath>
+    <SchemaVersion>2.0</SchemaVersion>
+    <GenerateCrossReferences>True</GenerateCrossReferences>
+    <RunAppCheckerRules>False</RunAppCheckerRules>
+    <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
+    <DeployOnline>False</DeployOnline>
+    <ProjectGuid>{f5d653da-4cec-49a2-a4d4-f86988113497}</ProjectGuid>
+    <Name>Commerce_CustomerListExtension</Name>
+    <RootNamespace>Commerce_CustomerListExtension</RootNamespace>
+    <StartupType>Class</StartupType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <Configuration>Debug</Configuration>
+    <DBSyncInBuild>True</DBSyncInBuild>
+    <GenerateFormAdaptors>False</GenerateFormAdaptors>
+    <Company>
+    </Company>
+    <Partition>initial</Partition>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DataEntityExpandParentChildRelations>False</DataEntityExpandParentChildRelations>
+    <DataEntityUseLabelTextAsFieldName>False</DataEntityUseLabelTextAsFieldName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Classes\" />
+    <Folder Include="Form Extensions\" />
+    <Folder Include="Resources\" />
+    <Folder Include="Table Extensions\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AxClass\ContosoCDXSeedDataEventHandler">
+      <SubType>Content</SubType>
+      <Name>ContosoCDXSeedDataEventHandler</Name>
+      <Link>Classes\ContosoCDXSeedDataEventHandler</Link>
+    </Content>
+    <Content Include="AxFormExtension\CustTable.OHMS">
+      <SubType>Content</SubType>
+      <Name>CustTable.OHMS</Name>
+      <Link>Form Extensions\CustTable.OHMS</Link>
+    </Content>
+    <Content Include="AxResource\CustomColumnCustTable_AX7">
+      <SubType>Content</SubType>
+      <Name>CustomColumnCustTable_AX7</Name>
+      <Link>Resources\CustomColumnCustTable_AX7</Link>
+    </Content>
+    <Content Include="AxTableExtension\CustTable.OHMS">
+      <SubType>Content</SubType>
+      <Name>CustTable.OHMS</Name>
+      <Link>Table Extensions\CustTable.OHMS</Link>
+    </Content>
+    <Content Include="CustomColumnCustTable.xml">
+      <SubType>Content</SubType>
+      <Name>CustomColumnCustTable.xml</Name>
+      <DependentUpon>AxResource\CustomColumnCustTable_AX7</DependentUpon>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="$(BuildTasksDirectory)\Microsoft.Dynamics.Framework.Tools.BuildTasks.17.0.targets" />
+</Project>
