@@ -17,6 +17,7 @@
 			<AxFields>
 				<Field Name="RecId"/>
 				<Field Name="REFNOEXT"/>
+				<Field Name="ACCOUNTNUM"/>
 			</AxFields>
 		</Subjob>
 	</Subjobs>
