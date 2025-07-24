@@ -4,7 +4,7 @@ Introducing a **stylish** guide to integrate a custom `RefNoExt` field across th
 
 ## 📑 Table of Contents
 
-* 🧠 [Concepts & Prerequisites](#concepts--prerequisites)
+* 🧠 [Concepts & Prerequisites](#concepts-prerequisites)
 * 🛠️ [CustTable Extension and Form Update](#custtable-extension-and-form-update)
 * 🔌 [CDX Seed Data Event Handler](#cdx-seed-data-event-handler)
 * 🗂️ [CDX Seed Data Resource Registration](#cdx-seed-data-resource-registration)
@@ -15,6 +15,8 @@ Introducing a **stylish** guide to integrate a custom `RefNoExt` field across th
 * 📦 [Scale Unit POS Manifest Modification](#scale-unit-pos-manifest-modification)
 
 ---
+
+<a id="concepts-prerequisites"></a>
 
 ## 🧠 Concepts & Prerequisites
 
@@ -31,6 +33,8 @@ Before diving into these steps, ensure familiarity with:
 
 ---
 
+<a id="custtable-extension-and-form-update"></a>
+
 ## 🛠️ CustTable Extension and Form Update
 
 **What was done:**
@@ -44,6 +48,8 @@ Before diving into these steps, ensure familiarity with:
 * No additional X++ form logic is required—purely declarative UI changes.
 
 ---
+
+<a id="cdx-seed-data-event-handler"></a>
 
 ## 🔌 CDX Seed Data Event Handler
 
@@ -59,6 +65,8 @@ Before diving into these steps, ensure familiarity with:
 
 ---
 
+<a id="cdx-seed-data-resource-registration"></a>
+
 ## 🗂️ CDX Seed Data Resource Registration
 
 **Resource Name:** `CustomColumnCustTable_AX7`
@@ -72,6 +80,8 @@ Before diving into these steps, ensure familiarity with:
 
 ---
 
+<a id="commerce-scheduler-initialization"></a>
+
 ## ⏱️ Commerce Scheduler Initialization
 
 **Task:** Initialize the Commerce Scheduler in Headquarters.
@@ -84,6 +94,8 @@ Before diving into these steps, ensure familiarity with:
 **Why it matters:** Ensures channel databases are seeded with the updated schema before scale-unit deployment.
 
 ---
+
+<a id="scale-unit-crt-trigger"></a>
 
 ## ⚙️ Scale Unit CRT Trigger
 
@@ -101,6 +113,8 @@ Before diving into these steps, ensure familiarity with:
 
 ---
 
+<a id="pos-customer-search-view-extension"></a>
+
 ## 💼 POS Customer Search View Extension
 
 **Module:** `CustomCustomerSearchColumns`
@@ -113,6 +127,8 @@ Before diving into these steps, ensure familiarity with:
 **Why it matters:** Surfaces the new reference number directly in the POS UI for end-user efficiency.
 
 ---
+
+<a id="channel-database-scripts"></a>
 
 ## 🗄️ Channel Database Scripts
 
@@ -129,6 +145,8 @@ Before diving into these steps, ensure familiarity with:
 **Why it matters:** Isolates custom data and provides a unified access point for synchronization and reporting.
 
 ---
+
+<a id="scale-unit-pos-manifest-modification"></a>
 
 ## 📦 Scale Unit POS Manifest Modification
 
