@@ -1,3 +1,4 @@
+
 # 🚀 Contoso D365 Commerce – RefNoExt Extension
 
 ### 🔍 Overview
@@ -6,19 +7,19 @@ This solution extends the standard D365 Commerce Customer entity to include a cu
 - 📦 Adds `RefNoExt` to **CustTable** via X++ extension  
 - 🔄 Propagates changes HQ → Channel DB → POS → HQ  
 - 🌱 Implements CDX seed-data extension for initial replication  
-- 🛠️ Provides SQL scripts for extension tables, views & procs  
-- 💻 Hooks into Commerce Runtime (CRT) to persist & push updates  
-- 🛍️ Enhances POS customer search & add/edit forms  
+- 🛠️ Provides SQL scripts for extension tables, views &amp; procs  
+- 💻 Hooks into Commerce Runtime (CRT) to persist &amp; push updates  
+- 🛍️ Enhances POS customer search &amp; add/edit forms  
 
 ---
 
 ## 📚 Table of Contents
-1. [Prerequisites](#prerequisites)
-2. [Solution Structure](#solution-structure)
-3. [X++ Extension (HQ)](#x-extension-hq)
-4. [Channel Database (Scale Unit)](#channel-database-scale-unit)
-5. [Commerce Runtime (CRT) -- C#](#commerce-runtime-crt--c)
-6. [POS Customizations](#pos-customizations)
+1. ## 🔧 Prerequisites {#prerequisites}
+2. [Solution Structure](#-solution-structure)
+3. [X++ Extension (HQ)](#-x-extension-hq)
+4. [Channel Database (Scale Unit)](#-channel-database-scale-unit)
+5. [Commerce Runtime (CRT) -- C#](#-commerce-runtime-crt----c)
+6. [POS Customizations](#-pos-customizations)
     - [Customer Search Columns](#customer-search-columns)
     - [Customer Add/Edit Control](#customer-addedit-control)
 7. [Installation & Deployment](#installation--deployment)
@@ -26,9 +27,6 @@ This solution extends the standard D365 Commerce Customer entity to include a cu
 9. [Contributing](#contributing)
 10. [License](#license)
 
- 
-
----
 
 ## 🔧 Prerequisites
 - D365 Commerce (v10+)  
@@ -37,7 +35,7 @@ This solution extends the standard D365 Commerce Customer entity to include a cu
 - Visual Studio with AX/X++ tools  
 - SQL Server permissions for `ext` schema  
 - .NET SDK for CRT extensions  
-- POS Extensibility framework & build tools  
+- POS Extensibility framework &amp; build tools  
 
 ---
 
@@ -59,7 +57,7 @@ This solution extends the standard D365 Commerce Customer entity to include a cu
     │   │   └── Triggers/GetCustomerTrigger.cs
     │   └── POS/ViewExtensions/
     │       ├── Search/CustomColumns.ts
-    │       └── CustomerAddEdit/CustomerCustomField.html & .ts
+    │       └── CustomerAddEdit/CustomerCustomField.html &amp; .ts
     └── README.md
 
 ---
@@ -101,9 +99,9 @@ This solution extends the standard D365 Commerce Customer entity to include a cu
 ## 🖥️ Commerce Runtime (CRT) – C#
 - **Request Handler**  
     internal class CreateUpdateCustomerDataRequestHandler  
-        : SingleAsyncRequestHandler<CreateOrUpdateCustomerDataRequest>  
+        : SingleAsyncRequestHandler&lt;CreateOrUpdateCustomerDataRequest&gt;  
     {  
-        protected override async Task<Response> Process(...) { … }  
+        protected override async Task&lt;Response&gt; Process(...) { … }  
     }  
 
     1. Persist core customer  
@@ -117,16 +115,16 @@ This solution extends the standard D365 Commerce Customer entity to include a cu
 
 ---
 
-## 🛍️ POS Customizations
+## POS Customizations
 
 ### Customer Search Columns
 **File**: `ViewExtensions/Search/CustomColumns.ts`  
-    export default (context): ICustomerSearchColumn[] => [  
+    export default (context): ICustomerSearchColumn[] =&gt; [  
       // … other columns …,  
       {  
         title: context.resources.getString("OHMS_4312"),  
-        computeValue: row =>  
-          row.ExtensionProperties.find(p => p.Key === "RefNoExt")?.Value.StringValue ?? "",  
+        computeValue: row =&gt;  
+          row.ExtensionProperties.find(p =&gt; p.Key === "RefNoExt")?.Value.StringValue ?? "",  
         ratio: 25,  
         collapseOrder: 1,  
         minWidth: 200  
@@ -141,15 +139,13 @@ This solution extends the standard D365 Commerce Customer entity to include a cu
 
 ---
 
-## ⚙️ Installation & Deployment
-1. **AX**: Import X++ artifacts → Build & deploy → CDX init  
-2. **Channel DB**: Run SQL scripts in order (0001 → 0002 → 0010)  
-3. **CRT**: Add/compile C# handler & trigger → Deploy to Scale Unit  
-4. **POS**: Include ViewExtensions → Update `Extensions.config` → Rebuild POS
+## Installation & Deployment
+1. **AX**: Build this solution to make sure changes are applied to your local dev or create a deployable package if you will apply to another enviornment    
+2. **Channel DB / CRT / POS**: Build Commerce SDK Solution and navigate to below path  in PowerShell as Admin  C:\Commerce-SDK\ScaleUnit\src\ScaleUnitSample\Installer\bin\Debug\net472\ ScaleUnit.Sample.Installer then type install
 
 ---
 
-## ✅ Testing & Verification
+## Testing & Verification
 1. In POS, set **Reference Number** → Save  
 2. Verify Channel DB & CRT writes & HQ real‑time push  
 3. In HQ “Customers” form, confirm `RefNoExt` value  
@@ -157,9 +153,12 @@ This solution extends the standard D365 Commerce Customer entity to include a cu
 
 ---
 
-## 🤝 Contributing
+## Contributing
 1. Fork repo & create feature branch  
 2. Commit changes & push to your fork  
 3. Open a Pull Request
 
 ---
+
+## License
+MIT License
