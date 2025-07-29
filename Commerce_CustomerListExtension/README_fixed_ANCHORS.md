@@ -14,20 +14,19 @@ This solution extends the standard D365 Commerce Customer entity to include a cu
 ---
 
 ## 📚 Table of Contents
-1. [Prerequisites](#prerequisites)
-2. [Solution Structure](#solution-structure)
-3. [X++ Extension (HQ)](#x-extension-hq)
-4. [Channel Database (Scale Unit)](#channel-database-scale-unit)
-5. [Commerce Runtime (CRT) -- C#](#commerce-runtime-crt----c)
-6. [POS Customizations](#pos-customizations)
+1. [Prerequisites](#-prerequisites)
+2. [Solution Structure](#-solution-structure)
+3. [X++ Extension (HQ)](#-x-extension-hq)
+4. [Channel Database (Scale Unit)](#-channel-database-scale-unit)
+5. [Commerce Runtime (CRT) -- C#](#-commerce-runtime-crt----c)
+6. [POS Customizations](#-pos-customizations)
     - [Customer Search Columns](#customer-search-columns)
     - [Customer Add/Edit Control](#customer-addedit-control)
-7. [Installation &amp; Deployment](#installation-amp-deployment)
-8. [Testing &amp; Verification](#testing-amp-verification)
+7. [Installation & Deployment](#installation--deployment)
+8. [Testing & Verification](#testing--verification)
 9. [Contributing](#contributing)
 10. [License](#license)
 
----
 
 ## 🔧 Prerequisites
 - D365 Commerce (v10+)  
