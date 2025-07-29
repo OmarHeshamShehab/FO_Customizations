@@ -8,6 +8,7 @@ This repository, developed under the acronym **OHMS** (Omar Hesham Mohamed Sheha
   - [ConVehicleManagement](#convehiclemanagement)
   - [Halwani](#halwani)
   - [Metadata](#metadata)
+  - [Commerce_CustomerListExtension](#commerce_customerlistextension)
 
 ## Project Overview
 
@@ -18,11 +19,23 @@ These customizations include solutions for specific modules, integrations, and f
 ## File and Folder Description
 
 ### ConVehicleManagement
-   - **Description**: This folder contains customizations and configurations related to vehicle management in D365 Finance and Operations. It may include modules for tracking, maintenance scheduling, and other vehicle-related functionalities.
+- **Description**: This folder contains customizations and configurations related to vehicle management in D365 Finance and Operations. It may include modules for tracking, maintenance scheduling, and other vehicle-related functionalities.
 
 ### Halwani
-   - **Description**: This folder includes customizations tailored for a specific client named Halwani. These customizations likely address unique business processes, reporting needs, or integrations required by the client.
+- **Description**: This folder includes customizations tailored for a specific client named Halwani. These customizations likely address unique business processes, reporting needs, or integrations required by the client.
 
 ### Metadata
-   - **Description**: This folder contains metadata files related to the customizations. These files may include details about data models, form layouts, and workflows associated with the custom solutions.
+- **Description**: This folder contains metadata files related to the customizations. These files may include details about data models, form layouts, and workflows associated with the custom solutions.
 
+### Commerce_CustomerListExtension
+- **Description**: A D365 Commerce extension project that adds a custom **RefNoExt** field to the customer entity, synchronizing data bidirectionally between Headquarters, Channel Database, and POS in real time.
+- **Technologies & Languages**:  
+  - **X++** for Dynamics 365 FO extensions (data contract, service & seed‑data handlers)  
+  - **T‑SQL** scripts for Channel DB schema, views, and stored procedures  
+  - **C#/.NET** for Commerce Runtime request handlers and triggers  
+  - **TypeScript & HTML** for POS ViewExtensions (search columns and add/edit controls)  
+- **Frameworks**:  
+  - Dynamics 365 Commerce SDK (Commerce Scale Unit sample)  
+  - POS extensibility framework  
+
+Use this project to see an end‑to‑end example of extending D365 Commerce, including code samples, deployment scripts, and best practices for real‑time data synchronization across the retail channel.  
