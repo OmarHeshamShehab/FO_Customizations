@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>ContosoRetailTransactionServiceEx_Extension</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+[ExtensionOf(classStr(RetailTransactionServiceEx))]
+final class ContosoRetailTransactionServiceEx_Extension
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>UpdateCustomerExtendedProperties</Name>
+				<Source><![CDATA[
+    [SysEntryPointAttribute(true)]
+    public static container UpdateCustomerExtendedProperties(str _accountNum, str _refNoExt)
+    {
+        boolean success = false;
+        str message = "OK";
+        CustTable cust;
+
+        ttsBegin;
+        try
+        {
+            select forUpdate cust where cust.AccountNum == _accountNum;
+
+            if (cust)
+            {
+                cust.RefNoExt = _refNoExt;
+                cust.update();
+                success = true;
+            }
+            else
+            {
+                message = strFmt("Customer %1 not found.", _accountNum);
+            }
+
+            ttsCommit;
+        }
+        catch (Exception::Error)
+        {
+            ttsAbort;
+            message = "Error in UpdateCustomerExtendedProperties";
+        }
+
+        // ✅ Manually return a container with [success, message]
+        return [success, message];
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
