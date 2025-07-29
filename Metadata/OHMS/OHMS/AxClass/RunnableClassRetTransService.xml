@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
-	<Name>RunnableClass1</Name>
+	<Name>RunnableClassRetTransService</Name>
 	<SourceCode>
 		<Declaration><![CDATA[
-internal final class RunnableClass1
+internal final class RunnableClassRetTransService
 {
 }
+
 ]]></Declaration>
 		<Methods>
 			<Method>

@@ -16,6 +16,7 @@
     <Name>Commerce_CustomerListExtension</Name>
     <RootNamespace>Commerce_CustomerListExtension</RootNamespace>
     <StartupType>Class</StartupType>
+    <StartupObject>RunnableClassRetTransService</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <Configuration>Debug</Configuration>
@@ -43,6 +44,21 @@
       <SubType>Content</SubType>
       <Name>ContosoCDXSeedDataEventHandler</Name>
       <Link>Classes\ContosoCDXSeedDataEventHandler</Link>
+    </Content>
+    <Content Include="AxClass\ContosoRetailTransactionServiceEx_Extension">
+      <SubType>Content</SubType>
+      <Name>ContosoRetailTransactionServiceEx_Extension</Name>
+      <Link>Classes\ContosoRetailTransactionServiceEx_Extension</Link>
+    </Content>
+    <Content Include="AxClass\RunnableClassRetTransService">
+      <SubType>Content</SubType>
+      <Name>RunnableClassRetTransService</Name>
+      <Link>Classes\RunnableClassRetTransService</Link>
+    </Content>
+    <Content Include="AxClass\UpdateCustomerResponse">
+      <SubType>Content</SubType>
+      <Name>UpdateCustomerResponse</Name>
+      <Link>Classes\UpdateCustomerResponse</Link>
     </Content>
     <Content Include="AxFormExtension\CustTable.OHMS">
       <SubType>Content</SubType>
