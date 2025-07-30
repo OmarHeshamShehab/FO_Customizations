@@ -6,6 +6,12 @@
 [ExtensionOf(classStr(RetailTransactionServiceEx))]
 final class ContosoRetailTransactionServiceEx_Extension
 {
+    /*
+     * Summary:
+     * This method updates the extended customer property 'RefNoExt' for a given customer account number.
+     * It wraps the update in a transaction and returns a container indicating success or failure and a message.
+     */
+
 }
 ]]></Declaration>
 		<Methods>
@@ -15,15 +21,19 @@ final class ContosoRetailTransactionServiceEx_Extension
     [SysEntryPointAttribute(true)]
     public static container UpdateCustomerExtendedProperties(str _accountNum, str _refNoExt)
     {
+        // Initialize success flag and message string
         boolean success = false;
         str message = "OK";
         CustTable cust;
 
+        // Start a transaction block
         ttsBegin;
         try
         {
+            // Select the customer record for update by matching the account number
             select forUpdate cust where cust.AccountNum == _accountNum;
 
+            // If customer record is found, update the RefNoExt field and save
             if (cust)
             {
                 cust.RefNoExt = _refNoExt;
@@ -32,18 +42,21 @@ final class ContosoRetailTransactionServiceEx_Extension
             }
             else
             {
+                // If customer not found, prepare an error message
                 message = strFmt("Customer %1 not found.", _accountNum);
             }
 
+            // Commit the transaction
             ttsCommit;
         }
         catch (Exception::Error)
         {
+            // Abort the transaction in case of an error and set the error message
             ttsAbort;
             message = "Error in UpdateCustomerExtendedProperties";
         }
 
-        // ✅ Manually return a container with [success, message]
+        // Return a container with success flag and message
         return [success, message];
     }
 

@@ -6,11 +6,17 @@
 [DataContractAttribute]
 class UpdateCustomerResponse
 {
+    /*
+     * Data contract class used to represent the response of a customer update operation.
+     * It includes two data members: success (boolean) indicating if the operation was successful,
+     * and message (string) providing additional information or error details.
+     */
+
     [DataMemberAttribute("Success")]
-    public boolean success;
+    public boolean success;  // Indicates whether the update operation was successful
 
     [DataMemberAttribute("Message")]
-    public str message;
+    public str message;      // Contains a message describing the outcome of the operation
 }
 ]]></Declaration>
 		<Methods />
