@@ -171,7 +171,7 @@ This is a **form-only CoC** — it doesn’t access any data source.
 
 ---
 
-## 👨‍💻 Author & Environment
+## 👨‍💻 Author and Environment
 
 | Field | Value |
 |--------|--------|
