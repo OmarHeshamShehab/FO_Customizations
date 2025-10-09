@@ -13,7 +13,7 @@
     <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
     <DeployOnline>False</DeployOnline>
     <ProjectGuid>{16e270a6-c56b-4022-bd6a-5239eadd5485}</ProjectGuid>
-    <Name>CoC [Chain of Command]</Name>
+    <Name>Chain_of_Command</Name>
     <RootNamespace>CoC [Chain of Command]</RootNamespace>
     <StartupType>Class</StartupType>
   </PropertyGroup>
