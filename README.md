@@ -61,8 +61,6 @@ Use this project to see an end-to-end example of extending D365 Commerce, includ
   To help developers understand how to extend and modify standard D365FO behavior using CoC, ensuring custom logic runs safely alongside Microsoft’s updates.  
 
 - **Example Topics**:  
-  - Adding custom validation to `SalesTableType.validateWrite()`  
-  - Extending `MCREndOrder.validate()` to control order closure logic  
   - Demonstrating CoC extensions on **form data sources** and **table methods**  
   - Showing proper use of `next` calls and result handling in CoC  
 
