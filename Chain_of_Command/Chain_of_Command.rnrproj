@@ -41,6 +41,11 @@
       <Name>SalesTableType_Class_Extension</Name>
       <Link>Classes\SalesTableType_Class_Extension</Link>
     </Content>
+    <Content Include="AxClass\SalesTable_Form_Extension">
+      <SubType>Content</SubType>
+      <Name>SalesTable_Form_Extension</Name>
+      <Link>Classes\SalesTable_Form_Extension</Link>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <Import Project="$(BuildTasksDirectory)\Microsoft.Dynamics.Framework.Tools.BuildTasks.17.0.targets" />
