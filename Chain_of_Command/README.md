@@ -14,7 +14,6 @@ These examples are part of the **Chain_of_Command** learning module under the **
 2. [Example 1 – SalesTableType.validateWrite() (Class CoC)](#-example-1--salestabletypevalidatewrite-class-coc)
 3. [Example 2 – SalesTable Form.run() (Form CoC)](#-example-2--salestable-formrun-form-coc)
 4. [General Notes & Best Practices](#-general-notes--best-practices)
-5. [Author and Environment](#-author-and-environment)
 
 ---
 
@@ -170,12 +169,3 @@ This is a **form-only CoC** — it doesn’t access any data source.
 - Avoid heavy computations inside form events like `run()` or `init()`.
 
 ---
-
-## 👨‍💻 Author and Environment
-
-| Field | Value |
-|--------|--------|
-| **Author** | Omar Shehab |
-| **Model** | OHMS |
-| **Environment** | D365 F&O OneBox (Contoso data) |
-| **Date** | 2025-10-09 |
