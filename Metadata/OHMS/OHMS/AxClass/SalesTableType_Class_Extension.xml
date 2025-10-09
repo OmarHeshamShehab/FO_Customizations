@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SalesTableType_Class_Extension</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+[ExtensionOf(classStr(SalesTableType))]
+final class SalesTableType_Class_Extension
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>validateWrite</Name>
+				<Source><![CDATA[
+    public boolean validateWrite()
+    {
+        boolean ret;
+
+        // 🧩 Call standard logic first
+        ret = next validateWrite();
+
+        // 🧠 Custom logic: block Customer group 10
+        if (ret)
+        {
+            if (this.salesTable().CustGroup == '10')
+            {
+                error("Sales orders for customer group 10 are not allowed in this demo.");
+                ret = false;
+            }
+        }
+
+        return ret;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
