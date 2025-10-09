@@ -63,7 +63,7 @@ Modules > Sales and marketing > Sales orders > All sales orders
 | **Extended Class** | `SalesTableType` |
 | **Method Extended** | `validateWrite()` |
 | **Purpose** | Custom validation before record save |
-| **Test Data Used** | Contoso `US-001`, `US-002` customers |
+| **Test Data Used** | Contoso `US-001`, `US-003` customers |
 
 ---
 
@@ -71,8 +71,8 @@ Modules > Sales and marketing > Sales orders > All sales orders
 
 | Scenario | Customer | CustGroup | Expected Result |
 |-----------|-----------|-----------|-----------------|
-| Negative | US-001 | 10 | Error message; cannot save |
-| Positive | US-002 | 20 | Saves successfully |
+| Negative | US-003 | 10 | Error message; cannot save |
+| Positive | US-001 | 30 | Saves successfully |
 
 ---
 
@@ -84,7 +84,7 @@ Modules > Sales and marketing > Sales orders > All sales orders
 
 ---
 
-**Author:** Your Name  
+**Author:** Omar Shehab 
 **Model:** MyCustomizations  
 **Environment:** D365 F&O OneBox (Contoso data)  
 **Date:** 2025-10-09  
