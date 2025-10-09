@@ -14,7 +14,7 @@ These examples are part of the **Chain_of_Command** learning module under the **
 2. [Example 1 – SalesTableType.validateWrite() (Class CoC)](#-example-1--salestabletypevalidatewrite-class-coc)
 3. [Example 2 – SalesTable Form.run() (Form CoC)](#-example-2--salestable-formrun-form-coc)
 4. [General Notes & Best Practices](#-general-notes--best-practices)
-5. [Author & Environment](#-author--environment)
+5. [Author & Environment](#author--environment)
 
 ---
 
