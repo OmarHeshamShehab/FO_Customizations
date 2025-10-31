@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>ohmsRequest</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+[DataContractAttribute]
+class ohmsRequest
+{
+    private str dataAreaId;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>parmDataAreaId</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Gets or sets the company (data area) identifier for the request.
+    /// </summary>
+    /// <remarks>
+    /// This parm method follows the standard X++ pattern:
+    /// - Acts as a <b>getter</b> when called without parameters.
+    /// - Acts as a <b>setter</b> when a non-default value is passed.
+    ///
+    /// The <c>prmIsDefault</c> check ensures that the field is only updated
+    /// when a new value is explicitly provided, avoiding unnecessary assignments.
+    /// </remarks>
+    /// <param name="_value">
+    /// Optional. The new dataAreaId to assign. If omitted or default,
+    /// the current value is returned instead.
+    /// </param>
+    /// <returns>
+    /// The current value of <c>dataAreaId</c>.
+    /// </returns>
+    [DataMember("dataAreaId")]
+    public str parmDataAreaId(str _value = dataAreaId)
+    {
+        if (!prmIsDefault(_value))
+        {
+            dataAreaId = _value;
+        }
+
+        return dataAreaId;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

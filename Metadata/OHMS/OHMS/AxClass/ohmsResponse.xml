@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>ohmsResponse</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+[DataContractAttribute]
+class ohmsResponse
+{
+    private str errorMessage;
+    private str success;
+    private str debugMessage;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>parmErrorMessage</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Gets or sets the error message returned in the response.
+    /// </summary>
+    /// <remarks>
+    /// This parm method follows the standard X++ pattern:
+    /// - Acts as a <b>getter</b> when called without parameters.
+    /// - Acts as a <b>setter</b> when a non-default value is passed.
+    ///
+    /// The <c>prmIsDefault</c> check ensures that the field is only updated
+    /// when a new value is explicitly provided, avoiding unnecessary assignments.
+    /// </remarks>
+    /// <param name="_value">
+    /// Optional. The new error message to assign. If omitted or default,
+    /// the current value is returned instead.
+    /// </param>
+    /// <returns>
+    /// The current error message value.
+    /// </returns>
+    [DataMember("ErrorMessage")]
+    public str parmErrorMessage(str _value = errorMessage)
+    {
+        if (!prmIsDefault(_value))
+        {
+            errorMessage = _value;
+        }
+
+        return errorMessage;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmSuccess</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Gets or sets the success indicator for the response.
+    /// </summary>
+    /// <remarks>
+    /// This value typically represents whether the request was processed
+    /// successfully. It is stored as a string for compatibility with
+    /// service serialization, though it often maps to a Boolean concept.
+    /// </remarks>
+    /// <param name="_value">
+    /// Optional. The new success flag to assign. If omitted or default,
+    /// the current value is returned instead.
+    /// </param>
+    /// <returns>
+    /// The current success flag value.
+    /// </returns>
+    [DataMember("Success")]
+    public str parmSuccess(str _value = success)
+    {
+        if (!prmIsDefault(_value))
+        {
+            success = _value;
+        }
+
+        return success;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmDebugMessage</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Gets or sets the debug message for troubleshooting.
+    /// </summary>
+    /// <remarks>
+    /// This field is intended for diagnostic information that can help
+    /// developers or support engineers understand the context of a response.
+    /// It should not be exposed to end users in production scenarios.
+    /// </remarks>
+    /// <param name="_value">
+    /// Optional. The new debug message to assign. If omitted or default,
+    /// the current value is returned instead.
+    /// </param>
+    /// <returns>
+    /// The current debug message value.
+    /// </returns>
+    [DataMember("debugMessage")]
+    public str parmDebugMessage(str _value = debugMessage)
+    {
+        if (!prmIsDefault(_value))
+        {
+            debugMessage = _value;
+        }
+
+        return debugMessage;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

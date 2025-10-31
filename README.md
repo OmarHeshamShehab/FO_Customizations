@@ -1,74 +1,115 @@
-# D365 Finance and Operations Customizations (FO Customization)
+# D365 Finance and Operations Customizations (FO_Customization)
 
-This repository, developed under the acronym **OHMS** (Omar Hesham Mohamed Shehab), serves as a collection of customizations for D365 Finance and Operations. It includes bespoke solutions crafted for various clients, as well as tutorials and cookbooks that showcase best practices in tailoring D365 Finance and Operations to meet specific business needs.
+A curated collection of real-world customizations, tutorials, and best practices for Microsoft Dynamics 365 Finance and Operations (D365FO), developed and maintained by **Omar Hesham Mohamed Shehab** under the **OHMS** model.
 
-## Table of Contents
+---
+
+## 📚 Table of Contents
+
 - [Project Overview](#project-overview)
-- [File and Folder Description](#file-and-folder-description)
+- [Repository Structure](#repository-structure)
+- [Key Features](#key-features)
+- [Getting Started](#getting-started)
+- [Customization Modules](#customization-modules)
   - [ConVehicleManagement](#convehiclemanagement)
   - [Halwani](#halwani)
   - [Metadata](#metadata)
   - [Commerce_CustomerListExtension](#commerce_customerlistextension)
   - [Chain_of_Command](#chain_of_command)
+- [Development Guidelines](#development-guidelines)
+- [Testing & Verification](#testing--verification)
+- [Contributing](#contributing)
+- [License](#license)
+- [Author & Contact](#author--contact)
 
 ---
 
 ## Project Overview
 
-The **FO_Customization** repository is a comprehensive resource for customizations built on D365 Finance and Operations (D365FO). It contains various client-specific solutions, along with tutorials and cookbooks that help developers enhance their skills in configuring and tailoring D365FO applications to suit unique business requirements.
+This repository serves as a comprehensive resource for D365FO customizations, including:
 
-These customizations include solutions for specific modules, integrations, and functionalities, helping clients optimize their business operations within the D365 ecosystem.
+- **Client-specific solutions** for real business requirements.
+- **Tutorials and cookbooks** for learning and reference.
+- **Best practices** for upgrade-safe, maintainable extensions.
+- **End-to-end examples** covering data, business logic, and UI.
 
----
-
-## File and Folder Description
-
-### ConVehicleManagement
-- **Description**: This folder contains customizations and configurations related to vehicle management in D365 Finance and Operations. It may include modules for tracking, maintenance scheduling, and other vehicle-related functionalities.
-
-### Halwani
-- **Description**: This folder includes customizations tailored for a specific client named Halwani. These customizations likely address unique business processes, reporting needs, or integrations required by the client.
-
-### Metadata
-- **Description**: This folder contains metadata files related to the customizations. These files may include details about data models, form layouts, and workflows associated with the custom solutions.
-
-### Commerce_CustomerListExtension
-- **Description**: A D365 Commerce extension project that adds a custom **RefNoExt** field to the customer entity, synchronizing data bidirectionally between Headquarters, Channel Database, and POS in real time.
-- **Technologies & Languages**:  
-  - **X++** for Dynamics 365 FO extensions (data contract, service & seed-data handlers)  
-  - **T-SQL** scripts for Channel DB schema, views, and stored procedures  
-  - **C#/.NET** for Commerce Runtime request handlers and triggers  
-  - **TypeScript & HTML** for POS ViewExtensions (search columns and add/edit controls)  
-- **Frameworks**:  
-  - Dynamics 365 Commerce SDK (Commerce Scale Unit sample)  
-  - POS extensibility framework  
-
-Use this project to see an end-to-end example of extending D365 Commerce, including code samples, deployment scripts, and best practices for real-time data synchronization across the retail channel.  
+All solutions are designed to be **upgrade-friendly** and follow Microsoft’s extensibility guidelines, ensuring safe coexistence with standard application updates.
 
 ---
 
-### Chain_of_Command
-- **Description**:  
-  The **Chain_of_Command** folder contains a collection of examples demonstrating how to use the **Chain of Command (CoC)** mechanism in D365 Finance and Operations.  
-  Each example showcases how to safely extend standard application logic without overlayering, following Microsoft’s extensibility best practices.  
+## Repository Structure
 
-- **Contents Include**:  
-  - Examples of CoC applied to **classes**, **tables**, **forms**, **data sources**, and other application objects.  
-  - Tutorials with explanations, testing steps, and reference README files.  
-  - Code samples that add pre- and post-validation logic, field validations, and conditional overrides.  
-
-- **Purpose**:  
-  To help developers understand how to extend and modify standard D365FO behavior using CoC, ensuring custom logic runs safely alongside Microsoft’s updates.  
-
-- **Example Topics**:  
-  - Demonstrating CoC extensions on **form data sources** and **table methods**  
-  - Showing proper use of `next` calls and result handling in CoC  
-
-This project serves as a **learning module** and a **ready-to-use reference** for developers implementing custom business rules in D365 F&O using Chain of Command.
+### Customization Modules
+- **ConVehicleManagement**: Customizations for vehicle management, including tracking and maintenance scheduling.
+- **Halwani**: Tailored solutions for the Halwani client, addressing unique business processes and integrations.
+- **Metadata**: Files related to data models, form layouts, and workflows for the custom solutions.
+- **Commerce_CustomerListExtension**: Extension adding a custom **RefNoExt** field to the customer entity, with real-time data synchronization across systems.
+- **Chain_of_Command**: Examples demonstrating the use of the **Chain of Command (CoC)** mechanism to extend standard application logic.
 
 ---
 
-**Author:** Omar Hesham Mohamed Shehab  
-**Model:** FO_Customization  
-**Environment:** D365 Finance & Operations (Contoso demo data)  
-**Last Updated:** 2025-10-09  
+## Key Features
+
+- Comprehensive D365FO customizations repository.
+- Real-world examples and client-specific solutions.
+- Detailed tutorials and best practices.
+- Focus on upgrade-safe and maintainable code.
+- Coverage of data, business logic, and user interface extensions.
+
+---
+
+## Getting Started
+
+To get started with the projects in this repository:
+
+1. **Explore the customization modules** to understand the available solutions.
+2. **Refer to the tutorials and cookbooks** for guidance on implementing and adapting the solutions.
+3. **Follow the development guidelines** to ensure consistency and quality in customizations.
+4. **Test and verify** the implementations as per the provided testing guidelines.
+
+---
+
+## Development Guidelines
+
+These guidelines ensure consistency, quality, and maintainability of customizations:
+
+- Follow Microsoft’s [extensibility guidelines](https://docs.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/sysadmin/extensibility-best-practices) for D365FO.
+- Use the **Chain of Command (CoC)** for extending existing logic.
+- Keep customizations **upgrade-safe** by avoiding overlayering and following best practices.
+- Document all customizations and extensions thoroughly.
+
+---
+
+## Testing & Verification
+
+To ensure the customizations work as intended:
+
+- Follow the testing steps outlined in each module’s documentation.
+- Verify data synchronization and integration points, especially for Commerce-related customizations.
+- Validate that CoC implementations do not break standard functionality and are upgrade-safe.
+
+---
+
+## Contributing
+
+Contributions are welcome! To contribute to this repository:
+
+1. Fork the repository and create a new branch for your feature or fix.
+2. Make your changes, following the development guidelines.
+3. Test your changes thoroughly.
+4. Submit a pull request with a clear description of your changes and their purpose.
+
+---
+
+## License
+
+This repository is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## Author & Contact
+
+**Omar Hesham Mohamed Shehab**  
+D365 Finance and Operations Consultant & Developer
+
+For inquiries or consulting requests, please contact me at: [email@example.com](mailto:email@example.com)

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>VendKpiService</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class VendKpiService
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>buildVendorKpi</Name>
+				<Source><![CDATA[
+    // Build KPI for a single vendor
+    public static VendKpiContract buildVendorKpi(VendAccount _vendAccount)
+    {
+        VendTable vend = VendTable::find(_vendAccount, true);
+        VendKpiContract contract = new VendKpiContract();
+
+        if (!vend)
+        {
+            // Return empty contract with the requested account to avoid nulls
+            contract.parmVendorAccount(_vendAccount);
+            contract.parmVendorName("");
+            contract.parmOnTimeDeliveryRate(0);
+            contract.parmOverdueInvoiceCount(0);
+            contract.parmOutstandingBalance(0);
+            contract.parmRiskLevel("Unknown");
+            return contract;
+        }
+
+        AmountCur outstanding = 0;
+        int overdueInvoices = 0;
+
+        // Contoso demo approximation: open vendor transactions
+        VendTransOpen vto;
+        while select AmountCur, DueDate from vto
+            where vto.VendAccount == _vendAccount
+        {
+            outstanding += vto.AmountCur;
+            if (vto.DueDate < today())
+            {
+                overdueInvoices++;
+            }
+        }
+
+        // Placeholder metric for on-time rate (you can replace with actual receipt logic)
+        real onTimeRate = 92.0;
+
+        // Simple risk classification
+        str risk = "Low";
+        if (onTimeRate < 85.0 || overdueInvoices > 5 || outstanding > 250000)
+        {
+            risk = "Medium";
+        }
+        if (onTimeRate < 75.0 || overdueInvoices > 10 || outstanding > 500000)
+        {
+            risk = "High";
+        }
+
+        contract.parmVendorAccount(vend.AccountNum);
+        contract.parmVendorName(vend.name());
+        contract.parmOutstandingBalance(outstanding);
+        contract.parmOverdueInvoiceCount(overdueInvoices);
+        contract.parmOnTimeDeliveryRate(onTimeRate);
+        contract.parmRiskLevel(risk);
+
+        return contract;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>buildVendorKpiBatch</Name>
+				<Source><![CDATA[
+    // Build KPI for multiple vendors (batch)
+    public static List buildVendorKpiBatch(List _vendAccounts)
+    {
+        List result = new List(Types::Class);
+        ListEnumerator le = _vendAccounts.getEnumerator();
+        VendAccount vendAccount;
+
+        while (le.moveNext())
+        {
+            vendAccount = le.current();
+            result.addEnd(VendKpiService::buildVendorKpi(vendAccount));
+        }
+
+        return result;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

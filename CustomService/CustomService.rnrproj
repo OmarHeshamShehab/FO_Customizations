@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <BuildTasksDirectory Condition=" '$(BuildTasksDirectory)' == ''">$(MSBuildProgramFiles32)\MSBuild\Microsoft\Dynamics\AX</BuildTasksDirectory>
+    <Model>OHMS</Model>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <OutputPath>bin</OutputPath>
+    <SchemaVersion>2.0</SchemaVersion>
+    <GenerateCrossReferences>True</GenerateCrossReferences>
+    <RunAppCheckerRules>False</RunAppCheckerRules>
+    <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
+    <DeployOnline>False</DeployOnline>
+    <ProjectGuid>{9b659d1c-e5e9-4044-b787-3cd9110b328f}</ProjectGuid>
+    <Name>CustomService</Name>
+    <RootNamespace>CustomService</RootNamespace>
+    <StartupType>Class</StartupType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <Configuration>Debug</Configuration>
+    <DBSyncInBuild>True</DBSyncInBuild>
+    <GenerateFormAdaptors>False</GenerateFormAdaptors>
+    <Company>
+    </Company>
+    <Partition>initial</Partition>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DataEntityExpandParentChildRelations>False</DataEntityExpandParentChildRelations>
+    <DataEntityUseLabelTextAsFieldName>False</DataEntityUseLabelTextAsFieldName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Classes\" />
+    <Folder Include="Service Groups\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AxClass\ohmsRequest">
+      <SubType>Content</SubType>
+      <Name>ohmsRequest</Name>
+      <Link>Classes\ohmsRequest</Link>
+    </Content>
+    <Content Include="AxClass\ohmsResponse">
+      <SubType>Content</SubType>
+      <Name>ohmsResponse</Name>
+      <Link>Classes\ohmsResponse</Link>
+    </Content>
+    <Content Include="AxClass\ohmsService">
+      <SubType>Content</SubType>
+      <Name>ohmsService</Name>
+      <Link>Classes\ohmsService</Link>
+    </Content>
+    <Content Include="AxServiceGroup\ohmsServiceGroup">
+      <SubType>Content</SubType>
+      <Name>ohmsServiceGroup</Name>
+      <Link>Service Groups\ohmsServiceGroup</Link>
+    </Content>
+    <Content Include="AxService\ohmsService">
+      <SubType>Content</SubType>
+      <Name>ohmsService</Name>
+      <Link>Services\ohmsService</Link>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="$(BuildTasksDirectory)\Microsoft.Dynamics.Framework.Tools.BuildTasks.17.0.targets" />
+</Project>

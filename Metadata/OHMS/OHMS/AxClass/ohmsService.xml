@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>ohmsService</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Provides the core service implementation for OHMS operations within Dynamics 365 Finance and Operations.
+/// </summary>
+/// <remarks>
+/// The <c>ohmsService</c> class exposes public service methods that can be invoked through
+/// AIF, SysOperation Framework, or custom service integrations.
+///
+/// Each method uses the standard Dynamics 365 F&O X++ pattern:
+/// - Accepts a <see cref="ohmsRequest"/> data contract as input.
+/// - Returns an <see cref="ohmsResponse"/> data contract containing results, status,
+///   and diagnostic messages.
+/// - Uses <see cref="InteropPermission"/> to safely call .NET assemblies when required.
+/// - Employs the <c>changecompany</c> statement to switch execution context to
+///   the legal entity specified by the request’s <c>dataAreaId</c>.
+/// </remarks>
+public class ohmsService
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>Create</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Executes the <b>Create</b> operation for OHMS within the specified company context.
+    /// </summary>
+    /// <param name="_request">
+    /// The <see cref="ohmsRequest"/> data contract object that provides input parameters for the operation.
+    /// It must contain a valid <c>dataAreaId</c> value identifying the target legal entity.
+    /// </param>
+    /// <returns>
+    /// An <see cref="ohmsResponse"/> data contract object containing the operation’s result:
+    /// - <c>Success</c>: “true” if the operation completed successfully; “false” otherwise.
+    /// - <c>DebugMessage</c>: diagnostic or informational text.
+    /// - <c>ErrorMessage</c>: populated only when an error or exception occurs.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// This method demonstrates a recommended pattern for service logic in X++:
+    /// </para>
+    /// <list type="number">
+    ///   <item>Initialize and return a response contract object.</item>
+    ///   <item>Assert <see cref="InteropPermission(InteropKind::ClrInterop)"/> to enable .NET interop.</item>
+    ///   <item>Validate that a valid <c>dataAreaId</c> was provided in the request.</item>
+    ///   <item>Use the <c>changecompany</c> keyword to execute company-specific logic.</item>
+    ///   <item>Wrap logic in <c>try/catch</c> to handle both X++ and CLR exceptions.</item>
+    ///   <item>Always call <c>CodeAccessPermission::revertAssert()</c> to restore permissions.</item>
+    /// </list>
+    /// <para>
+    /// The <c>changecompany</c> statement ensures that all data access inside its block runs under the
+    /// context of the specified <c>dataAreaId</c>. When the block exits, execution returns to the original
+    /// company context automatically.
+    /// </para>
+    /// </remarks>
+    public ohmsResponse Create(ohmsRequest _request)
+    {
+        // Create a new response object that will be returned to the caller
+        ohmsResponse response = new ohmsResponse();
+
+        // -----------------------------------------------------------------
+        // SECURITY: Assert permission to execute CLR interop.
+        // This is required when calling .NET classes or using CLRInterop APIs
+        // from within the AOS process.
+        // -----------------------------------------------------------------
+        new InteropPermission(InteropKind::ClrInterop).assert();
+
+        try
+        {
+            // Retrieve the company (dataAreaId) from the incoming request.
+            str company = _request.parmDataAreaId();
+
+            // Validate that the company context is provided.
+            // If missing, throw an explicit X++ error to stop execution.
+            if (!company)
+            {
+                throw error("dataAreaId cannot be empty.");
+            }
+
+            // -----------------------------------------------------------------
+            // BUSINESS LOGIC SECTION
+            // Switch execution context to the target company.
+            // Any table operations or business logic within this block
+            // will execute in the specified legal entity.
+            // -----------------------------------------------------------------
+            changecompany (company)
+            {
+                // Placeholder logic:
+                // Replace this block with the real "Create" operation,
+                // such as inserting records or invoking business logic.
+                response.parmDebugMessage(strFmt("Hello World from %1", company));
+                response.parmSuccess("true");
+            }
+        }
+        catch (Exception::CLRError)
+        {
+            // -----------------------------------------------------------------
+            // Handle exceptions originating from .NET (CLR) interop calls.
+            // Retrieve the actual .NET exception object for detailed diagnostics.
+            // -----------------------------------------------------------------
+            System.Exception netEx = CLRInterop::getLastException();
+
+            response.parmSuccess("false");
+            response.parmErrorMessage(netEx.ToString());
+        }
+        catch
+        {
+            // -----------------------------------------------------------------
+            // Handle native X++ exceptions that are not CLR interop related.
+            // Provide a generic error message for traceability.
+            // -----------------------------------------------------------------
+            response.parmSuccess("false");
+            response.parmErrorMessage("An unknown X++ exception occurred.");
+        }
+
+        // -----------------------------------------------------------------
+        // Always revert any previously asserted permissions to maintain
+        // correct Code Access Security (CAS) behavior in the AOS.
+        // -----------------------------------------------------------------
+        CodeAccessPermission::revertAssert();
+
+        // Return the final response to the caller.
+        return response;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>VendKpiServiceContract</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+[SysEntryPointAttribute]
+public class VendKpiServiceContract
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>getVendorKpi</Name>
+				<Source><![CDATA[
+    // Single vendor KPI
+    public VendKpiContract getVendorKpi(VendAccount _vendAccount)
+    {
+        return VendKpiService::buildVendorKpi(_vendAccount);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getVendorKpiBatch</Name>
+				<Source><![CDATA[
+    // Batch KPI for multiple vendors
+    public List getVendorKpiBatch(List _vendAccounts)
+    {
+        return VendKpiService::buildVendorKpiBatch(_vendAccounts);
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

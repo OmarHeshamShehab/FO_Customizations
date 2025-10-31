@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>VendKpiContract</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+[DataContract]
+public final class VendKpiContract
+{
+    str vendorAccount;
+    str vendorName;
+    real onTimeDeliveryRate;
+    int overdueInvoiceCount;
+    AmountCur outstandingBalance;
+    str riskLevel;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>parmVendorAccount</Name>
+				<Source><![CDATA[
+    [DataMember]
+    public str parmVendorAccount(str _v = vendorAccount)
+    {
+        vendorAccount = _v;
+        return vendorAccount;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmVendorName</Name>
+				<Source><![CDATA[
+    [DataMember]
+    public str parmVendorName(str _v = vendorName)
+    {
+        vendorName = _v;
+        return vendorName;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmOnTimeDeliveryRate</Name>
+				<Source><![CDATA[
+    [DataMember]
+    public real parmOnTimeDeliveryRate(real _v = onTimeDeliveryRate)
+    {
+        onTimeDeliveryRate = _v;
+        return onTimeDeliveryRate;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmOverdueInvoiceCount</Name>
+				<Source><![CDATA[
+    [DataMember]
+    public int parmOverdueInvoiceCount(int _v = overdueInvoiceCount)
+    {
+        overdueInvoiceCount = _v;
+        return overdueInvoiceCount;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmOutstandingBalance</Name>
+				<Source><![CDATA[
+    [DataMember]
+    public AmountCur parmOutstandingBalance(AmountCur _v = outstandingBalance)
+    {
+        outstandingBalance = _v;
+        return outstandingBalance;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmRiskLevel</Name>
+				<Source><![CDATA[
+    [DataMember]
+    public str parmRiskLevel(str _v = riskLevel)
+    {
+        riskLevel = _v;
+        return riskLevel;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
