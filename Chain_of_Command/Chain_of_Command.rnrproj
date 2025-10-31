@@ -36,6 +36,11 @@
     <Folder Include="Classes\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="AxClass\HcmGoal_ColorCodeByStatus_Extension">
+      <SubType>Content</SubType>
+      <Name>HcmGoal_ColorCodeByStatus_Extension</Name>
+      <Link>Classes\HcmGoal_ColorCodeByStatus_Extension</Link>
+    </Content>
     <Content Include="AxClass\SalesTableType_Class_Extension">
       <SubType>Content</SubType>
       <Name>SalesTableType_Class_Extension</Name>

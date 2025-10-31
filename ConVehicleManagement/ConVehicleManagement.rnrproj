@@ -16,6 +16,7 @@
     <Name>ConVehicleManagement</Name>
     <RootNamespace>ConVehicleManagement</RootNamespace>
     <StartupType>Class</StartupType>
+    <StartupObject>SecurityCheck</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <Configuration>Debug</Configuration>
@@ -57,6 +58,11 @@
       <SubType>Content</SubType>
       <Name>ConVMSVehicleGroupFilterableI</Name>
       <Link>Classes\ConVMSVehicleGroupFilterableI</Link>
+    </Content>
+    <Content Include="AxClass\SecurityCheck">
+      <SubType>Content</SubType>
+      <Name>SecurityCheck</Name>
+      <Link>Classes\SecurityCheck</Link>
     </Content>
     <Content Include="AxEdt\ConVMSAcquiredDate">
       <SubType>Content</SubType>

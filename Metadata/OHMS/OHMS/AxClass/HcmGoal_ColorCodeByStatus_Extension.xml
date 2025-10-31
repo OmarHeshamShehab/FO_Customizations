@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>HcmGoal_ColorCodeByStatus_Extension</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/*
+================================================================================
+* EXTENSION: HcmGoal_ColorCodeByStatus_Extension
+* MODULE:    Human Resources > Performance Management
+* FORM:      HcmGoal (Goals)
+* PURPOSE:   Applies color coding to goals based on their status for visual tracking
+*
+* VISUAL REPRESENTATION:
+*
+*   Goals List with Color Coding:
+*   ┌─────────────────────────────────────────────┐
+*   │ ███████████████████████████████████████████ │
+*   │  Goal Description      | Status      | Due  │
+*   │ ███████████████████████████████████████████ │
+*   │ 🟢 Complete Project X  | Completed   | Jan  │  [Light Green]
+*   │ 🟢 Train Team Members  | On Track    | Feb  │  [Light Green]
+*   │ 🟠 Improve KPIs        | Needs Impr. | Mar  │  [Light Orange]
+*   │ 🟡 New Initiative      | Not Started | Apr  │  [Light Yellow]
+*   └─────────────────────────────────────────────┘
+*
+* COLOR SCHEME:
+*   Status              | Color         | RGB            | Meaning
+*   ────────────────────┼───────────────┼────────────────┼──────────────────
+*   Completed           | Light Green   | (144, 238, 144)| Success/Achieved
+*   OnTrack             | Light Green   | (144, 238, 144)| Progressing Well
+*   NeedsImprovement    | Light Orange  | (255, 165, 0)  | Requires Attention
+*   NotStarted          | Light Yellow  | (255, 255, 224)| Action Needed
+*
+* TESTING:
+*   To verify this functionality:
+*   1. Navigate to: Human resources > Performance > Goals
+*   2. View the goals list - records will be colored based on status
+*   3. Using Contoso data: You should see goals with different colors
+*
+* BUSINESS VALUE:
+*   - Enables quick visual status assessment of all goals
+*   - Improves user experience with intuitive color coding
+*   - Facilitates faster decision-making and prioritization
+*   - Enhances performance tracking visibility
+================================================================================
+*/
+
+[ExtensionOf(formDataSourceStr(HcmGoal, HcmGoal))]
+final class HcmGoal_ColorCodeByStatus_Extension
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>displayOption</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Sets the background color for a goal record in the form based on its status.
+    /// </summary>
+    /// <param name="_record">
+    /// The current record from the form data source. Expected to be of type HcmGoal.
+    /// </param>
+    /// <param name="_options">
+    /// The FormRowDisplayOption object that controls the visual presentation of the row.
+    /// </param>
+    public void displayOption(Common _record, FormRowDisplayOption _options)
+    {
+        // Cast the generic Common record to the specific HcmGoal table.
+        HcmGoal HcmGoal = _record as HcmGoal;
+
+        // Evaluate the status of the goal and apply the corresponding color.
+        switch (HcmGoal.Status)
+        {
+            // Cases for positive progress
+        case HRMGoalStatus::Completed:
+        case HRMGoalStatus::OnTrack:
+            // Apply a Light Green color for completed or on-track goals.
+            _options.backColor(WinAPI::RGB2int(144, 238, 144));
+            break;
+
+            // Case for goals requiring attention
+        case HRMGoalStatus::NeedsImprovement:
+            // Apply a Light Orange color for goals that need improvement.
+            _options.backColor(WinAPI::RGB2int(255, 165, 0));
+            break;
+
+            // Case for goals not yet initiated
+        case HRMGoalStatus::NotStarted:
+            // Apply a Light Yellow color for goals that have not been started.
+            _options.backColor(WinAPI::RGB2int(255, 255, 224));
+            break;
+        }
+
+        // Call the next method in the chain to ensure base behavior and other extensions run correctly.
+        next displayOption(_record, _options);
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

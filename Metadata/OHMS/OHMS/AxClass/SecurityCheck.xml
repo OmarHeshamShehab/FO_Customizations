@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SecurityCheck</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+internal final class SecurityCheck
+{
+    /// <summary>
+    /// Class entry point. The system will call this method when a designated menu 
+    /// is selected or when execution starts and this class is set as the startup class.
+    /// </summary>
+    /// <param name = "_args">The specified arguments.</param>
+    
+    boolean hasInventMaterialManagerRole = xUserInfo::checkUserRole(roleStr(InventMaterialsManager), curUserId());
+    boolean isAdmin                     = Global::isSystemAdministrator();
+    container roles                     = xUserInfo::getUserRoles(curUserId());
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>hasUserSecurityDuty</Name>
+				<Source><![CDATA[
+    public static boolean hasUserSecurityDuty(SecurityDutyName _securityDuty, UserId _userId = curUserId())
+    {
+        SecurityRoleDutyExplodedGraph securityRoleDutyExplodedGraph;
+        SecurityUserRole              securityUserRole;
+        SecurityDuty                  securityDuty;
+
+        select firstonly securityDuty
+        where securityDuty.Identifier == _securityDuty
+    exists join securityRoleDutyExplodedGraph
+        where securityRoleDutyExplodedGraph.SecurityDuty == securityDuty.RecId
+    exists join securityUserRole
+        where securityUserRole.SecurityRole     == securityRoleDutyExplodedGraph.SecurityRole
+           && securityUserRole.User             == _userId
+           && securityUserRole.AssignmentStatus == RoleAssignmentStatus::Enabled
+           && (securityUserRole.ValidFrom <= DateTimeUtil::utcNow() || securityUserRole.ValidFrom == utcDateTimeNull())
+           && (securityUserRole.ValidTo   >= DateTimeUtil::utcNow() || securityUserRole.ValidTo   == utcDateTimeNull());
+
+        return securityDuty.RecId != 0;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>hasUserSecurityPrivilege</Name>
+				<Source><![CDATA[
+    public static boolean hasUserSecurityPrivilege(SecurityPrivilegeName _securityPrivilege, UserId _userId = curUserId())
+    {
+        SecurityRolePrivilegeExplodedGraph securityRolePrivilegeExplodedGraph;
+        SecurityUserRole                   securityUserRole;
+        SecurityPrivilege                  securityPrivilege;
+
+        select firstonly securityPrivilege
+        where securityPrivilege.Identifier == _securityPrivilege
+    exists join securityRolePrivilegeExplodedGraph
+        where securityRolePrivilegeExplodedGraph.SecurityPrivilege == securityPrivilege.RecId
+    exists join securityUserRole
+        where securityUserRole.SecurityRole     == securityRolePrivilegeExplodedGraph.SecurityRole
+           && securityUserRole.User             == _userId
+           && securityUserRole.AssignmentStatus == RoleAssignmentStatus::Enabled
+           && (securityUserRole.ValidFrom <= DateTimeUtil::utcNow() || securityUserRole.ValidFrom == utcDateTimeNull())
+           && (securityUserRole.ValidTo   >= DateTimeUtil::utcNow() || securityUserRole.ValidTo   == utcDateTimeNull());
+
+        return securityPrivilege.RecId != 0;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    public static void main(Args _args)
+    {
+        // Example of real duty and privilege identifiers commonly available in standard environments.
+        // Replace with your own if needed.
+        SecurityDutyName dutyName = 'CustMaintainCustomerMaster';      // Example duty
+        SecurityPrivilegeName privilegeName = 'MaintainCustomerMaster'; // Example privilege
+
+        boolean hasDuty = SecurityCheck::hasUserSecurityDuty(dutyName);
+        boolean hasPrivilege = SecurityCheck::hasUserSecurityPrivilege(privilegeName);
+
+        info(strFmt("User has duty '%1': %2", dutyName, hasDuty));
+        info(strFmt("User has privilege '%1': %2", privilegeName, hasPrivilege));
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
