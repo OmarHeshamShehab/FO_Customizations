@@ -10,10 +10,10 @@ This document showcases practical examples of **Chain of Command (CoC)** in Micr
 4. [Example 3 – HcmGoal Form Data Source Display Coloring](#example-3--hcmgoal-form-data-source-display-coloring)
 5. [General Notes & Best Practices](#general-notes--best-practices)
 
-## 🧠 Introduction to Chain of Command
+## Introduction to Chain of Command
 The **Chain of Command (CoC)** mechanism allows developers to extend standard methods without directly modifying Microsoft's base code. It helps maintain upgrade-safe customizations by wrapping custom logic *before* or *after* standard method calls. A CoC method always calls the original implementation using: `next <methodName>(parameters);` This ensures Microsoft's base behavior runs as intended.
 
-## 🧩 Example 1 – SalesTableType.validateWrite() (Class CoC)
+## Example 1 – SalesTableType.validateWrite() (Class CoC)
 **Purpose:** Extend the `SalesTableType` class to add a **custom validation rule** that prevents saving Sales orders belonging to a specific **Customer group** (`CustGroup = "10"`).
 
 **How It Works:** `validateWrite()` executes when a Sales order header is saved. `next validateWrite()` runs the original Microsoft logic. The CoC checks the `CustGroup` field on the SalesTable. If the group equals `"10"`, an error message prevents saving.
@@ -35,7 +35,7 @@ The **Chain of Command (CoC)** mechanism allows developers to extend standard me
 | Negative | US-003 | 10 | Error – cannot save |
 | Positive | US-001 | 30 | Saves successfully |
 
-## 🧩 Example 2 – SalesTable Form.run() (Form CoC)
+## Example 2 – SalesTable Form.run() (Form CoC)
 **Purpose:** Extend the `SalesTable` form using Chain of Command to display a **welcome message** whenever the Sales order form is opened. This is a **form-only CoC** — it doesn't access any data source.
 
 **How It Works:** `run()` executes when the form finishes initialization. `next run()` ensures standard logic executes first. Displays a message using `info()` with the current user's ID. Fires every time the **SalesTable form** opens.
@@ -58,7 +58,7 @@ The **Chain of Command (CoC)** mechanism allows developers to extend standard me
 | Any | admin | Info message appears |
 | Any | Jodi | Info message appears with user name |
 
-## 🧩 Example 3 – HcmGoal Form Data Source Display Coloring
+## Example 3 – HcmGoal Form Data Source Display Coloring
 **Purpose:** Extend the `HcmGoal` form data source to apply **conditional background coloring** to goals based on their status. This provides visual status tracking for performance management, allowing users to quickly assess goal progress at a glance.
 
 **How It Works:** `displayOption()` executes for each record as it's rendered in the form grid. `next displayOption()` ensures standard display logic runs. The CoC checks the `Status` field of each HcmGoal record. Applies background colors using `WinAPI::RGB2int()` based on status value. Creates an intuitive color-coded interface for performance tracking.
@@ -90,7 +90,7 @@ The **Chain of Command (CoC)** mechanism allows developers to extend standard me
 | Needs Attention | NeedsImprovement | Light Orange background |
 | Not Initiated | NotStarted | Light Yellow background |
 
-## 📘 General Notes & Best Practices
+## General Notes & Best Practices
 - Always call `next <method>()` **exactly once and unconditionally**.
 - The `[ExtensionOf(...)]` attribute must be the **first line** in your file.
 - Keep **business logic in classes/tables**, not forms, to follow clean architecture.
@@ -101,7 +101,7 @@ The **Chain of Command (CoC)** mechanism allows developers to extend standard me
 - For display enhancements, ensure colors provide sufficient contrast for accessibility.
 - Test color schemes across different themes and user preferences.
 
-## 🔧 Technical Implementation Notes
+## Technical Implementation Notes
 All examples follow the standard CoC pattern:
 ```x++
 [ExtensionOf(<elementToExtend>)]
