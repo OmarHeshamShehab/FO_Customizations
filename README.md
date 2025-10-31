@@ -20,8 +20,7 @@ A curated collection of real-world customizations, tutorials, and best practices
 - [Development Guidelines](#development-guidelines)
 - [Testing & Verification](#testing--verification)
 - [Contributing](#contributing)
-- [License](#license)
-- [Author & Contact](#author--contact)
+
 
 ---
 
@@ -177,17 +176,4 @@ Contributions are welcome! To contribute to this repository:
 3. Test your changes thoroughly.
 4. Submit a pull request with a clear description of your changes and their purpose.
 
----
 
-## License
-
-This repository is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-## Author & Contact
-
-**Omar Hesham Mohamed Shehab**  
-D365 Finance and Operations Consultant & Developer
-
-For inquiries or consulting requests, please contact me at: [email@example.com](mailto:email@example.com)
