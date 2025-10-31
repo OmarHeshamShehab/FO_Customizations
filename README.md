@@ -140,17 +140,12 @@ https://usnconeboxax1aos.cloud.onebox.dynamics.com/api/services/ohmsServiceGroup
 }
 ```
 
-#### 📘 Reference
-See the full documentation in:  
-[`/OHMS/README.md`](OHMS/README.md)
-
 ---
 
 ## Development Guidelines
 
 These guidelines ensure consistency, quality, and maintainability of customizations:
 
-- Follow Microsoft’s [extensibility guidelines](https://docs.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/sysadmin/extensibility-best-practices) for D365FO.
 - Use the **Chain of Command (CoC)** for extending existing logic.
 - Keep customizations **upgrade-safe** by avoiding overlayering and following best practices.
 - Document all customizations and extensions thoroughly.
