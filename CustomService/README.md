@@ -223,14 +223,3 @@ public class ohmsService
 - This service pattern can be extended to include CRUD or integration operations.
 
 ---
-
-## 📚 References
-
-- [Microsoft Learn: Service and Data Contracts in X++](https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/data-entities/services-home-page)
-- [Microsoft Learn: AIF Services in D365FO](https://learn.microsoft.com/en-us/dynamics365/fin-ops-core/dev-itpro/services/service-framework)
-
----
-
-**Author:** Dynamics 365 F&O Developer  
-**Version:** 1.0  
-**Last Updated:** November 2025
