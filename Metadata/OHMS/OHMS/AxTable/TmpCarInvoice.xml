@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxTable xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>TmpCarInvoice</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class TmpCarInvoice extends common
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>shouldThrowExceptionOnZeroDelete</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Determines if concurrent deletes should throw exception.
+    /// </summary>
+    /// <returns>true, if exception should be thrown; otherwise, false.</returns>
+    public boolean shouldThrowExceptionOnZeroDelete()
+    {
+        return true;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+	<SubscriberAccessLevel>
+		<Read>Allow</Read>
+	</SubscriberAccessLevel>
+	<TableType>TempDB</TableType>
+	<DeleteActions />
+	<FieldGroups>
+		<AxTableFieldGroup>
+			<Name>AutoReport</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoLookup</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoIdentification</Name>
+			<AutoPopulate>Yes</AutoPopulate>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoSummary</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoBrowse</Name>
+			<Fields />
+		</AxTableFieldGroup>
+	</FieldGroups>
+	<Fields>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>CarRegNo</Name>
+			<ExtendedDataType>Description</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>CustAccount</Name>
+			<ExtendedDataType>CustAccount</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>CustGroupId</Name>
+			<ExtendedDataType>CustGroupId</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>CustName</Name>
+			<ExtendedDataType>CustName</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>InventLocationId</Name>
+			<ExtendedDataType>InventLocationId</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldDate">
+			<Name>InvoiceDate</Name>
+			<ExtendedDataType>InvoiceDate</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>InvoiceId</Name>
+			<ExtendedDataType>InvoiceId</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>LineAmount</Name>
+			<ExtendedDataType>LineAmount</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>LineNumber</Name>
+			<ExtendedDataType>LineNumber</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>MobileNumber</Name>
+			<ExtendedDataType>Phone</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>PaymMode</Name>
+			<ExtendedDataType>PaymMode</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>SalesId</Name>
+			<ExtendedDataType>SalesId</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>UserId</Name>
+			<ExtendedDataType>SysUserId</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>CustomerRegion</Name>
+			<ExtendedDataType>AddressCountryRegionId</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+	</Fields>
+	<FullTextIndexes />
+	<Indexes />
+	<Mappings />
+	<Relations />
+	<StateMachines />
+</AxTable>

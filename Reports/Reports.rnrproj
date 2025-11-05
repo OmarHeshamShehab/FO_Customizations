@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <BuildTasksDirectory Condition=" '$(BuildTasksDirectory)' == ''">$(MSBuildProgramFiles32)\MSBuild\Microsoft\Dynamics\AX</BuildTasksDirectory>
+    <Model>OHMS</Model>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <OutputPath>bin</OutputPath>
+    <SchemaVersion>2.0</SchemaVersion>
+    <GenerateCrossReferences>True</GenerateCrossReferences>
+    <RunAppCheckerRules>False</RunAppCheckerRules>
+    <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
+    <DeployOnline>False</DeployOnline>
+    <ProjectGuid>{1328d23a-97ec-4182-abe0-eb5cd366161e}</ProjectGuid>
+    <Name>Reports</Name>
+    <RootNamespace>Reports</RootNamespace>
+    <StartupType>Class</StartupType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <Configuration>Debug</Configuration>
+    <DBSyncInBuild>True</DBSyncInBuild>
+    <GenerateFormAdaptors>False</GenerateFormAdaptors>
+    <Company>
+    </Company>
+    <Partition>initial</Partition>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DataEntityExpandParentChildRelations>False</DataEntityExpandParentChildRelations>
+    <DataEntityUseLabelTextAsFieldName>False</DataEntityUseLabelTextAsFieldName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Classes\" />
+    <Folder Include="Menu Extensions\" />
+    <Folder Include="Output Menu Items\" />
+    <Folder Include="Reports\" />
+    <Folder Include="Tables\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AxClass\DSRReportController">
+      <SubType>Content</SubType>
+      <Name>DSRReportController</Name>
+      <Link>Classes\DSRReportController</Link>
+    </Content>
+    <Content Include="AxClass\DSRReportDC">
+      <SubType>Content</SubType>
+      <Name>DSRReportDC</Name>
+      <Link>Classes\DSRReportDC</Link>
+    </Content>
+    <Content Include="AxClass\DSRReportDP">
+      <SubType>Content</SubType>
+      <Name>DSRReportDP</Name>
+      <Link>Classes\DSRReportDP</Link>
+    </Content>
+    <Content Include="AxClass\DSRReportUIBuilder">
+      <SubType>Content</SubType>
+      <Name>DSRReportUIBuilder</Name>
+      <Link>Classes\DSRReportUIBuilder</Link>
+    </Content>
+    <Content Include="AxMenuExtension\AccountsReceivable.OHMS">
+      <SubType>Content</SubType>
+      <Name>AccountsReceivable.OHMS</Name>
+      <Link>Menu Extensions\AccountsReceivable.OHMS</Link>
+    </Content>
+    <Content Include="AxMenuItemOutput\DSRReportMI">
+      <SubType>Content</SubType>
+      <Name>DSRReportMI</Name>
+      <Link>Output Menu Items\DSRReportMI</Link>
+    </Content>
+    <Content Include="AxReport\DSRReport">
+      <SubType>Content</SubType>
+      <Name>DSRReport</Name>
+      <Link>Reports\DSRReport</Link>
+    </Content>
+    <Content Include="AxTable\TmpCarInvoice">
+      <SubType>Content</SubType>
+      <Name>TmpCarInvoice</Name>
+      <Link>Tables\TmpCarInvoice</Link>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="$(BuildTasksDirectory)\Microsoft.Dynamics.Framework.Tools.BuildTasks.17.0.targets" />
+</Project>

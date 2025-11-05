@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>DSRReportDP</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// The DSRReportDP data provider class is responsible for processing and retrieving
+/// data for the DSR report. It executes the main business logic to populate the
+/// report temporary table with sales invoice data based on the specified filters.
+/// </summary>
+[
+// Add the reference of data contract class
+SRSReportParameterAttribute(classstr(DSRReportDC))
+]
+class DSRReportDP extends SRSReportDataProviderBase
+{
+    DSRReportDC             dsrReportDC;
+    TransDate               fromdate;
+    TransDate               todate;
+    InventLocationId        inventLocationId;
+    TmpCarInvoice           tmpCarInvoice;
+    LedgerJournalTrans      ledgerJournalTrans;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>getTempTable</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Provides the temporary table dataset to the reporting framework
+    /// </summary>
+    /// <returns>The populated temporary table record</returns>
+    [
+        // Add the reference of report temp table
+        SRSReportDataSetAttribute(tablestr("TmpCarInvoice"))
+    ]
+        public TmpCarInvoice getTempTable()
+    {
+        select * from tmpCarInvoice;
+        return tmpCarInvoice;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>processReport</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Main report processing method that retrieves and processes sales invoice data
+    /// </summary>
+    /// <remarks>
+    /// This method:
+    /// 1. Retrieves parameters from the data contract
+    /// 2. Builds a query to fetch customer invoice journal records
+    /// 3. Applies date and warehouse filters
+    /// 4. Processes sales and return item transactions
+    /// 5. Populates the temporary table with formatted report data
+    /// </remarks>
+    [SysEntryPointAttribute(false)]
+    public void processReport()
+    {
+        Query                       query;
+        QueryRun                    queryRun;
+        QueryBuildDataSource        queryBuildDataSource;
+        QueryBuildRange             queryBuildRange;
+        CustInvoiceJour             carInvoice;
+        dsrReportDC             =       new DSRReportDC();
+        dsrReportDC             =       this.parmDataContract() as DSRReportDC;
+        fromdate                =       dsrReportDC.parmFromDate();
+        todate                  =       dsrReportDC.parmToDate();
+        inventLocationId        =       dsrReportDC.parmWarehouse();
+        query                   =       new Query();
+        
+        // Add CustInvoiceJour as a report data source in a query
+        queryBuildDataSource = query.addDataSource(tableNum(CustInvoiceJour));
+        
+        // Check the dates & warehouse and set the ranges
+        if(fromdate && todate)
+        {
+            query.dataSourceTable(tableNum(CustInvoiceJour)).addRange(fieldNum(CustInvoiceJour,InvoiceDate)).value(queryRange(fromdate,ToDate));
+        }
+        if(inventLocationId)
+        {
+            query.dataSourceTable(tableNum(CustInvoiceJour)).addRange(fieldNum(CustInvoiceJour,InventLocationId)).value(queryValue(inventLocationId));
+        }
+        
+        query.dataSourceTable(tableNum(CustInvoiceJour)).addRange(fieldNum(CustInvoiceJour,SalesType)).value(queryValue(SalesType::Sales));
+        query.dataSourceTable(tableNum(CustInvoiceJour)).addRange(fieldNum(CustInvoiceJour,SalesType)).value(queryValue(SalesType::ReturnItem));
+        //query.dataSourceTable(tableNum(CustInvoiceJour)).addRange(fieldNum(CustInvoiceJour,InterCompanyCompanyId)).value(SysQuery::valueEmptyString());
+        queryRun = new QueryRun(query);
+        while (queryRun.next())
+        {
+            // Get the table from the query
+            carInvoice  = queryRun.get(tableNum(CustInvoiceJour));
+            tmpCarInvoice.InvoiceDate       =   carInvoice.InvoiceDate;
+            tmpCarInvoice.InvoiceId         =   carInvoice.InvoiceId;
+            tmpCarInvoice.CustAccount       =   carInvoice.OrderAccount;
+            tmpCarInvoice.CustName          =   CustTable::find(carInvoice.OrderAccount).name();
+            tmpCarInvoice.CustGroupId       =   carInvoice.CustGroup;
+            tmpCarInvoice.CustomerRegion    =   CustTable::find(carInvoice.OrderAccount).countryName();
+            tmpCarInvoice.inventLocationId  =   carInvoice.inventLocationId;
+            tmpCarInvoice.userId            =   carInvoice.createdBy;
+            tmpCarInvoice.LineAmount        =   carInvoice.InvoiceAmountMST;
+            tmpCarInvoice.SalesId           =   carInvoice.SalesId;
+            // insert the record into report table
+            tmpCarInvoice.insert();
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Main entry point for testing and debugging the data provider
+    /// </summary>
+    /// <param name="args">Command line arguments</param>
+    public static void main(Args args)
+    {
+        DSRReportDP  dsrReportDP  =  new   DSRReportDP();
+        dsrReportDP.processReport();
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

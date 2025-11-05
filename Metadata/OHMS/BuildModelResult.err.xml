@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Diagnostics
-  GenerationTime="2024-07-16T22:10:20.2724012+03:00">
+  GenerationTime="2025-11-05T13:39:47.9483384+02:00">
   <Items>
     <Diagnostic>
-      <DiagnosticType>FormPatternValidation</DiagnosticType>
+      <DiagnosticType>Compile</DiagnosticType>
       <Severity>Error</Severity>
-      <Path>AxForm/ConVMSVehicleServiceTable/Design</Path>
-      <Moniker>PatternControlMissingChild</Moniker>
-      <Message>Control 'AxForm/ConVMSVehicleServiceTable/Design' is missing child 'Application Bar' required by pattern 'Details Transaction'.</Message>
+      <Path>dynamics://Class/VendKpiService/Method/buildVendorKpi</Path>
+      <ElementType>Class Method</ElementType>
+      <Moniker>TableDoesNotContainField</Moniker>
+      <Line>27</Line>
+      <Column>19</Column>
+      <EndLine>27</EndLine>
+      <EndColumn>22</EndColumn>
+      <Message>Table 'VendTransOpen' does not contain a field named 'VendAccount'.</Message>
     </Diagnostic>
   </Items>
   <Aliases />

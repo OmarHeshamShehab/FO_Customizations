@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>DSRReportUIBuilder</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// The DSRReportUIBuilder class constructs the user interface for the DSR report parameters.
+/// It handles dialog field creation, post-build configuration, and custom lookup implementations.
+/// </summary>
+class DSRReportUIBuilder extends SrsReportDataContractUIBuilder
+{
+    DSRReportDC rdpcontract;
+    DialogField dialogfromdate;
+    DialogField dialogtodate;
+    DialogField warehouse;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>build</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Builds the dialog by adding parameter fields to the UI
+    /// </summary>
+    public void build()
+    {
+        rdpcontract = this.dataContractObject() as DSRReportDC;
+        dialogfromdate  = this.addDialogField(methodStr(DSRReportDC,parmFromDate),rdpContract);
+        dialogtodate    = this.addDialogField(methodStr(DSRReportDC,parmToDate),rdpContract);
+        warehouse       = this.addDialogField(methodStr(DSRReportDC,parmWarehouse),rdpContract);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>postBuild</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Performs post-build configuration including field binding and custom method overrides
+    /// </summary>
+    public void postBuild()
+    {
+        Dialog localDaialogObj = this.dialog();
+        super();
+        dialogfromdate  = this.bindInfo().getDialogField(this.dataContractObject(),methodStr(DSRReportDC,parmFromDate));
+        dialogtodate    = this.bindInfo().getDialogField(this.dataContractObject(),methodStr(DSRReportDC,parmToDate));
+        warehouse       = this.bindInfo().getDialogField(this.dataContractObject(),methodStr(DSRReportDC,parmwarehouse));
+        warehouse.registerOverrideMethod(methodStr(FormStringControl, lookup), methodStr(DSRReportUIBuilder,warehouseLookup), this);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>PostRun</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Executes after the dialog has run, used for post-processing operations
+    /// </summary>
+    Public void PostRun()
+    {
+        DSRReportDC contract = this.dataContractObject();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>warehouselookup</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Provides a custom lookup for warehouse/InventLocation selection
+    /// </summary>
+    /// <param name="_control">The form control that triggered the lookup</param>
+    /// <remarks>
+    /// Filters the lookup to show only standard warehouse locations and displays
+    /// both warehouse ID and name in the lookup form
+    /// </remarks>
+    public void warehouselookup(FormStringControl    _control)
+    {
+        Query                   queryProjectLookup;
+        QueryBuildDataSource    qbds_Project, qbds_ProjName;
+        QueryBuildRange         qbr;
+        SysTableLookup          sysTableLookup;
+        queryProjectLookup  =   new     Query();
+        sysTableLookup = SysTableLookup::newParameters(tableNum(InventLocation), _control);
+        qbds_Project = queryProjectLookup.addDataSource(tableNum(InventLocation));
+        qbr =   qbds_Project.addRange(fieldNum(InventLocation, InventLocationType));
+        qbr.value(queryValue(InventLocationType::Standard));
+        qbds_Project.orderMode(OrderMode::OrderBy);
+        qbds_Project.addGroupByField(fieldNum(InventLocation, InventLocationId));
+        qbds_Project.addGroupByField(fieldNum(InventLocation, Name));
+        sysTableLookup.parmQuery(queryProjectLookup);
+        sysTableLookup.addLookupField(fieldNum(InventLocation, InventLocationId));
+        sysTableLookup.addLookupfield(fieldNum(InventLocation, Name));
+        sysTableLookup.performFormLookup();
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

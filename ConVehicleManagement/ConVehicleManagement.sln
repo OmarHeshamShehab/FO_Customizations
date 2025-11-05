@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.34928.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FC65038C-1B2F-41E1-A629-BED71D161FFF}") = "ConVehicleManagement (ISV) [Fleet Management]", "ConVehicleManagement.rnrproj", "{71F86372-6E37-4B0A-91B4-450BA4B51A24}"
+Project("{FC65038C-1B2F-41E1-A629-BED71D161FFF}") = "ConVehicleManagement (USR) [OHMS]", "ConVehicleManagement.rnrproj", "{71F86372-6E37-4B0A-91B4-450BA4B51A24}"
+EndProject
+Project("{FC65038C-1B2F-41E1-A629-BED71D161FFF}") = "Reports (ISV) [Fleet Management]", "..\Reports\Reports.rnrproj", "{4299C0EC-7290-4A53-8426-11C809A8C78C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,6 +14,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{71F86372-6E37-4B0A-91B4-450BA4B51A24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{71F86372-6E37-4B0A-91B4-450BA4B51A24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4299C0EC-7290-4A53-8426-11C809A8C78C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4299C0EC-7290-4A53-8426-11C809A8C78C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

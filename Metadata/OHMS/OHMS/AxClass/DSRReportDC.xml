@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>DSRReportDC</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// The DSRReportDC data contract class defines the parameters and filters
+/// for the DSR (Daily Sales Report) report. It handles parameter validation
+/// and organizes parameters into logical groups for the UI.
+/// </summary>
+[
+    DataContractAttribute,
+    SysOperationGroupAttribute('From Date',"From Date",'1'),
+    SysOperationGroupAttribute('To Date',"To Date",'2'),
+    SysOperationGroupAttribute('Warehouse',"Warehouse",'4'),
+    SysOperationGroupAttribute('User Id', "User Id", '6',FormArrangeMethod::HorizontalFlushRight),
+    SysOperationContractProcessingAttribute(classstr(DSRReportUIBuilder),
+    SysOperationDataContractProcessingMode::CreateUIBuilderForRootContractOnly)
+]
+    
+public class DSRReportDC
+{
+    TransDate           fromDate, toDate;
+    InventLocationId    inventLocationId;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>parmFromDate</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Gets or sets the starting date for the report period
+    /// </summary>
+    [
+        DataMemberAttribute('FromDate'),
+        SysOperationLabelAttribute(literalstr("@SYS5209")),
+        SysOperationHelpTextAttribute(literalstr("@SYS5209")),
+        SysOperationGroupMemberAttribute('FromDate'),
+        SysOperationDisplayOrderAttribute('1')
+    ]
+    public TransDate parmFromDate(TransDate _fromDate = fromDate)
+    {
+        fromDate = _fromDate;
+        return fromDate;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmToDate</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Gets or sets the ending date for the report period
+    /// </summary>
+    [
+        DataMemberAttribute('ToDate'),
+        SysOperationLabelAttribute(literalstr("@SYS36680")),
+        SysOperationHelpTextAttribute(literalstr("@SYS36680")),
+        SysOperationGroupMemberAttribute('Date'),
+        SysOperationDisplayOrderAttribute('2')
+    ]
+    public TransDate parmToDate(TransDate _ToDate = ToDate)
+    {
+        ToDate = _ToDate;
+        return ToDate;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmWarehouse</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Gets or sets the warehouse filter for the report
+    /// </summary>
+    [
+        DataMemberAttribute('Warehouse'),
+        SysOperationLabelAttribute(literalstr("Warehouse")),
+        SysOperationHelpTextAttribute(literalstr("Warehouse")),
+        SysOperationGroupMemberAttribute('Warehouse'),
+        SysOperationDisplayOrderAttribute('5')
+    ]
+    public InventLocationId parmWarehouse(InventLocationId _inventLocationId = inventLocationId)
+    {
+        inventLocationId = _inventLocationId;
+        return inventLocationId;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>validate</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Validates the parameter values to ensure logical consistency
+    /// </summary>
+    /// <returns>True if validation passes, false if validation fails</returns>
+    /// <remarks>
+    /// Checks that:
+    /// - To date is greater than From date when both are provided
+    /// - Both dates are specified if either one is provided
+    /// </remarks>
+    public boolean  validate()
+    {
+        boolean ok = true;
+        if(fromdate &&  Todate)
+        {
+            if(fromdate >   Todate)
+            {
+                ok = checkFailed("To date must be greater from date.");
+            }
+        }
+        if(fromdate)
+        {
+            if(!Todate)
+            {
+                ok = checkFailed("To date must be specified.");
+            }
+        }
+        if(Todate)
+        {
+            if(!fromdate)
+            {
+                ok = checkFailed("From date must be specified.");
+            }
+        }
+        return ok;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
