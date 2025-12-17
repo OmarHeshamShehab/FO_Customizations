@@ -35,7 +35,7 @@ public class VendKpiService
         // Contoso demo approximation: open vendor transactions
         VendTransOpen vto;
         while select AmountCur, DueDate from vto
-            where vto.VendAccount == _vendAccount
+            where vto.AccountNum == _vendAccount
         {
             outstanding += vto.AmountCur;
             if (vto.DueDate < today())
