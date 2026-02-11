@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>OHMSSalesOrderUploader</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+using System.IO;
+using OfficeOpenXml;
+
+/// <summary>
+/// OHMSSalesOrderUploader
+/// Uploads an Excel (.xlsx) file and creates Sales Orders + Sales Lines automatically.
+/// Rules:
+/// 1) New sales order is created when CustomerAccount changes (Excel must be sorted by customer).
+/// 2) Sales lines are created only when Qty != 0.
+/// 3) Financial dimensions are applied line-wise: BusinessUnit, CostCenter, Department, Project.
+/// Notes:
+/// - Skips completely blank rows.
+/// - Shows a success message including created Sales Order numbers.
+/// </summary>
+final class OHMSSalesOrderUploader
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Entry point when called from Action menu item.
+    /// Refreshes SalesTable datasource if called from SalesTable form.
+    /// </summary>
+    /// <param name="_args">Args passed by menu item; caller is the SalesTable form (when executed from SalesTable).</param>
+    public static void main(Args _args)
+    {
+        new OHMSSalesOrderUploader().run();
+
+        if (_args && _args.caller() is FormRun)
+        {
+            FormRun callerFormRun = _args.caller();
+            FormDataSource ds = callerFormRun.dataSource("SalesTable");
+            if (ds)
+            {
+                ds.research(true);
+            }
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>run</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Starts upload dialog and processing.
+    /// </summary>
+    public void run()
+    {
+        this.uploadAndProcessExcel();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>uploadAndProcessExcel</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Shows upload dialog, reads the uploaded stream and calls processExcel().
+    /// </summary>
+    private void uploadAndProcessExcel()
+    {
+        System.IO.Stream stream;
+
+        Dialog dialog = new Dialog("Sales orders uploader");
+        DialogGroup dlgUploadGroup;
+        FormBuildControl formBuildControl;
+        FileUploadBuild fileUploadBuild;
+
+        dlgUploadGroup = dialog.addGroup("Upload Excel");
+        formBuildControl = dialog.formBuildDesign().control(dlgUploadGroup.name());
+
+        fileUploadBuild = formBuildControl.addControlEx(classstr(FileUpload), 'Upload');
+        fileUploadBuild.style(FileUploadStyle::MinimalWithFilename);
+        fileUploadBuild.fileTypesAccepted('.xlsx');
+
+        if (!(dialog.run() && dialog.closedOk()))
+        {
+            throw error("Excel upload cancelled.");
+        }
+
+        FileUpload fileUploadControl =
+            dialog.formRun().control(dialog.formRun().controlId("Upload"));
+
+        FileUploadTemporaryStorageResult fileUploadResult =
+            fileUploadControl.getFileUploadResult();
+
+        if (!fileUploadResult || !fileUploadResult.getUploadStatus())
+        {
+            throw error("Upload failed.");
+        }
+
+        stream = fileUploadResult.openResult();
+
+        this.processExcel(stream);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>processExcel</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Reads Excel and creates SalesTable/SalesLine.
+    /// Excel Template (Row 1 header, data from Row 2):
+    /// A(1): CustomerAccount
+    /// B(2): BusinessUnit
+    /// C(3): CostCenter
+    /// D(4): ItemId
+    /// E(5): Department
+    /// F(6): Qty
+    /// G(7): Project
+    /// </summary>
+    /// <param name="_stream">Stream of uploaded excel file.</param>
+    private void processExcel(System.IO.Stream _stream)
+    {
+        CustAccount currentAccount = '';
+        SalesTable  salesTable;
+        SalesLine   salesLine;
+        SalesLine   salesLineUpdate;
+        NumberSeq   numberSeq;
+
+        CustTable   custTable;
+        InventTable inventTable;
+
+        int rowCount;
+        int row;
+
+        // Counters + created SalesIds for user message
+        int       createdOrders = 0;
+        int       createdLines  = 0;
+        container createdSalesIds;
+
+        using (ExcelPackage package = new ExcelPackage(_stream))
+        {
+            ExcelWorksheet worksheet = package.get_Workbook().get_Worksheets().get_Item(1);
+
+            if (!worksheet || !worksheet.Dimension)
+            {
+                throw error("Excel sheet is empty or unreadable.");
+            }
+
+            OfficeOpenXml.ExcelRange range = worksheet.Cells;
+
+            rowCount = (worksheet.Dimension.End.Row - worksheet.Dimension.Start.Row) + 1;
+
+            ttsBegin;
+            try
+            {
+                for (row = 2; row <= rowCount; row++)
+                {
+                    CustAccount excelAccount           = strLRTrim(any2Str(range.get_Item(row, 1).value));
+                    OMOperatingUnitNumber businessUnit = strLRTrim(any2Str(range.get_Item(row, 2).value));
+                    OMOperatingUnitNumber costCenter   = strLRTrim(any2Str(range.get_Item(row, 3).value));
+                    ItemId itemId                      = strLRTrim(any2Str(range.get_Item(row, 4).value));
+                    OMOperatingUnitNumber department   = strLRTrim(any2Str(range.get_Item(row, 5).value));
+                    real qty                           = any2Real(range.get_Item(row, 6).value);
+                    OMOperatingUnitNumber project      = strLRTrim(any2Str(range.get_Item(row, 7).value));
+
+                    // Skip completely blank rows (common in Excel)
+                    if (!excelAccount && !itemId && qty == 0)
+                    {
+                        continue;
+                    }
+
+                    // If row has data but customer missing -> stop
+                    if (!excelAccount)
+                    {
+                        throw error(strFmt("Row %1: CustomerAccount is empty.", row));
+                    }
+
+                    if (!itemId)
+                    {
+                        throw error(strFmt("Row %1: ItemId is empty.", row));
+                    }
+
+                    // Skip zero qty lines
+                    if (qty == 0)
+                    {
+                        continue;
+                    }
+
+                    // Validate customer exists
+                    select firstOnly custTable
+                        where custTable.AccountNum == excelAccount;
+
+                    if (!custTable.RecId)
+                    {
+                        throw error(strFmt("Row %1: Customer account %2 does not exist in this company.", row, excelAccount));
+                    }
+
+                    // Create new header when customer changes
+                    if (currentAccount != excelAccount)
+                    {
+                        salesTable.clear();
+                        numberSeq = NumberSeq::newGetNum(SalesParameters::numRefSalesId());
+                        salesTable.SalesId = numberSeq.num();
+
+                        salesTable.initValue();
+                        salesTable.SalesType = SalesType::Sales;
+
+                        // Set customer then trigger standard defaulting logic
+                        salesTable.CustAccount = excelAccount;
+
+                        // Triggers defaulting of required fields (currency/group/etc.) in many versions
+                        salesTable.modifiedField(fieldNum(SalesTable, CustAccount));
+
+                        // Keep your original call too (safe)
+                        salesTable.initFromCustTable();
+
+                        salesTable.insert();
+                        currentAccount = excelAccount;
+
+                        createdOrders++;
+                        createdSalesIds += salesTable.SalesId;
+                    }
+
+                    // Validate item exists
+                    select firstOnly RecId from inventTable
+                        where inventTable.ItemId == itemId;
+
+                    if (!inventTable.RecId)
+                    {
+                        throw error(strFmt("Row %1: Item number %2 does not exist in this company.", row, itemId));
+                    }
+
+                    // Create line
+                    salesLine.clear();
+                    salesLine.SalesId  = salesTable.SalesId;
+                    salesLine.ItemId   = itemId;
+                    salesLine.modifiedField(fieldNum(SalesLine, ItemId));
+                    salesLine.SalesQty = qty;
+
+                    salesLine.createLine(true, true, false, true, true, false);
+
+                    // Apply dimensions after createLine
+                    select firstOnly forUpdate salesLineUpdate
+                        where salesLineUpdate.RecId == salesLine.RecId;
+
+                    salesLineUpdate.DefaultDimension =
+                        this.getFinancialDimensionUSMF(businessUnit, costCenter, department, project);
+
+                    salesLineUpdate.update();
+
+                    createdLines++;
+                }
+
+                ttsCommit;
+
+                // Success message with SalesIds + counts
+                if (createdOrders > 0 || createdLines > 0)
+                {
+                    str salesIdList = '';
+                    int i;
+
+                    for (i = 1; i <= conLen(createdSalesIds); i++)
+                    {
+                        if (salesIdList)
+                        {
+                            salesIdList += ', ';
+                        }
+
+                        salesIdList += conPeek(createdSalesIds, i);
+                    }
+
+                    if (!salesIdList)
+                    {
+                        salesIdList = '(none)';
+                    }
+
+                    info(strFmt("Upload successful. Created %1 sales order(s): %2. Total line(s): %3.",
+                                createdOrders,
+                                salesIdList,
+                                createdLines));
+                }
+                else
+                {
+                    info("Upload completed. No sales orders/lines were created (all rows may have Qty=0 or blank).");
+                }
+            }
+            catch (Exception::Error)
+            {
+                ttsAbort;
+                throw error(strFmt("Upload failed. Last processed row: %1", row));
+            }
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getFinancialDimensionUSMF</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Builds DimensionDefault for financial dimensions:
+    /// BusinessUnit, CostCenter, Department, Project.
+    /// </summary>
+    /// <param name="_businessUnit">BusinessUnit value (e.g. 002).</param>
+    /// <param name="_costCenter">CostCenter value (e.g. 014).</param>
+    /// <param name="_department">Department value (e.g. 022).</param>
+    /// <param name="_project">Project value (optional).</param>
+    /// <returns>DimensionDefault value set for SalesLine.DefaultDimension.</returns>
+    private DimensionDefault getFinancialDimensionUSMF(
+        OMOperatingUnitNumber _businessUnit,
+        OMOperatingUnitNumber _costCenter,
+        OMOperatingUnitNumber _department,
+        OMOperatingUnitNumber _project)
+    {
+        DimensionAttributeValueSetStorage storage = new DimensionAttributeValueSetStorage();
+        DimensionAttribute dimAttr;
+        DimensionAttributeValue dimAttrValue;
+
+        container dimNames  = ['BusinessUnit', 'CostCenter', 'Department', 'Project'];
+        container dimValues = [_businessUnit, _costCenter, _department, _project];
+
+        int i;
+
+        for (i = 1; i <= conLen(dimNames); i++)
+        {
+            Name dimName = conPeek(dimNames, i);
+            str  dimValue = strLRTrim(conPeek(dimValues, i));
+
+            if (!dimValue)
+            {
+                continue;
+            }
+
+            dimAttr = DimensionAttribute::findByName(dimName);
+            if (!dimAttr)
+            {
+                throw error(strFmt("Financial dimension %1 not found.", dimName));
+            }
+
+            dimAttrValue =
+                DimensionAttributeValue::findByDimensionAttributeAndValue(
+                    dimAttr,
+                    dimValue,
+                    false,
+                    true);
+
+            if (!dimAttrValue)
+            {
+                throw error(strFmt("Value %1 not found for dimension %2.", dimValue, dimName));
+            }
+
+            storage.addItem(dimAttrValue);
+        }
+
+        return storage.save();
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
