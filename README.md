@@ -1,3 +1,4 @@
+
 # D365 Finance and Operations Customizations (FO_Customization)
 
 A curated collection of real-world customizations, tutorials, and best practices for Microsoft Dynamics 365 Finance and Operations (D365FO), developed and maintained by **Omar Hesham Mohamed Shehab** under the **OHMS** model.
@@ -25,6 +26,7 @@ A curated collection of real-world customizations, tutorials, and best practices
 
 ---
 
+<a id="project-overview"></a>
 ## Project Overview
 
 This repository serves as a comprehensive resource for D365FO customizations, including:
@@ -34,95 +36,116 @@ This repository serves as a comprehensive resource for D365FO customizations, in
 - Best practices for upgrade-safe, maintainable extensions.
 - End-to-end examples covering data, business logic, and UI.
 
-All solutions are designed to be **upgrade-friendly** and follow Microsoft’s extensibility guidelines.
+All solutions follow Microsoft extensibility guidelines to ensure upgrade safety.
 
 ---
 
+<a id="repository-structure"></a>
 ## Repository Structure
 
 ### Customization Modules
 
-- **ConVehicleManagement**
-- **Reports (SSRS Custom Report)**
-- **Halwani**
-- **Metadata**
-- **Commerce_CustomerListExtension**
-- **Chain_of_Command**
-- **SalesOrderExcelUpload**
-- **OHMS Service Integration**
+- **ConVehicleManagement** – Vehicle tracking and maintenance scheduling.
+- **Reports** – Custom SSRS reporting solution.
+- **Halwani** – Client-specific customizations.
+- **Metadata** – Data model and UI extensions.
+- **Commerce_CustomerListExtension** – Customer entity extension.
+- **Chain_of_Command** – CoC implementation examples.
+- **SalesOrderExcelUpload** – Excel-driven sales order automation.
+- **OHMS Service Integration** – Custom integration service module.
 
 ---
 
+<a id="key-features"></a>
 ## Key Features
 
 - Upgrade-safe customizations
-- Real-world implementation scenarios
-- SSRS reporting
-- Service integrations
-- Chain of Command extensions
-- Excel-based automation tools
-- Production-ready coding patterns
+- Real-world client implementations
+- Reporting, services, automation examples
+- Clean architecture and best practices
 
 ---
 
+<a id="getting-started"></a>
 ## Getting Started
 
-1. Clone repository.
-2. Open solution in Visual Studio.
-3. Build and synchronize database.
-4. Deploy reports/services.
-5. Test using Contoso demo data (USMF).
+1. Build the solution in Visual Studio.
+2. Synchronize database changes.
+3. Deploy reports/services where applicable.
+4. Test using Contoso demo data (USMF).
 
 ---
 
-# Customization Modules
+<a id="customization-modules"></a>
+## Customization Modules
+
+<a id="convehiclemanagement"></a>
+### ConVehicleManagement
+
+Custom vehicle management module including tracking and maintenance logic.
 
 ---
 
-## Reports (SSRS Custom Report)
+<a id="reports-ssrs-custom-report"></a>
+### Reports (SSRS Custom Report)
 
-Custom SSRS report demonstrating full implementation pattern:
+Custom SSRS Daily Sales Report using:
 
-- TempDB table (TmpCarInvoice)
+- TempDB Table (TmpCarInvoice)
 - Data Contract
 - UI Builder
 - RDP Class
 - Controller
-- Action Menu Item
 - Precision Design Layout
 
-Displays Daily Sales Data filtered by date range and warehouse.
+Report Name: **DSRReport**
 
 ---
 
-## SalesOrderExcelUpload (Sales Order Upload from Excel)
+<a id="halwani"></a>
+### Halwani
 
-### Overview
-
-A complete automation solution allowing Excel upload to automatically create:
-
-- Sales Orders (SalesTable)
-- Sales Lines (SalesLine)
-- Line-level Financial Dimensions (DefaultDimension)
-
-Built under the **OHMS model** and tested in **USMF (Contoso demo environment)**.
+Tailored solutions addressing unique client business processes.
 
 ---
 
-### Business Logic
+<a id="metadata"></a>
+### Metadata
 
-- Creates new Sales Order when CustomerAccount changes.
-- Skips rows where Qty = 0.
-- Validates Customer and Item existence.
-- Applies Financial Dimensions line-wise.
-- Displays summary message after upload.
+Contains extended tables, forms, and workflows.
 
 ---
 
-### Excel Template (USMF)
+<a id="commerce_customerlistextension"></a>
+### Commerce_CustomerListExtension
 
-Row 1 = Header  
-Data starts from Row 2.
+Adds custom **RefNoExt** field to the customer entity with synchronization support.
+
+---
+
+<a id="chain_of_command"></a>
+### Chain_of_Command
+
+Demonstrates Microsoft-recommended extension pattern using:
+
+- Class CoC
+- Form CoC
+- Data Source CoC
+
+Ensures upgrade-safe logic extension.
+
+---
+
+<a id="salesorderexcelupload-sales-order-upload-from-excel"></a>
+### SalesOrderExcelUpload (Sales Order Upload from Excel)
+
+Custom automation allowing upload of Excel (.xlsx) file to create:
+
+- SalesTable records
+- SalesLine records
+- Financial Dimensions (DefaultDimension)
+
+#### Excel Template (USMF)
 
 | CustomerAccount | BusinessUnit | CostCenter | ItemId | Department | Qty | Project |
 |----------------|-------------|------------|--------|------------|-----|---------|
@@ -130,76 +153,57 @@ Data starts from Row 2.
 | US-001 | 3 | 14 | 1000 | 22 | 2 | |
 | US-002 | 4 | 14 | D0003 | 22 | 3 | |
 
----
-
-### Technical Components
-
-| Object | Type |
-|--------|------|
-| OHMSSalesOrderUploader | Runnable Class |
-| OHMSSalesOrderUploaderAction | Action Menu Item |
-| SalesTableListPage.OHMS | Form Extension |
-
----
-
-### Example Success Message
+#### Success Message Example
 
 Upload successful. Created 2 sales order(s): SO-000123, SO-000124. Total line(s): 5.
 
 ---
 
-### Testing (USMF)
+<a id="ohms-service-integration"></a>
+### OHMS Service Integration
 
-- Validate customer exists.
-- Validate item exists.
-- Validate financial dimension values.
-- Verify SalesLine.DefaultDimension populated.
-- Confirm status = Open order.
-
----
-
-## OHMS Service Integration
-
-Custom service module implementing:
+Secure service pattern including:
 
 - DataContract classes
-- changecompany execution
-- Structured response pattern
-- Secure API endpoint exposure
+- changecompany usage
+- Exception handling (CLR + X++)
+- API endpoint exposure
 
-Example Endpoint:
+Example endpoint:
 
 /api/services/ohmsServiceGroup/ohmsService/Create
 
 ---
 
+<a id="development-guidelines"></a>
 ## Development Guidelines
 
-- Use Chain of Command (CoC).
+- Use Chain of Command.
 - Avoid overlayering.
-- Keep logic in classes.
+- Validate before insert.
 - Use proper transaction handling.
-- Follow OHMS naming convention.
-- Keep customizations upgrade-safe.
+- Follow OHMS naming standards.
 
 ---
 
+<a id="testing--verification"></a>
 ## Testing & Verification
 
-- Use Contoso demo data.
-- Validate headers and lines creation.
-- Confirm no regression in standard logic.
-- Perform negative scenario testing.
+- Use Contoso demo data (USMF).
+- Validate financial dimensions.
+- Confirm SalesTable & SalesLine creation.
+- Ensure no standard logic is broken.
 
 ---
 
+<a id="contributing"></a>
 ## Contributing
 
 1. Fork repository.
 2. Create feature branch.
 3. Follow coding standards.
 4. Test thoroughly.
-5. Submit pull request with documentation.
+5. Submit pull request.
 
 ---
 
