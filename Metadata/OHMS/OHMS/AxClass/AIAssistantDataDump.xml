@@ -16,7 +16,7 @@
 ///   - Verify order counts, backorder lists, and customer histories
 ///
 /// Output File:
-///   C:\Temp\D365_AI_Data.txt
+///   C:\Users\localadmin\source\repos\FO_Customizations\D365_AI_Sales-Assistant\D365_AI_Data.txt
 ///
 /// Sections Generated:
 ///   Section 1 — Overall order summary with status breakdown
@@ -30,7 +30,7 @@
 ///
 /// Usage:
 ///   Right-click class in Visual Studio → Set as Startup Object → Ctrl+F5
-///   Then open C:\Temp\D365_AI_Data.txt in Notepad
+///   Then open C:\Users\localadmin\source\repos\FO_Customizations\D365_AI_Sales-Assistant\D365_AI_Data.txt in Notepad
 ///
 /// Notes:
 ///   - Targets USMF company (dataAreaId = 'usmf')
@@ -79,8 +79,8 @@ class AIAssistantDataDump
         int             orderLineCount;
 
         // ── FILE SETUP ────────────────────────────────────────────────────────
-
-        filePath = "C:\\Temp\\D365_AI_Data.txt";
+        
+        filePath = "C:\\Users\\localadmin\\source\\repos\\FO_Customizations\\D365_AI_Sales-Assistant\\D365_AI_Data.txt";
 
         // Create output directory if it does not exist
         System.IO.Directory::CreateDirectory("C:\\Temp");
