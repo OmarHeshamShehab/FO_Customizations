@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxForm xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="Microsoft.Dynamics.AX.Metadata.V6">
+	<Name>SalesAIAssistant</Name>
+	<SourceCode>
+		<Methods xmlns="">
+			<Method>
+				<Name>classDeclaration</Name>
+				<Source><![CDATA[
+[Form]
+public class SalesAIAssistant extends FormRun
+{
+    SalesAIAssistantService     aiService;
+    FormStringControl           questionInput;
+    FormStringControl           answerDisplay;
+    FormButtonControl           askButton;
+    FormStringControl           custAccountControl;
+    FormStringControl           salesIdControl;
+
+}
+]]></Source>
+			</Method>
+			<Method>
+				<Name>init</Name>
+				<Source><![CDATA[
+    public void init()
+    {
+        super();
+
+        questionInput      = element.design().controlName('QuestionInput');
+        answerDisplay      = element.design().controlName('AnswerDisplay');
+        askButton          = element.design().controlName('AskButton');
+        custAccountControl = element.design().controlName('CustomerIdInput');
+        salesIdControl     = element.design().controlName('SalesOrderIdInput');
+
+        aiService = new SalesAIAssistantService();
+
+        if (!aiService.isServiceAvailable())
+        {
+            answerDisplay.text(
+                "AI service is not reachable.\n\n"
+                + "Please make sure:\n"
+                + "1. Python server is running (uvicorn server:app --port 8000)\n"
+                + "2. Ollama is running (ollama serve)\n"
+                + "3. API endpoint: "
+                + SalesAIAssistantParameters::find().APIEndpoint
+            );
+        }
+        else
+        {
+            answerDisplay.text("AI Assistant is ready. Type your question and click Ask Assistant.");
+        }
+
+        questionInput.setFocus();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>close</Name>
+				<Source><![CDATA[
+    public void close()
+    {
+        super();
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+		<DataSources xmlns="" />
+		<DataControls xmlns="">
+			<Control>
+				<Name>CustomerIdInput</Name>
+				<Type>String</Type>
+				<Methods>
+					<Method>
+						<Name>lookup</Name>
+						<Source><![CDATA[
+        public void lookup()
+        {
+            SysTableLookup          sysTableLookup;
+            QueryBuildDataSource    qbds;
+            Query                   query;
+
+            sysTableLookup = SysTableLookup::newParameters(tableNum(CustTable), this);
+            sysTableLookup.addLookupField(fieldNum(CustTable, AccountNum));
+
+            query = new Query();
+            qbds  = query.addDataSource(tableNum(CustTable));
+            qbds.addSortField(fieldNum(CustTable, AccountNum));
+
+            sysTableLookup.parmQuery(query);
+            sysTableLookup.performFormLookup();
+        }
+
+]]></Source>
+					</Method>
+				</Methods>
+			</Control>
+			<Control>
+				<Name>SalesOrderIdInput</Name>
+				<Type>String</Type>
+				<Methods>
+					<Method>
+						<Name>lookup</Name>
+						<Source><![CDATA[
+        public void lookup()
+        {
+            SysTableLookup          sysTableLookup;
+            QueryBuildDataSource    qbds;
+            Query                   query;
+            str                     custAccount;
+
+            sysTableLookup = SysTableLookup::newParameters(tableNum(SalesTable), this);
+            sysTableLookup.addLookupField(fieldNum(SalesTable, SalesId));
+            sysTableLookup.addLookupField(fieldNum(SalesTable, CustAccount));
+            sysTableLookup.addLookupField(fieldNum(SalesTable, SalesStatus));
+
+            query    = new Query();
+            qbds     = query.addDataSource(tableNum(SalesTable));
+            qbds.addSortField(fieldNum(SalesTable, SalesId), SortOrder::Descending);
+
+            custAccount = custAccountControl.text();
+            if (custAccount)
+            {
+                qbds.addRange(fieldNum(SalesTable, CustAccount)).value(custAccount);
+            }
+
+            sysTableLookup.parmQuery(query);
+            sysTableLookup.performFormLookup();
+        }
+
+]]></Source>
+					</Method>
+				</Methods>
+			</Control>
+			<Control>
+				<Name>AskButton</Name>
+				<Type>Button</Type>
+				<Methods>
+					<Method>
+						<Name>clicked</Name>
+						<Source><![CDATA[
+        public void clicked()
+        {
+            str question   = questionInput.text();
+            str orderId    = salesIdControl.text();
+            str customerId = custAccountControl.text();
+
+            if (!question || strLen(strLTrim(strRTrim(question))) == 0)
+            {
+                warning("Please enter a question.");
+                questionInput.setFocus();
+                return;
+            }
+
+            answerDisplay.text("Thinking... please wait.");
+            askButton.enabled(false);
+            element.redraw();
+
+            try
+            {
+                str answer = aiService.askQuestion(question, orderId, customerId);
+                answerDisplay.text(answer);
+            }
+            catch (Exception::Error)
+            {
+                answerDisplay.text("An error occurred. Please try again.");
+            }
+
+            askButton.enabled(true);
+            askButton.setFocus();
+        }
+
+]]></Source>
+					</Method>
+				</Methods>
+			</Control>
+		</DataControls>
+		<Members xmlns="" />
+	</SourceCode>
+	<DataSources />
+	<Design>
+		<Caption xmlns="">Sales AI Assistant</Caption>
+		<Pattern xmlns="">Custom</Pattern>
+		<ShowDeleteButton xmlns="">No</ShowDeleteButton>
+		<ShowNewButton xmlns="">No</ShowNewButton>
+		<Controls xmlns="">
+			<AxFormControl xmlns=""
+				i:type="AxFormGroupControl">
+				<Name>InputGroup</Name>
+				<Type>Group</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>CustomerIdInput</Name>
+						<Type>String</Type>
+						<Width>200</Width>
+						<WidthMode>Manual</WidthMode>
+						<FormControlExtension
+							i:nil="true" />
+						<Label>Customer Account</Label>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>SalesOrderIdInput</Name>
+						<HeightMode>Auto</HeightMode>
+						<Type>String</Type>
+						<Width>200</Width>
+						<WidthMode>Manual</WidthMode>
+						<FormControlExtension
+							i:nil="true" />
+						<Label>Sales Order ID</Label>
+					</AxFormControl>
+				</Controls>
+				<Columns>2</Columns>
+				<Caption>Order &amp; Customer Context</Caption>
+			</AxFormControl>
+			<AxFormControl xmlns=""
+				i:type="AxFormGroupControl">
+				<Name>QuestionGroup</Name>
+				<Type>Group</Type>
+				<WidthMode>SizeToAvailable</WidthMode>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>QuestionInput</Name>
+						<Height>200</Height>
+						<HeightMode>Manual</HeightMode>
+						<Type>String</Type>
+						<Width>600</Width>
+						<WidthMode>Manual</WidthMode>
+						<FormControlExtension
+							i:nil="true" />
+						<MultiLine>Yes</MultiLine>
+					</AxFormControl>
+				</Controls>
+				<ColumnsMode>Fill</ColumnsMode>
+				<Caption>Your Question</Caption>
+			</AxFormControl>
+			<AxFormControl xmlns=""
+				i:type="AxFormButtonGroupControl">
+				<Name>ButtonGroup</Name>
+				<Type>ButtonGroup</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+						i:type="AxFormButtonControl">
+						<Name>AskButton</Name>
+						<Type>Button</Type>
+						<Width>150</Width>
+						<WidthMode>Manual</WidthMode>
+						<FormControlExtension
+							i:nil="true" />
+						<ButtonDisplay>TextOnly</ButtonDisplay>
+						<Text>Ask Assistant</Text>
+					</AxFormControl>
+				</Controls>
+				<FrameType>None</FrameType>
+			</AxFormControl>
+			<AxFormControl xmlns=""
+				i:type="AxFormGroupControl">
+				<Name>AnswerGroup</Name>
+				<Type>Group</Type>
+				<WidthMode>Auto</WidthMode>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+						i:type="AxFormStringControl">
+						<Name>AnswerDisplay</Name>
+						<AllowEdit>No</AllowEdit>
+						<Height>2600</Height>
+						<HeightMode>Manual</HeightMode>
+						<Type>String</Type>
+						<Width>1600</Width>
+						<WidthMode>Manual</WidthMode>
+						<FormControlExtension
+							i:nil="true" />
+						<MultiLine>Yes</MultiLine>
+					</AxFormControl>
+				</Controls>
+				<ColumnsMode>Fill</ColumnsMode>
+				<Caption>Answer</Caption>
+			</AxFormControl>
+		</Controls>
+	</Design>
+	<Parts />
+</AxForm>

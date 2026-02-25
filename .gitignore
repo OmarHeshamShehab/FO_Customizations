@@ -371,3 +371,17 @@ BuildProjectResult.err.xml
 BuildProjectResult.xml
 CompileLabels.xml
 *.xref
+
+# -----------------------------
+# D365 AI Sales Assistant (Python)
+# -----------------------------
+
+# Virtual environment
+.venv/
+
+# Environment variables
+.env
+
+# Optional: ignore Python venv anywhere
+*/.venv/
+*/.env

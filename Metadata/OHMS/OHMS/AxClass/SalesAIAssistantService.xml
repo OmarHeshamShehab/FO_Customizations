@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SalesAIAssistantService</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// SalesAIAssistantService — AI Assistant HTTP Integration Service
+/// ===============================================================
+/// This class is the bridge between the D365 F&O X++ layer and the
+/// Python FastAPI backend that powers the Sales AI Assistant.
+///
+/// Responsibilities:
+///   - Loads API configuration from SalesAIAssistantParameters table
+///   - Builds JSON request bodies for the Python API
+///   - Sends HTTP requests to the Python FastAPI server
+///   - Returns plain text AI-generated answers to the calling form
+///   - Performs health checks to verify the Python server is running
+///
+/// Architecture:
+///   F&O Form (SalesAIAssistant)
+///     -> SalesAIAssistantService.askQuestion()
+///       -> callAPI() -> Python /ask-text endpoint
+///         -> Python fetches D365 OData data
+///         -> Python calls Ollama LLM
+///         -> Returns plain text answer
+///     -> SalesAIAssistantService.isServiceAvailable()
+///       -> callHealthCheck() -> Python /health endpoint
+///
+/// Dependencies:
+///   - SalesAIAssistantParameters: Stores API endpoint and timeout settings
+///   - Python FastAPI server running on localhost:8000
+///   - System.Net.Http: .NET HTTP client for making REST calls
+///
+/// Important Notes:
+///   - Uses /ask-text endpoint (plain text) not /ask (JSON) to avoid
+///     X++ string length limitations with JSON parsing
+///   - Python server must be running before calling any methods
+///   - AOS must be awake (F&O browser active) for OData calls to succeed
+///   - Timeout defaults to 90 seconds to allow for Ollama response time
+///
+/// Usage:
+///   SalesAIAssistantService aiService = new SalesAIAssistantService();
+///   if (aiService.isServiceAvailable())
+///   {
+///       str answer = aiService.askQuestion("What is the status of order 000697?", "000697", "");
+///   }
+/// </summary>
+public class SalesAIAssistantService
+{
+    // API endpoint base URL loaded from parameters table
+    // Default: http://localhost:8000
+    private str apiEndpoint;
+
+    // HTTP request timeout in seconds
+    // Set high enough to allow Ollama LLM to generate a response
+    // Default: 90 seconds
+    private int timeoutSeconds;
+
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>new</Name>
+				<Source><![CDATA[
+    // ── CONSTRUCTOR ───────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Initializes the service by loading configuration from the parameters table.
+    /// Falls back to sensible defaults if parameters are not configured.
+    /// </summary>
+    public void new()
+    {
+        SalesAIAssistantParameters params = SalesAIAssistantParameters::find();
+
+        // Load endpoint from parameters, fall back to localhost default
+        apiEndpoint    = params.APIEndpoint    ? params.APIEndpoint    : "http://localhost:8000";
+
+        // Load timeout from parameters, fall back to 90 second default
+        timeoutSeconds = params.TimeoutSeconds ? params.TimeoutSeconds : 90;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>askQuestion</Name>
+				<Source><![CDATA[
+    // ── PUBLIC METHODS ────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Main entry point — sends a natural language question to the AI assistant
+    /// and returns a plain text answer based on live D365 data.
+    ///
+    /// The Python backend will:
+    ///   1. Detect intent from the question and context fields
+    ///   2. Fetch relevant data from D365 OData
+    ///   3. Build a prompt with the data
+    ///   4. Call Ollama LLM to generate an answer
+    ///   5. Return plain text answer
+    ///
+    /// Parameters:
+    ///   _question      - Natural language question e.g. "What is the status of order 000697?"
+    ///   _salesOrderId  - Optional explicit order number e.g. "000697"
+    ///                    If provided, Python will fetch this specific order
+    ///   _customerId    - Optional explicit customer account e.g. "US-001"
+    ///                    If provided, Python will fetch this customer's orders
+    ///
+    /// Returns:
+    ///   Plain text answer from the AI assistant
+    ///   Error message string if the service is unavailable
+    /// </summary>
+    public str askQuestion(str _question, str _salesOrderId = '', str _customerId = '')
+    {
+        str requestBody;
+        str response;
+
+        // Validate that a question was provided
+        if (!_question)
+        {
+            return "Please enter a question.";
+        }
+
+        // Build JSON request body with question and optional context
+        requestBody = this.buildRequestBody(_question, _salesOrderId, _customerId);
+
+        // Call the Python API and get plain text response
+        response = this.callAPI(requestBody);
+
+        // Return friendly error if server is unreachable
+        if (!response)
+        {
+            return "Could not reach the AI service. Please make sure the Python server is running on " + apiEndpoint;
+        }
+
+        return response;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>isServiceAvailable</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Checks whether the Python FastAPI server is running and reachable.
+    /// Called during form initialization to show appropriate status message.
+    ///
+    /// Returns:
+    ///   true  - Server is running and responding to health checks
+    ///   false - Server is unreachable or returned an error
+    /// </summary>
+    public boolean isServiceAvailable()
+    {
+        str response = this.callHealthCheck();
+        return response != '';
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>buildRequestBody</Name>
+				<Source><![CDATA[
+    // ── PRIVATE METHODS ───────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Builds the JSON request body for the /ask-text API endpoint.
+    ///
+    /// Sanitizes input strings by removing double quotes to prevent
+    /// JSON injection or malformed request bodies.
+    ///
+    /// Parameters:
+    ///   _question      - User's question (double quotes replaced with spaces)
+    ///   _salesOrderId  - Order number (double quotes stripped)
+    ///   _customerId    - Customer account (double quotes stripped)
+    ///
+    /// Returns:
+    ///   JSON string formatted for the AskRequest Python model
+    ///
+    /// Example output:
+    ///   {"question": "What is the status of order 000697?","sales_order_id": "000697","customer_id": ""}
+    /// </summary>
+    private str buildRequestBody(str _question, str _salesOrderId, str _customerId)
+    {
+        // Sanitize inputs to prevent JSON formatting issues
+        str safeQuestion = strReplace(_question,     '"', ' ');
+        str safeOrderId  = strReplace(_salesOrderId, '"', '');
+        str safeCustomer = strReplace(_customerId,   '"', '');
+
+        return '{'
+            + '"question": "'       + safeQuestion + '",'
+            + '"sales_order_id": "' + safeOrderId  + '",'
+            + '"customer_id": "'    + safeCustomer + '"'
+            + '}';
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>callAPI</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Sends a POST request to the Python /ask-text endpoint and returns
+    /// the plain text AI-generated answer.
+    ///
+    /// Uses /ask-text instead of /ask because:
+    ///   - /ask returns JSON which requires parsing in X++
+    ///   - X++ str type has a 256 character limit causing JSON truncation
+    ///   - /ask-text returns plain text which X++ handles correctly
+    ///
+    /// Parameters:
+    ///   _body - JSON request body from buildRequestBody()
+    ///
+    /// Returns:
+    ///   Plain text answer string from the AI
+    ///   Empty string on any error (caller handles error messaging)
+    /// </summary>
+    private str callAPI(str _body)
+    {
+        System.Net.Http.HttpClient          httpClient;
+        System.Net.Http.HttpRequestMessage  request;
+        System.Net.Http.HttpResponseMessage response;
+        System.Net.Http.StringContent       content;
+        str                                 responseText;
+        str                                 fullUrl;
+
+        // Always call the plain text endpoint to avoid JSON parsing in X++
+        fullUrl = apiEndpoint + "/ask-text";
+
+        try
+        {
+            // Initialize HTTP client with configured timeout
+            httpClient         = new System.Net.Http.HttpClient();
+            httpClient.Timeout = System.TimeSpan::FromSeconds(timeoutSeconds);
+
+            // Build request content with JSON body and correct content type
+            content = new System.Net.Http.StringContent(
+                _body,
+                System.Text.Encoding::UTF8,
+                "application/json"
+            );
+
+            // Build POST request to the /ask-text endpoint
+            request = new System.Net.Http.HttpRequestMessage(
+                System.Net.Http.HttpMethod::Post,
+                new System.Uri(fullUrl)
+            );
+            request.Content = content;
+
+            // Send request synchronously using .Result
+            // Note: This blocks the AOS thread but is acceptable for interactive forms
+            response     = httpClient.SendAsync(request).Result;
+            responseText = response.Content.ReadAsStringAsync().Result;
+
+            // Log and return empty on HTTP error responses
+            if (!response.IsSuccessStatusCode)
+            {
+                warning("AI Service error: " + subStr(responseText, 1, 200));
+                return '';
+            }
+
+            return responseText;
+        }
+        catch (Exception::CLRError)
+        {
+            // .NET CLR errors e.g. connection refused, DNS failure
+            warning("Connection error: " + AifUtil::getClrErrorMessage());
+            return '';
+        }
+        catch (Exception::Error)
+        {
+            // X++ runtime errors
+            warning("Error calling AI service.");
+            return '';
+        }
+        finally
+        {
+            // Always dispose HTTP client to release socket connections
+            if (httpClient)
+            {
+                httpClient.Dispose();
+            }
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>callHealthCheck</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Sends a GET request to the Python /health endpoint to verify
+    /// the server is running and responsive.
+    ///
+    /// Uses a short 10 second timeout so the form loads quickly
+    /// even if the server is down — no long wait for the user.
+    ///
+    /// Returns:
+    ///   Response body string if server is healthy e.g. {"status":"ok",...}
+    ///   Empty string if server is unreachable or returned an error
+    /// </summary>
+    private str callHealthCheck()
+    {
+        System.Net.Http.HttpClient          httpClient;
+        System.Net.Http.HttpResponseMessage response;
+
+        try
+        {
+            // Short timeout for health check — fail fast if server is down
+            httpClient         = new System.Net.Http.HttpClient();
+            httpClient.Timeout = System.TimeSpan::FromSeconds(10);
+
+            // Simple GET request to /health endpoint
+            response = httpClient.GetAsync(apiEndpoint + "/health").Result;
+
+            if (response.IsSuccessStatusCode)
+            {
+                return response.Content.ReadAsStringAsync().Result;
+            }
+
+            return '';
+        }
+        catch (Exception::CLRError)
+        {
+            // Server unreachable — return empty string silently
+            // The calling form will display appropriate message to user
+            return '';
+        }
+        finally
+        {
+            // Always dispose HTTP client to release socket connections
+            if (httpClient)
+            {
+                httpClient.Dispose();
+            }
+        }
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

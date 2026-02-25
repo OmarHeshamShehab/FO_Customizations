@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>AIAssistantDataDump</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// AIAssistantDataDump — D365 Sales Data Export Job
+/// =================================================
+/// Exports comprehensive sales order, customer, and order line data
+/// from the USMF company to a structured text file for AI assistant
+/// validation and testing purposes.
+///
+/// This job is used to:
+///   - Extract ground truth data from D365 to validate AI assistant answers
+///   - Provide a complete snapshot of sales data for complex inquiry testing
+///   - Verify order counts, backorder lists, and customer histories
+///
+/// Output File:
+///   C:\Temp\D365_AI_Data.txt
+///
+/// Sections Generated:
+///   Section 1 — Overall order summary with status breakdown
+///   Section 2 — All customers with total and backorder counts
+///   Section 3 — US-001 complete order history
+///   Section 4 — DE-001 complete order history
+///   Section 5 — All backorders with full details
+///   Section 6 — 10 most recent orders
+///   Section 7 — Order lines for first 5 backorders
+///   Section 8 — Customer master data
+///
+/// Usage:
+///   Right-click class in Visual Studio → Set as Startup Object → Ctrl+F5
+///   Then open C:\Temp\D365_AI_Data.txt in Notepad
+///
+/// Notes:
+///   - Targets USMF company (dataAreaId = 'usmf')
+///   - SalesStatus enum values: None, Backorder, Delivered, Invoiced, Canceled
+///   - Output file is overwritten on each run
+///   - C:\Temp directory is created automatically if it does not exist
+/// </summary>
+class AIAssistantDataDump
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    public static void main(Args _args)
+    {
+        // ── VARIABLE DECLARATIONS ─────────────────────────────────────────────
+
+        // Table buffers
+        SalesTable      salesTable;
+        CustTable       custTable;
+        SalesLine       salesLine;
+
+        // File output
+        TextIo          file;
+        str             filePath;
+
+        // Section 1 — Status counters
+        int             totalCount;
+        int             backorderCount;
+        int             invoicedCount;
+        int             openCount;
+        int             deliveredCount;
+        int             canceledCount;
+
+        // Section 2 — Customer grouping variables
+        CustAccount     prevCust;
+        int             custTotal;
+        int             custBack;
+
+        // Section 6 — Recent orders counter
+        int             recentCount;
+
+        // Section 7 — Order line counter
+        int             orderLineCount;
+
+        // ── FILE SETUP ────────────────────────────────────────────────────────
+
+        filePath = "C:\\Temp\\D365_AI_Data.txt";
+
+        // Create output directory if it does not exist
+        System.IO.Directory::CreateDirectory("C:\\Temp");
+
+        // Open file in write mode — overwrites existing file
+        file = new TextIo(filePath, 'W');
+
+        // ── SECTION 1: OVERALL ORDER SUMMARY ─────────────────────────────────
+        // Count all orders in USMF broken down by SalesStatus enum value
+        // SalesStatus enum: None, Backorder, Delivered, Invoiced, Canceled
+
+        file.write("=================================================");
+        file.write("SECTION 1 - OVERALL ORDER SUMMARY");
+        file.write("=================================================");
+
+        while select salesTable
+            where salesTable.dataAreaId == 'usmf'
+        {
+            totalCount++;
+
+            // Increment the appropriate status counter
+            if (salesTable.SalesStatus == SalesStatus::Backorder)  backorderCount++;
+            if (salesTable.SalesStatus == SalesStatus::Invoiced)   invoicedCount++;
+            if (salesTable.SalesStatus == SalesStatus::None)       openCount++;
+            if (salesTable.SalesStatus == SalesStatus::Delivered)  deliveredCount++;
+            if (salesTable.SalesStatus == SalesStatus::Canceled)   canceledCount++;
+        }
+
+        file.write(strFmt("Total Orders    : %1", totalCount));
+        file.write(strFmt("Backorders      : %1", backorderCount));
+        file.write(strFmt("Invoiced        : %1", invoicedCount));
+        file.write(strFmt("None/Open       : %1", openCount));
+        file.write(strFmt("Delivered       : %1", deliveredCount));
+        file.write(strFmt("Canceled        : %1", canceledCount));
+        file.write(" ");
+
+        // ── SECTION 2: CUSTOMERS WITH ORDER AND BACKORDER COUNTS ─────────────
+        // Loops through all orders sorted by customer account
+        // Groups by customer to produce per-customer order and backorder totals
+        // Uses prev-customer pattern since GROUP BY is not available in X++ select
+
+        file.write("=================================================");
+        file.write("SECTION 2 - CUSTOMERS WITH ORDER AND BACKORDER COUNTS");
+        file.write("=================================================");
+
+        prevCust  = '';
+        custTotal = 0;
+        custBack  = 0;
+
+        while select salesTable
+            order by salesTable.CustAccount
+            where salesTable.dataAreaId == 'usmf'
+        {
+            // When customer changes write the previous customer totals
+            if (salesTable.CustAccount != prevCust && prevCust)
+            {
+                file.write(strFmt("Customer: %1 | Total: %2 | Backorders: %3",
+                    prevCust, custTotal, custBack));
+
+                // Reset counters for new customer
+                custTotal = 0;
+                custBack  = 0;
+            }
+
+            prevCust = salesTable.CustAccount;
+            custTotal++;
+
+            if (salesTable.SalesStatus == SalesStatus::Backorder)
+            {
+                custBack++;
+            }
+        }
+
+        // Write the last customer record after loop ends
+        if (prevCust)
+        {
+            file.write(strFmt("Customer: %1 | Total: %2 | Backorders: %3",
+                prevCust, custTotal, custBack));
+        }
+        file.write(" ");
+
+        // ── SECTION 3: US-001 COMPLETE ORDER HISTORY ─────────────────────────
+        // Full order history for customer US-001 sorted newest first
+        // Used to validate customer-specific AI assistant answers
+
+        file.write("=================================================");
+        file.write("SECTION 3 - US-001 COMPLETE ORDER HISTORY");
+        file.write("=================================================");
+
+        while select salesTable
+            order by salesTable.CreatedDateTime desc
+            where salesTable.dataAreaId == 'usmf'
+               && salesTable.CustAccount == 'US-001'
+        {
+            file.write(strFmt("Order: %1 | Status: %2 | Created: %3 | ReqShip: %4 | Currency: %5 | PayTerms: %6",
+                salesTable.SalesId,
+                salesTable.SalesStatus,
+                salesTable.CreatedDateTime,
+                salesTable.DeliveryDate,
+                salesTable.CurrencyCode,
+                salesTable.Payment));
+        }
+        file.write(" ");
+
+        // ── SECTION 4: DE-001 COMPLETE ORDER HISTORY ─────────────────────────
+        // Full order history for customer DE-001 sorted newest first
+        // DE-001 is a key test customer — has known backorders for validation
+
+        file.write("=================================================");
+        file.write("SECTION 4 - DE-001 COMPLETE ORDER HISTORY");
+        file.write("=================================================");
+
+        while select salesTable
+            order by salesTable.CreatedDateTime desc
+            where salesTable.dataAreaId == 'usmf'
+               && salesTable.CustAccount == 'DE-001'
+        {
+            file.write(strFmt("Order: %1 | Status: %2 | Created: %3 | ReqShip: %4 | Currency: %5 | PayTerms: %6",
+                salesTable.SalesId,
+                salesTable.SalesStatus,
+                salesTable.CreatedDateTime,
+                salesTable.DeliveryDate,
+                salesTable.CurrencyCode,
+                salesTable.Payment));
+        }
+        file.write(" ");
+
+        // ── SECTION 5: ALL BACKORDERS FULL DETAILS ───────────────────────────
+        // Complete list of all backorders across all customers
+        // Sorted by customer account for easy grouping and comparison
+        // This is ground truth data to validate backorder inquiry answers
+
+        file.write("=================================================");
+        file.write("SECTION 5 - ALL BACKORDERS FULL DETAILS");
+        file.write("=================================================");
+
+        while select salesTable
+            order by salesTable.CustAccount
+            where salesTable.dataAreaId  == 'usmf'
+               && salesTable.SalesStatus == SalesStatus::Backorder
+        {
+            file.write(strFmt("Order: %1 | Customer: %2 | Created: %3 | ReqShip: %4 | PayTerms: %5 | Origin: %6",
+                salesTable.SalesId,
+                salesTable.CustAccount,
+                salesTable.CreatedDateTime,
+                salesTable.DeliveryDate,
+                salesTable.Payment,
+                salesTable.SalesOriginId));
+        }
+        file.write(" ");
+
+        // ── SECTION 6: 10 MOST RECENT ORDERS ─────────────────────────────────
+        // The 10 most recently created orders across all customers
+        // Used to validate recent order summary questions
+
+        file.write("=================================================");
+        file.write("SECTION 6 - 10 MOST RECENT ORDERS");
+        file.write("=================================================");
+
+        recentCount = 0;
+
+        while select salesTable
+            order by salesTable.CreatedDateTime desc
+            where salesTable.dataAreaId == 'usmf'
+        {
+            recentCount++;
+
+            // Stop after 10 records
+            if (recentCount > 10) break;
+
+            file.write(strFmt("Order: %1 | Customer: %2 | Status: %3 | Created: %4 | ReqShip: %5",
+                salesTable.SalesId,
+                salesTable.CustAccount,
+                salesTable.SalesStatus,
+                salesTable.CreatedDateTime,
+                salesTable.DeliveryDate));
+        }
+        file.write(" ");
+
+        // ── SECTION 7: ORDER LINES FOR FIRST 5 BACKORDERS ────────────────────
+        // Drill into order line details for the first 5 backorders
+        // Provides item, quantity, unit, and price data for line-level questions
+        // Note: Full line data for all backorders would be too large for testing
+
+        file.write("=================================================");
+        file.write("SECTION 7 - ORDER LINES FOR FIRST 5 BACKORDERS");
+        file.write("=================================================");
+
+        orderLineCount = 0;
+
+        while select salesTable
+            where salesTable.dataAreaId  == 'usmf'
+               && salesTable.SalesStatus == SalesStatus::Backorder
+        {
+            orderLineCount++;
+
+            // Limit to first 5 backorders to keep output manageable
+            if (orderLineCount > 5) break;
+
+            file.write(strFmt("ORDER: %1 (Customer: %2)",
+                salesTable.SalesId,
+                salesTable.CustAccount));
+
+            // Fetch all lines for this backorder
+            while select salesLine
+                where salesLine.SalesId    == salesTable.SalesId
+                   && salesLine.dataAreaId == 'usmf'
+            {
+                file.write(strFmt("  Line: %1 | Item: %2 | Qty: %3 | Unit: %4 | Price: %5",
+                    salesLine.LineNum,
+                    salesLine.ItemId,
+                    salesLine.SalesQty,
+                    salesLine.SalesUnit,
+                    salesLine.SalesPrice));
+            }
+        }
+        file.write(" ");
+
+        // ── SECTION 8: CUSTOMER MASTER DATA ──────────────────────────────────
+        // Customer master records from CustTable
+        // Provides credit limits, payment terms, currency and customer group
+        // Used to validate customer profile questions
+
+        file.write("=================================================");
+        file.write("SECTION 8 - CUSTOMER MASTER DATA");
+        file.write("=================================================");
+
+        while select custTable
+            where custTable.dataAreaId == 'usmf'
+        {
+            file.write(strFmt("Customer: %1 | Group: %2 | Currency: %3 | PayTerms: %4 | CreditMax: %5",
+                custTable.AccountNum,
+                custTable.CustGroup,
+                custTable.Currency,
+                custTable.PaymTermId,
+                custTable.CreditMax));
+        }
+        file.write(" ");
+
+        // ── FOOTER ────────────────────────────────────────────────────────────
+
+        file.write("=================================================");
+        file.write("END OF DATA DUMP");
+        file.write("=================================================");
+
+        // Release file handle
+        file = null;
+
+        info(strFmt("Done. Open %1 in Notepad to validate contents.", filePath));
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

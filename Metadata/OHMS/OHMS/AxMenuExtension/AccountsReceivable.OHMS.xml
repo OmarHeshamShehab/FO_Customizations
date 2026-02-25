@@ -12,6 +12,15 @@
 				<MenuItemType>Output</MenuItemType>
 			</MenuElement>
 		</AxMenuExtensionElement>
+		<AxMenuExtensionElement xmlns="">
+			<Parent>Orders</Parent>
+			<PositionType>Begin</PositionType>
+			<MenuElement xmlns=""
+				i:type="AxMenuElementMenuItem">
+				<Name>SalesAIAssistant</Name>
+				<MenuItemName>SalesAIAssistant</MenuItemName>
+			</MenuElement>
+		</AxMenuExtensionElement>
 	</Elements>
 	<MenuElementModifications />
 	<PropertyModifications />
