@@ -1,3 +1,4 @@
+
 # D365 Finance and Operations Customizations (FO_Customization)
 
 A curated collection of real-world customizations, tutorials, and best practices for Microsoft Dynamics 365 Finance and Operations (D365FO), developed and maintained by **Omar Hesham Mohamed Shehab** under the **OHMS** model.
@@ -11,7 +12,6 @@ A curated collection of real-world customizations, tutorials, and best practices
 - [Key Features](#key-features)
 - [Getting Started](#getting-started)
 - [Customization Modules](#customization-modules)
-  - [D365 AI Sales Assistant](#d365-ai-sales-assistant)
   - [ConVehicleManagement](#convehiclemanagement)
   - [Reports (SSRS Custom Report)](#reports-ssrs-custom-report)
   - [Halwani](#halwani)
@@ -45,7 +45,6 @@ All solutions follow Microsoft extensibility guidelines to ensure upgrade safety
 
 ### Customization Modules
 
-- **D365_AI_Sales-Assistant** — AI-powered natural language sales assistant integrated natively into D365 F&O.
 - **ConVehicleManagement** – Vehicle tracking and maintenance scheduling.
 - **Reports** – Custom SSRS reporting solution.
 - **Halwani** – Client-specific customizations.
@@ -62,7 +61,6 @@ All solutions follow Microsoft extensibility guidelines to ensure upgrade safety
 
 - Upgrade-safe customizations
 - Real-world client implementations
-- AI-powered natural language querying of live ERP data
 - Reporting, services, automation examples
 - Clean architecture and best practices
 
@@ -80,63 +78,6 @@ All solutions follow Microsoft extensibility guidelines to ensure upgrade safety
 
 <a id="customization-modules"></a>
 ## Customization Modules
-
----
-
-<a id="d365-ai-sales-assistant"></a>
-### D365 AI Sales Assistant
-
-> 📁 `D365_AI_Sales-Assistant/` — [Full Documentation](D365_AI_Sales-Assistant/README.md)
-
-A fully local, AI-powered natural language assistant integrated natively into Microsoft Dynamics 365 F&O. Sales representatives can ask questions about orders, customers, backorders, and credit risk in plain English and receive instant, data-driven answers — all without any cloud AI dependency or data leaving the environment.
-
-#### Architecture
-
-```
-F&O Form (X++) → SalesAIAssistantService (X++) → Python FastAPI → Ollama qwen3:8b → D365 OData API
-```
-
-#### Key Highlights
-
-- Native F&O form accessible from **Accounts Receivable → Orders → AI Sales Assistant**
-- Python FastAPI backend running on `localhost:8000`
-- Local Ollama LLM (`qwen3:8b`) — no API costs, no data leaves the VHD
-- Live D365 data via Azure AD OAuth2 authenticated OData API
-- Customer credit risk analysis from `CustomersV3` OData entity
-- Validated against USMF demo data with ground truth verification
-
-#### Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| F&O UI | X++ Form + Service Class |
-| Backend | Python 3.14+ / FastAPI / uvicorn |
-| AI Model | Ollama `qwen3:8b` (local) |
-| Auth | Azure AD client credentials |
-| Data | D365 OData API (`SalesOrderHeadersV2`, `CustomersV3`) |
-
-#### Validated Scenarios
-
-| Scenario | Question | Result |
-|----------|----------|--------|
-| Backorder Risk | Which customers have more than 2 backorders and what is their credit limit? | ✅ Pass |
-| COD Analysis | Which customers have COD payment terms and do they have backorders? | ✅ Pass |
-| Customer Summary | Full summary of customer US-003 — orders, backorders, credit, risk | ✅ Pass |
-| Order Line Items | What items are on order 000698 and what is the total value? | ⚠️ Planned |
-
-#### Quick Start
-
-```bash
-# Start Python server
-cd D365_AI_Sales-Assistant/python
-.venv\Scripts\activate.bat
-uvicorn server:app --host 0.0.0.0 --port 8000 --reload
-
-# Open AI Assistant in F&O
-https://usnconeboxax1aos.cloud.onebox.dynamics.com/?mi=SalesAIAssistant
-```
-
----
 
 <a id="convehiclemanagement"></a>
 ### ConVehicleManagement
@@ -230,9 +171,7 @@ Secure service pattern including:
 
 Example endpoint:
 
-```
 /api/services/ohmsServiceGroup/ohmsService/Create
-```
 
 ---
 

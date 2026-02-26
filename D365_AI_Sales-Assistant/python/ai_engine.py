@@ -21,7 +21,7 @@ Dependencies:
   - config.py: Ollama URL and model name
 
 Usage:
-  from ai_engine import detect_intent, fetch_context, build_prompt, call_ollama
+  from ai_engine import detect_intent, fetch_context, build_prompt, call_ollama, warm_up_ollama
 
   intent  = detect_intent("What is the status of order 000697?", "", "")
   context = fetch_context(intent)
@@ -36,10 +36,12 @@ Notes:
     is not supported via URL parameters
   - Customer credit data (CreditLimit, PaymentTerms) is fetched from
     CustomersV3 entity when risk or credit questions are detected
+  - Ollama model is kept warm via a keep-alive ping on startup
 """
 
 import re
 import logging
+import asyncio
 import httpx
 
 from config import OLLAMA_URL, OLLAMA_MODEL, ODATA_BASE_URL, COMPANY
@@ -58,6 +60,37 @@ CUSTOMER_FIELDS = (
     "CredManCreditLimitExpiryDate,CredManAccountStatusId,"
     "CredManGroupId,CredManEligibleCreditMax"
 )
+
+
+# ── OLLAMA WARM-UP ────────────────────────────────────────────────────────────
+
+async def warm_up_ollama():
+    """
+    Send a lightweight ping to Ollama on startup to load the model into memory.
+
+    This prevents the first real request from timing out due to model load time.
+    Called once during FastAPI startup. Failures are logged but not fatal.
+
+    The keep_alive value of "10m" tells Ollama to keep the model in memory
+    for 10 minutes after the last request, reducing cold-start delays.
+    """
+    payload = {
+        "model":      OLLAMA_MODEL,
+        "messages":   [{"role": "user", "content": "hello"}],
+        "stream":     False,
+        "keep_alive": "10m",
+        "options":    {"num_predict": 5}
+    }
+    try:
+        log.info(f"Warming up Ollama model: {OLLAMA_MODEL}")
+        async with httpx.AsyncClient(timeout=300.0) as client:
+            r = await client.post(f"{OLLAMA_URL}/api/chat", json=payload)
+            if r.status_code == 200:
+                log.info("Ollama warm-up complete — model loaded into memory")
+            else:
+                log.warning(f"Ollama warm-up returned status {r.status_code}")
+    except Exception as e:
+        log.warning(f"Ollama warm-up failed (non-fatal): {e}")
 
 
 # ── INTENT DETECTION ──────────────────────────────────────────────────────────
@@ -337,9 +370,17 @@ CUSTOMER {cust_id} ORDER HISTORY:
                 by_cust.setdefault(c, []).append(o.get("SalesOrderNumber"))
 
             # Sort by number of backorders descending so worst customers appear first
-            for cust, nums in sorted(by_cust.items(), key=lambda x: len(x[1]), reverse=True):
+            # Only include customers with more than 1 backorder to keep prompt concise
+            filtered = {c: nums for c, nums in by_cust.items() if len(nums) > 1}
+            for cust, nums in sorted(filtered.items(), key=lambda x: len(x[1]), reverse=True):
                 sample = ', '.join(nums[:3]) + ('...' if len(nums) > 3 else '')
                 data += f"  {cust}: {len(nums)} backorders ({sample})\n"
+
+            if not filtered:
+                # Fall back to all if none have >1
+                for cust, nums in sorted(by_cust.items(), key=lambda x: len(x[1]), reverse=True):
+                    sample = ', '.join(nums[:3]) + ('...' if len(nums) > 3 else '')
+                    data += f"  {cust}: {len(nums)} backorders ({sample})\n"
         else:
             data += "  No backorders found.\n"
 
@@ -364,8 +405,25 @@ CUSTOMER {cust_id} ORDER HISTORY:
 
     # Customer credit and master data
     if context.get("customers"):
+        # If backorders exist, only show credit data for customers who have backorders
+        # This keeps the prompt concise and focused
+        backorder_customers = set()
+        if context.get("backorders"):
+            for o in context["backorders"]:
+                backorder_customers.add(o.get("OrderingCustomerAccountNumber", ""))
+
+        customers_to_show = context["customers"]
+        if backorder_customers:
+            customers_to_show = [
+                c for c in context["customers"]
+                if c.get("CustomerAccount") in backorder_customers
+            ]
+            # Fall back to all if filter produces nothing
+            if not customers_to_show:
+                customers_to_show = context["customers"]
+
         data += "\nCUSTOMER CREDIT AND MASTER DATA:\n"
-        for c in context["customers"]:
+        for c in customers_to_show:
             credit_limit = c.get("CreditLimit", 0)
             credit_display = "No limit set" if credit_limit == 0 else f"{credit_limit:,.2f}"
             data += (
@@ -391,42 +449,55 @@ async def call_ollama(prompt):
     Uses async httpx for non-blocking HTTP calls. Connects to the locally
     running Ollama service on localhost:11434.
 
+    Includes automatic retry logic: if the first attempt fails, the model
+    is re-warmed and one retry is attempted before returning an error.
+
     Args:
         prompt (str): Complete prompt string from build_prompt()
 
     Returns:
         str: Generated answer text from the LLM
-             Error message string if Ollama is unreachable
+             Error message string if Ollama is unreachable after retry
 
     Model settings:
-        - model: qwen3:8b (configured in config.py)
-        - think: False — disables chain-of-thought for faster responses
+        - model:       qwen3:8b (configured in config.py)
+        - think:       False — disables chain-of-thought for faster responses
         - temperature: 0.2 — low for consistent, factual business answers
         - num_predict: 600 — limits response length for concise answers
+        - keep_alive:  10m — keeps model in memory between requests
     """
     payload = {
-        "model":    OLLAMA_MODEL,
-        "messages": [{"role": "user", "content": prompt}],
-        "stream":   False,
-        "think":    False,
-        "options":  {
-            "temperature":  0.2,
-            "num_predict":  600
+        "model":      OLLAMA_MODEL,
+        "messages":   [{"role": "user", "content": prompt}],
+        "stream":     False,
+        "think":      False,
+        "keep_alive": "10m",
+        "options":    {
+            "temperature": 0.2,
+            "num_predict": 600
         }
     }
 
-    try:
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            r = await client.post(f"{OLLAMA_URL}/api/chat", json=payload)
+    for attempt in range(2):  # Try twice — second attempt after re-warm
+        try:
+            if attempt == 1:
+                log.info("Retrying Ollama after warm-up pause...")
+                await warm_up_ollama()
+                await asyncio.sleep(3)
 
-            if r.status_code == 200:
-                answer = r.json().get("message", {}).get("content", "No response.")
-                log.info(f"Ollama responded with {len(answer)} characters")
-                return answer
+            async with httpx.AsyncClient(timeout=300.0) as client:
+                r = await client.post(f"{OLLAMA_URL}/api/chat", json=payload)
 
-            log.error(f"Ollama error {r.status_code}")
-            return f"Ollama error {r.status_code}"
+                if r.status_code == 200:
+                    answer = r.json().get("message", {}).get("content", "No response.")
+                    log.info(f"Ollama responded with {len(answer)} characters")
+                    return answer
 
-    except Exception as e:
-        log.error(f"Cannot reach Ollama: {e}")
-        return f"Cannot reach Ollama: {e}"
+                log.error(f"Ollama error {r.status_code}: {r.text[:200]}")
+
+        except Exception as e:
+            log.error(f"Ollama attempt {attempt + 1} failed: {e}")
+            if attempt == 1:
+                return f"Cannot reach Ollama after retry: {e}"
+
+    return "Ollama did not respond after retry. Please check that Ollama is running."

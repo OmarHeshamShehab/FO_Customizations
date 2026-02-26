@@ -39,7 +39,7 @@ public class SalesAIAssistantParameters extends common
         {
             ttsbegin;
             parameters.APIEndpoint    = "http://localhost:8000";
-            parameters.TimeoutSeconds = 90;
+            parameters.TimeoutSeconds = 300;
             parameters.IsEnabled      = IsEnabled::Yes;
             parameters.insert();
             ttscommit;

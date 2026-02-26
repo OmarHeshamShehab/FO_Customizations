@@ -36,7 +36,7 @@
 ///     X++ string length limitations with JSON parsing
 ///   - Python server must be running before calling any methods
 ///   - AOS must be awake (F&O browser active) for OData calls to succeed
-///   - Timeout defaults to 90 seconds to allow for Ollama response time
+///   - Timeout defaults to 300 seconds to allow for Ollama response time
 ///
 /// Usage:
 ///   SalesAIAssistantService aiService = new SalesAIAssistantService();
@@ -53,7 +53,7 @@ public class SalesAIAssistantService
 
     // HTTP request timeout in seconds
     // Set high enough to allow Ollama LLM to generate a response
-    // Default: 90 seconds
+    // Default: 300 seconds
     private int timeoutSeconds;
 
 
@@ -76,8 +76,8 @@ public class SalesAIAssistantService
         // Load endpoint from parameters, fall back to localhost default
         apiEndpoint    = params.APIEndpoint    ? params.APIEndpoint    : "http://localhost:8000";
 
-        // Load timeout from parameters, fall back to 90 second default
-        timeoutSeconds = params.TimeoutSeconds ? params.TimeoutSeconds : 90;
+        // Load timeout from parameters, fall back to 300 second default
+        timeoutSeconds = params.TimeoutSeconds ? params.TimeoutSeconds : 300;
     }
 
 ]]></Source>

@@ -10,6 +10,7 @@ Responsibilities:
   - CORS middleware for cross-origin requests
   - Request/response model definitions
   - API endpoint routing and orchestration
+  - Ollama model warm-up on server startup
   - Delegates all business logic to ai_engine.py and odata.py
 
 Endpoints:
@@ -42,7 +43,7 @@ from pydantic import BaseModel
 
 from config import OLLAMA_MODEL, COMPANY
 from odata import fetch_odata
-from ai_engine import detect_intent, fetch_context, build_prompt, call_ollama
+from ai_engine import detect_intent, fetch_context, build_prompt, call_ollama, warm_up_ollama
 
 # ── LOGGING ───────────────────────────────────────────────────────────────────
 
@@ -69,6 +70,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ── STARTUP ───────────────────────────────────────────────────────────────────
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Run once when the FastAPI server starts.
+    Warms up the Ollama model so it is loaded into memory before the
+    first real request arrives. Prevents cold-start timeouts on the
+    first question after server restart.
+    """
+    log.info("Server starting — warming up Ollama model...")
+    await warm_up_ollama()
+    log.info("Startup complete — server ready.")
 
 
 # ── REQUEST / RESPONSE MODELS ─────────────────────────────────────────────────

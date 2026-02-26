@@ -6,15 +6,60 @@
 			<Method>
 				<Name>classDeclaration</Name>
 				<Source><![CDATA[
+/// <summary>
+/// SalesAIAssistant — AI Sales Assistant Form
+/// ===========================================
+/// Main user interface form for the D365 Sales AI Assistant.
+/// Provides a chat-style interface for sales representatives to ask
+/// natural language questions about sales orders and customers.
+///
+/// Form Controls:
+///   CustomerIdInput  — Optional customer account lookup (CustTable)
+///   SalesOrderIdInput — Optional sales order lookup (SalesTable)
+///   QuestionInput    — Free text natural language question input
+///   AskButton        — Submits question to the AI assistant
+///   ClearButton      — Clears all fields and resets the form
+///   AnswerDisplay    — Displays the AI-generated answer with response time
+///
+/// Architecture:
+///   Form → SalesAIAssistantService.askQuestion()
+///     → Python /ask-text endpoint
+///       → OData fetch from D365
+///       → Ollama LLM (qwen3:8b)
+///       → Plain text answer returned
+///
+/// Dependencies:
+///   - SalesAIAssistantService: HTTP bridge to Python backend
+///   - SalesAIAssistantParameters: API endpoint and timeout configuration
+///
+/// Notes:
+///   - Form blocks during AI call (AOS thread limitation)
+///   - Both AskButton and ClearButton are disabled during processing
+///   - Response time is displayed at the bottom of every answer
+///   - ClearButton resets all fields to initial ready state
+///   - CustomerIdInput drives SalesOrderIdInput lookup filter
+///   - AOS must be awake before submitting questions (OData dependency)
+/// </summary>
 [Form]
 public class SalesAIAssistant extends FormRun
 {
+    // ── FORM CONTROL REFERENCES ───────────────────────────────────────────────
+
+    // Service instance — initialized once in init() and reused for all calls
     SalesAIAssistantService     aiService;
-    FormStringControl           questionInput;
-    FormStringControl           answerDisplay;
-    FormButtonControl           askButton;
-    FormStringControl           custAccountControl;
-    FormStringControl           salesIdControl;
+
+    // Input controls
+    FormStringControl           questionInput;      // Natural language question
+    FormStringControl           custAccountControl; // Optional customer account filter
+    FormStringControl           salesIdControl;     // Optional sales order filter
+
+    // Output controls
+    FormStringControl           answerDisplay;      // AI-generated answer display
+
+    // Action controls
+    FormButtonControl           askButton;          // Submit question to AI
+    FormButtonControl           clearButton;        // Reset all fields
+
 
 }
 ]]></Source>
@@ -22,18 +67,32 @@ public class SalesAIAssistant extends FormRun
 			<Method>
 				<Name>init</Name>
 				<Source><![CDATA[
+    // ── FORM LIFECYCLE ────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Initializes the form — binds control references, creates the AI service,
+    /// and performs a health check to verify the Python backend is reachable.
+    ///
+    /// If the service is unavailable, displays troubleshooting instructions
+    /// in the answer display area so the user knows what to fix.
+    /// If the service is available, displays a ready message.
+    /// </summary>
     public void init()
     {
         super();
 
+        // Bind all form controls by their design-time names
         questionInput      = element.design().controlName('QuestionInput');
         answerDisplay      = element.design().controlName('AnswerDisplay');
         askButton          = element.design().controlName('AskButton');
+        clearButton        = element.design().controlName('ClearButton');
         custAccountControl = element.design().controlName('CustomerIdInput');
         salesIdControl     = element.design().controlName('SalesOrderIdInput');
 
+        // Initialize AI service — loads config from SalesAIAssistantParameters
         aiService = new SalesAIAssistantService();
 
+        // Health check — verify Python server is running before user interacts
         if (!aiService.isServiceAvailable())
         {
             answerDisplay.text(
@@ -50,6 +109,7 @@ public class SalesAIAssistant extends FormRun
             answerDisplay.text("AI Assistant is ready. Type your question and click Ask Assistant.");
         }
 
+        // Set initial focus to question input for immediate typing
         questionInput.setFocus();
     }
 
@@ -58,6 +118,9 @@ public class SalesAIAssistant extends FormRun
 			<Method>
 				<Name>close</Name>
 				<Source><![CDATA[
+    /// <summary>
+    /// Handles form close — calls super() to perform standard cleanup.
+    /// </summary>
     public void close()
     {
         super();
@@ -115,10 +178,11 @@ public class SalesAIAssistant extends FormRun
             sysTableLookup.addLookupField(fieldNum(SalesTable, CustAccount));
             sysTableLookup.addLookupField(fieldNum(SalesTable, SalesStatus));
 
-            query    = new Query();
-            qbds     = query.addDataSource(tableNum(SalesTable));
+            query = new Query();
+            qbds  = query.addDataSource(tableNum(SalesTable));
             qbds.addSortField(fieldNum(SalesTable, SalesId), SortOrder::Descending);
 
+            // Filter by customer if one is selected in CustomerIdInput
             custAccount = custAccountControl.text();
             if (custAccount)
             {
@@ -142,10 +206,24 @@ public class SalesAIAssistant extends FormRun
 						<Source><![CDATA[
         public void clicked()
         {
-            str question   = questionInput.text();
-            str orderId    = salesIdControl.text();
-            str customerId = custAccountControl.text();
+            str             question;
+            str             orderId;
+            str             customerId;
+            str             answer;
+            System.DateTime startTime;
+            System.DateTime endTime;
+            System.TimeSpan elapsed;
+            int             totalSeconds;
+            int             minutes;
+            int             seconds;
+            str             duration;
 
+            // Read current values from all input controls
+            question   = questionInput.text();
+            orderId    = salesIdControl.text();
+            customerId = custAccountControl.text();
+
+            // Validate that a question was entered before submitting
             if (!question || strLen(strLTrim(strRTrim(question))) == 0)
             {
                 warning("Please enter a question.");
@@ -153,22 +231,70 @@ public class SalesAIAssistant extends FormRun
                 return;
             }
 
+            // Show processing state — disable buttons to prevent double submission
             answerDisplay.text("Thinking... please wait.");
             askButton.enabled(false);
+            clearButton.enabled(false);
             element.redraw();
 
             try
             {
-                str answer = aiService.askQuestion(question, orderId, customerId);
-                answerDisplay.text(answer);
+                // Record start time before calling the AI service
+                startTime = System.DateTime::get_UtcNow();
+
+                // Call the AI service — this blocks the AOS thread until response
+                answer = aiService.askQuestion(question, orderId, customerId);
+
+                // Calculate elapsed response time
+                endTime      = System.DateTime::get_UtcNow();
+                elapsed      = endTime.Subtract(startTime);
+                totalSeconds = System.Convert::ToInt32(elapsed.get_TotalSeconds());
+                minutes      = totalSeconds / 60;
+                seconds      = totalSeconds mod 60;
+
+                // Format duration as "2m 34s" or "47s"
+                if (minutes > 0)
+                    duration = int2Str(minutes) + 'm ' + int2Str(seconds) + 's';
+                else
+                    duration = int2Str(seconds) + 's';
+
+                // Display answer with response time footer
+                answerDisplay.text(answer + "\n\n─────────────────────\nResponse time: " + duration);
             }
             catch (Exception::Error)
             {
                 answerDisplay.text("An error occurred. Please try again.");
             }
 
+            // Restore buttons and return focus to Ask button
             askButton.enabled(true);
+            clearButton.enabled(true);
             askButton.setFocus();
+        }
+
+]]></Source>
+					</Method>
+				</Methods>
+			</Control>
+			<Control>
+				<Name>ClearButton</Name>
+				<Type>Button</Type>
+				<Methods>
+					<Method>
+						<Name>clicked</Name>
+						<Source><![CDATA[
+        public void clicked()
+        {
+            // Clear all input fields
+            questionInput.text('');
+            salesIdControl.text('');
+            custAccountControl.text('');
+
+            // Reset answer display to initial ready message
+            answerDisplay.text("AI Assistant is ready. Type your question and click Ask Assistant.");
+
+            // Return focus to question input for next inquiry
+            questionInput.setFocus();
         }
 
 ]]></Source>
@@ -259,14 +385,27 @@ public class SalesAIAssistant extends FormRun
 						<ButtonDisplay>TextOnly</ButtonDisplay>
 						<Text>Ask Assistant</Text>
 					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormButtonControl">
+						<Name>ClearButton</Name>
+						<Type>Button</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Text>Clear</Text>
+					</AxFormControl>
 				</Controls>
+				<Columns>2</Columns>
+				<ColumnsMode>Fill</ColumnsMode>
 				<FrameType>None</FrameType>
 			</AxFormControl>
 			<AxFormControl xmlns=""
 				i:type="AxFormGroupControl">
 				<Name>AnswerGroup</Name>
+				<Height>1600</Height>
+				<HeightMode>Manual</HeightMode>
 				<Type>Group</Type>
-				<WidthMode>Auto</WidthMode>
+				<Width>1600</Width>
+				<WidthMode>Manual</WidthMode>
 				<FormControlExtension
 					i:nil="true" />
 				<Controls>
@@ -274,7 +413,7 @@ public class SalesAIAssistant extends FormRun
 						i:type="AxFormStringControl">
 						<Name>AnswerDisplay</Name>
 						<AllowEdit>No</AllowEdit>
-						<Height>2600</Height>
+						<Height>1600</Height>
 						<HeightMode>Manual</HeightMode>
 						<Type>String</Type>
 						<Width>1600</Width>

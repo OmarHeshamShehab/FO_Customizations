@@ -34,9 +34,10 @@
 ///
 /// Notes:
 ///   - Targets USMF company (dataAreaId = 'usmf')
+///   - Filters SalesType = Sales to exclude return orders (SalesType::ReturnItem)
+///     Return orders have SalesStatus = Backorder but are NOT true backorders
 ///   - SalesStatus enum values: None, Backorder, Delivered, Invoiced, Canceled
 ///   - Output file is overwritten on each run
-///   - C:\Temp directory is created automatically if it does not exist
 /// </summary>
 class AIAssistantDataDump
 {
@@ -79,18 +80,14 @@ class AIAssistantDataDump
         int             orderLineCount;
 
         // ── FILE SETUP ────────────────────────────────────────────────────────
-        
+
         filePath = "C:\\Users\\localadmin\\source\\repos\\FO_Customizations\\D365_AI_Sales-Assistant\\D365_AI_Data.txt";
 
-        // Create output directory if it does not exist
         System.IO.Directory::CreateDirectory("C:\\Temp");
 
-        // Open file in write mode — overwrites existing file
         file = new TextIo(filePath, 'W');
 
         // ── SECTION 1: OVERALL ORDER SUMMARY ─────────────────────────────────
-        // Count all orders in USMF broken down by SalesStatus enum value
-        // SalesStatus enum: None, Backorder, Delivered, Invoiced, Canceled
 
         file.write("=================================================");
         file.write("SECTION 1 - OVERALL ORDER SUMMARY");
@@ -98,10 +95,9 @@ class AIAssistantDataDump
 
         while select salesTable
             where salesTable.dataAreaId == 'usmf'
+               && salesTable.SalesType  == SalesType::Sales
         {
             totalCount++;
-
-            // Increment the appropriate status counter
             if (salesTable.SalesStatus == SalesStatus::Backorder)  backorderCount++;
             if (salesTable.SalesStatus == SalesStatus::Invoiced)   invoicedCount++;
             if (salesTable.SalesStatus == SalesStatus::None)       openCount++;
@@ -118,9 +114,6 @@ class AIAssistantDataDump
         file.write(" ");
 
         // ── SECTION 2: CUSTOMERS WITH ORDER AND BACKORDER COUNTS ─────────────
-        // Loops through all orders sorted by customer account
-        // Groups by customer to produce per-customer order and backorder totals
-        // Uses prev-customer pattern since GROUP BY is not available in X++ select
 
         file.write("=================================================");
         file.write("SECTION 2 - CUSTOMERS WITH ORDER AND BACKORDER COUNTS");
@@ -133,14 +126,12 @@ class AIAssistantDataDump
         while select salesTable
             order by salesTable.CustAccount
             where salesTable.dataAreaId == 'usmf'
+               && salesTable.SalesType  == SalesType::Sales
         {
-            // When customer changes write the previous customer totals
             if (salesTable.CustAccount != prevCust && prevCust)
             {
                 file.write(strFmt("Customer: %1 | Total: %2 | Backorders: %3",
                     prevCust, custTotal, custBack));
-
-                // Reset counters for new customer
                 custTotal = 0;
                 custBack  = 0;
             }
@@ -149,12 +140,9 @@ class AIAssistantDataDump
             custTotal++;
 
             if (salesTable.SalesStatus == SalesStatus::Backorder)
-            {
                 custBack++;
-            }
         }
 
-        // Write the last customer record after loop ends
         if (prevCust)
         {
             file.write(strFmt("Customer: %1 | Total: %2 | Backorders: %3",
@@ -163,8 +151,6 @@ class AIAssistantDataDump
         file.write(" ");
 
         // ── SECTION 3: US-001 COMPLETE ORDER HISTORY ─────────────────────────
-        // Full order history for customer US-001 sorted newest first
-        // Used to validate customer-specific AI assistant answers
 
         file.write("=================================================");
         file.write("SECTION 3 - US-001 COMPLETE ORDER HISTORY");
@@ -174,6 +160,7 @@ class AIAssistantDataDump
             order by salesTable.CreatedDateTime desc
             where salesTable.dataAreaId == 'usmf'
                && salesTable.CustAccount == 'US-001'
+               && salesTable.SalesType   == SalesType::Sales
         {
             file.write(strFmt("Order: %1 | Status: %2 | Created: %3 | ReqShip: %4 | Currency: %5 | PayTerms: %6",
                 salesTable.SalesId,
@@ -186,8 +173,6 @@ class AIAssistantDataDump
         file.write(" ");
 
         // ── SECTION 4: DE-001 COMPLETE ORDER HISTORY ─────────────────────────
-        // Full order history for customer DE-001 sorted newest first
-        // DE-001 is a key test customer — has known backorders for validation
 
         file.write("=================================================");
         file.write("SECTION 4 - DE-001 COMPLETE ORDER HISTORY");
@@ -197,6 +182,7 @@ class AIAssistantDataDump
             order by salesTable.CreatedDateTime desc
             where salesTable.dataAreaId == 'usmf'
                && salesTable.CustAccount == 'DE-001'
+               && salesTable.SalesType   == SalesType::Sales
         {
             file.write(strFmt("Order: %1 | Status: %2 | Created: %3 | ReqShip: %4 | Currency: %5 | PayTerms: %6",
                 salesTable.SalesId,
@@ -209,9 +195,6 @@ class AIAssistantDataDump
         file.write(" ");
 
         // ── SECTION 5: ALL BACKORDERS FULL DETAILS ───────────────────────────
-        // Complete list of all backorders across all customers
-        // Sorted by customer account for easy grouping and comparison
-        // This is ground truth data to validate backorder inquiry answers
 
         file.write("=================================================");
         file.write("SECTION 5 - ALL BACKORDERS FULL DETAILS");
@@ -221,6 +204,7 @@ class AIAssistantDataDump
             order by salesTable.CustAccount
             where salesTable.dataAreaId  == 'usmf'
                && salesTable.SalesStatus == SalesStatus::Backorder
+               && salesTable.SalesType   == SalesType::Sales
         {
             file.write(strFmt("Order: %1 | Customer: %2 | Created: %3 | ReqShip: %4 | PayTerms: %5 | Origin: %6",
                 salesTable.SalesId,
@@ -233,8 +217,6 @@ class AIAssistantDataDump
         file.write(" ");
 
         // ── SECTION 6: 10 MOST RECENT ORDERS ─────────────────────────────────
-        // The 10 most recently created orders across all customers
-        // Used to validate recent order summary questions
 
         file.write("=================================================");
         file.write("SECTION 6 - 10 MOST RECENT ORDERS");
@@ -245,10 +227,9 @@ class AIAssistantDataDump
         while select salesTable
             order by salesTable.CreatedDateTime desc
             where salesTable.dataAreaId == 'usmf'
+               && salesTable.SalesType  == SalesType::Sales
         {
             recentCount++;
-
-            // Stop after 10 records
             if (recentCount > 10) break;
 
             file.write(strFmt("Order: %1 | Customer: %2 | Status: %3 | Created: %4 | ReqShip: %5",
@@ -261,9 +242,6 @@ class AIAssistantDataDump
         file.write(" ");
 
         // ── SECTION 7: ORDER LINES FOR FIRST 5 BACKORDERS ────────────────────
-        // Drill into order line details for the first 5 backorders
-        // Provides item, quantity, unit, and price data for line-level questions
-        // Note: Full line data for all backorders would be too large for testing
 
         file.write("=================================================");
         file.write("SECTION 7 - ORDER LINES FOR FIRST 5 BACKORDERS");
@@ -274,17 +252,15 @@ class AIAssistantDataDump
         while select salesTable
             where salesTable.dataAreaId  == 'usmf'
                && salesTable.SalesStatus == SalesStatus::Backorder
+               && salesTable.SalesType   == SalesType::Sales
         {
             orderLineCount++;
-
-            // Limit to first 5 backorders to keep output manageable
             if (orderLineCount > 5) break;
 
             file.write(strFmt("ORDER: %1 (Customer: %2)",
                 salesTable.SalesId,
                 salesTable.CustAccount));
 
-            // Fetch all lines for this backorder
             while select salesLine
                 where salesLine.SalesId    == salesTable.SalesId
                    && salesLine.dataAreaId == 'usmf'
@@ -300,9 +276,6 @@ class AIAssistantDataDump
         file.write(" ");
 
         // ── SECTION 8: CUSTOMER MASTER DATA ──────────────────────────────────
-        // Customer master records from CustTable
-        // Provides credit limits, payment terms, currency and customer group
-        // Used to validate customer profile questions
 
         file.write("=================================================");
         file.write("SECTION 8 - CUSTOMER MASTER DATA");
@@ -326,7 +299,6 @@ class AIAssistantDataDump
         file.write("END OF DATA DUMP");
         file.write("=================================================");
 
-        // Release file handle
         file = null;
 
         info(strFmt("Done. Open %1 in Notepad to validate contents.", filePath));
