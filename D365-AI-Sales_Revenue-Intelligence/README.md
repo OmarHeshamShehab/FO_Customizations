@@ -1,262 +1,265 @@
-# D365 AI Sales & Revenue Intelligence Dashboard
+# 🧠 D365 AI Sales & Revenue Intelligence Dashboard
 
-> **OHMS Model — Omar Hesham Shehab**  
-> Part of the D365 AI Series | Microsoft Dynamics 365 Finance & Operations
+> 👤 **OHMS Model — Omar Hesham Shehab**  
+> 🏢 Part of the D365 AI Series | Microsoft Dynamics 365 Finance & Operations
 
 An AI-powered, fully embedded sales revenue intelligence dashboard built as a **custom Extensible Control** inside Microsoft Dynamics 365 F&O. The dashboard fetches live invoiced sales data from D365 via OData, aggregates it in Python, renders three interactive Chart.js charts, and generates an executive AI narrative using a locally running Ollama LLM — all rendered natively inside a D365 form with zero external browser dependencies.
 
 ---
 
-## Table of Contents
+## 📚 Table of Contents
 
-1. [Project Overview](#1-project-overview)
-2. [System Architecture](#2-system-architecture)
-3. [Data Flow — End to End](#3-data-flow--end-to-end)
-4. [Repository Structure](#4-repository-structure)
-5. [D365 AOT Project Structure](#5-d365-aot-project-structure)
-6. [Component Deep Dive](#6-component-deep-dive)
-   - [SalesIntelligenceControl.htm](#61-salesintelligencecontrolhtm)
-   - [SalesIntelligenceControlScript.js](#62-salesintelligencecontrolscriptjs)
-   - [SalesIntelligenceChartJS.js](#63-salesintelligencechartjsjs)
-   - [SalesIntelligenceDashboard (Form)](#64-salesintelligencedashboard-form)
-   - [SalesIntelligenceControl (X++ Class)](#65-salesintelligencecontrol-x-class)
-   - [SalesIntelligenceControlBuild (X++ Class)](#66-salesintelligencecontrolbuild-x-class)
-   - [SalesIntelligenceService (X++ Class)](#67-salesintelligenceservice-x-class)
-   - [SalesIntelligenceTest (X++ Runnable Class)](#68-salesintelligencetest-x-runnable-class)
-7. [Python Service Layer](#7-python-service-layer)
-   - [server.py](#71-serverpy)
-   - [odata.py](#72-odatapy)
-   - [chart_engine.py](#73-chart_enginepy)
-   - [ai_engine.py](#74-ai_enginepy)
-   - [config.py](#75-configpy)
-8. [Prerequisites](#8-prerequisites)
-9. [Installation & Setup](#9-installation--setup)
-10. [Configuration — .env File](#10-configuration--env-file)
-11. [AOT Resource Deployment](#11-aot-resource-deployment)
-12. [Running the Python Server](#12-running-the-python-server)
-13. [API Endpoints](#13-api-endpoints)
-14. [Data Validation & SQL Ground Truth](#14-data-validation--sql-ground-truth)
-15. [Revenue Tier Classification](#15-revenue-tier-classification)
-16. [Technical Notes & Gotchas](#16-technical-notes--gotchas)
-17. [Troubleshooting](#17-troubleshooting)
+1. [🎯 Project Overview](#1--project-overview)
+2. [🏗️ System Architecture](#2-️-system-architecture)
+3. [🔄 Data Flow — End to End](#3--data-flow--end-to-end)
+4. [📁 Repository Structure](#4--repository-structure)
+5. [🧩 D365 AOT Project Structure](#5--d365-aot-project-structure)
+6. [🔬 Component Deep Dive](#6--component-deep-dive)
+   - [📄 SalesIntelligenceControl.htm](#61--salesintelligencecontrolhtm)
+   - [⚙️ SalesIntelligenceControlScript.js](#62-️-salesintelligencecontrolscriptjs)
+   - [📊 SalesIntelligenceChartJS.js](#63--salesintelligencechartjsjs)
+   - [🖥️ SalesIntelligenceDashboard Form](#64-️-salesintelligencedashboard-form)
+   - [🔧 SalesIntelligenceControl X++ Class](#65--salesintelligencecontrol-x-class)
+   - [🔩 SalesIntelligenceControlBuild X++ Class](#66--salesintelligencecontrolbuild-x-class)
+   - [🌐 SalesIntelligenceService X++ Class](#67--salesintelligenceservice-x-class)
+   - [🧪 SalesIntelligenceTest X++ Runnable Class](#68--salesintelligencetest-x-runnable-class)
+7. [🐍 Python Service Layer](#7--python-service-layer)
+   - [🚀 server.py](#71--serverpy)
+   - [📡 odata.py](#72--odatapy)
+   - [🎨 chart_engine.py](#73--chart_enginepy)
+   - [🤖 ai_engine.py](#74--ai_enginepy)
+   - [⚙️ config.py](#75-️-configpy)
+8. [📋 Prerequisites](#8--prerequisites)
+9. [🛠️ Installation & Setup](#9-️-installation--setup)
+10. [🔑 Configuration — .env File](#10--configuration--env-file)
+11. [🚢 AOT Resource Deployment](#11--aot-resource-deployment)
+12. [▶️ Running the Python Server](#12-️-running-the-python-server)
+13. [🔌 API Endpoints](#13--api-endpoints)
+14. [✅ Data Validation & SQL Ground Truth](#14--data-validation--sql-ground-truth)
+15. [🥇 Revenue Tier Classification](#15--revenue-tier-classification)
+16. [⚠️ Technical Notes & Gotchas](#16-️-technical-notes--gotchas)
+17. [🆘 Troubleshooting](#17--troubleshooting)
 
 ---
 
-## 1. Project Overview
+## 1. 🎯 Project Overview
 
 This project solves a real problem: **D365 F&O has no native AI-powered sales analytics dashboard**. The standard D365 reporting tools (SSRS, Power BI embedded) require separate licensing, infrastructure, and configuration. This solution delivers a fully self-contained AI dashboard that:
 
-- Reads **live invoiced sales data** directly from D365 via OData — no data exports, no ETL pipelines
-- Filters to **fully invoiced orders only** (header status = Invoiced AND line status = Invoiced) for financial accuracy
-- Aggregates revenue by customer, product, and category in Python
-- Renders **three interactive Chart.js charts** natively inside a D365 form
-- Generates an **AI executive narrative** using a locally running `qwen3:8b` model via Ollama
-- Is **entirely embedded** in D365 as a custom Extensible Control — no iframe, no popup, no external browser tab
+- 📥 Reads **live invoiced sales data** directly from D365 via OData — no data exports, no ETL pipelines
+- 🔍 Filters to **fully invoiced orders only** (header status = Invoiced AND line status = Invoiced) for financial accuracy
+- 🧮 Aggregates revenue by customer, product, and category in Python
+- 📈 Renders **three interactive Chart.js charts** natively inside a D365 form
+- 🤖 Generates an **AI executive narrative** using a locally running `qwen3:8b` model via Ollama
+- 🔒 Is **entirely embedded** in D365 as a custom Extensible Control — no iframe, no popup, no external browser tab
 
-**Validated data (USMF company):**
-- Total Revenue: **$99,451,085.50**
-- Total Customers: **29**
-- Total Orders: **708**
-- Top Customer: **DE-001** ($7.66M)
-- Top Product: **Projector Television** ($34.9M)
+**📌 Validated data (USMF company):**
+
+| Metric | Value |
+|---|---|
+| 💰 Total Revenue | **$99,451,085.50** |
+| 👥 Total Customers | **29** |
+| 📦 Total Orders | **708** |
+| 🏆 Top Customer | **DE-001** ($7.66M) |
+| 🥇 Top Product | **Projector Television** ($34.9M) |
 
 ---
 
-## 2. System Architecture
+## 2. 🏗️ System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    D365 F&O (AOS / Browser)                     │
+│                 🖥️  D365 F&O (AOS / Browser)                    │
 │                                                                 │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │           SalesIntelligenceDashboard (Form)              │   │
+│  │        📋 SalesIntelligenceDashboard (Form)              │   │
 │  │                                                          │   │
-│  │   [Generate Dashboard Button]                            │   │
+│  │   [🔘 Generate Dashboard Button]                         │   │
 │  │        │                                                 │   │
 │  │        ▼ DashboardControl.loadDashboard()                │   │
 │  │   ┌──────────────────────────────────────────────┐       │   │
-│  │   │   SalesIntelligenceControl (Extensible Ctrl) │       │   │
+│  │   │  🧩 SalesIntelligenceControl (Extensible)    │       │   │
 │  │   │                                              │       │   │
-│  │   │   SalesIntelligenceControl.htm               │       │   │
+│  │   │  📄 SalesIntelligenceControl.htm             │       │   │
 │  │   │   └── #SalesIntelligenceDashboardContainer   │       │   │
 │  │   │                                              │       │   │
-│  │   │   SalesIntelligenceControlScript.js          │       │   │
+│  │   │  ⚙️  SalesIntelligenceControlScript.js       │       │   │
 │  │   │   └── Observes HtmlContent observable        │       │   │
 │  │   │   └── Injects HTML into container div        │       │   │
 │  │   │   └── Extracts & re-executes <script> tags   │       │   │
 │  │   │   └── Loads Chart.js from AOT resource       │       │   │
 │  │   │                                              │       │   │
-│  │   │   SalesIntelligenceChartJS.js (AOT Resource) │       │   │
+│  │   │  📊 SalesIntelligenceChartJS.js (AOT)        │       │   │
 │  │   │   └── Chart.js v4.4.0 UMD build              │       │   │
 │  │   └──────────────────────────────────────────────┘       │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │                        │                                        │
-│              X++ HTTP call (SalesIntelligenceService)           │
+│           🔗 X++ HTTP call (SalesIntelligenceService)           │
 └────────────────────────┼────────────────────────────────────────┘
                          │
                          ▼ POST /ask-chart
 ┌─────────────────────────────────────────────────────────────────┐
-│                   Python FastAPI Server (:8000)                  │
+│               🐍 Python FastAPI Server (:8000)                   │
 │                                                                 │
-│   server.py ──► odata.py ──► D365 OData API                    │
-│                    │                                            │
-│                    ▼ (filtered, aggregated records)             │
-│              chart_engine.py ──► HTML + Chart.js config         │
-│                    │                                            │
-│                    ▼                                            │
-│              ai_engine.py ──► Ollama (qwen3:8b) ──► Narrative   │
-│                    │                                            │
-│                    ▼                                            │
-│         Complete HTML string returned to X++                   │
+│  🚀 server.py ──► 📡 odata.py ──► D365 OData API               │
+│                        │                                        │
+│                        ▼ (filtered, aggregated records)         │
+│              🎨 chart_engine.py ──► HTML + Chart.js config      │
+│                        │                                        │
+│                        ▼                                        │
+│              🤖 ai_engine.py ──► Ollama (qwen3:8b) ──► Text    │
+│                        │                                        │
+│                        ▼                                        │
+│         📤 Complete HTML string returned to X++                │
 └─────────────────────────────────────────────────────────────────┘
                          │
                          ▼ OAuth2 client_credentials
 ┌─────────────────────────────────────────────────────────────────┐
-│                  Azure Active Directory                          │
-│            Token issued for D365 OData access                   │
+│               🔐 Azure Active Directory                          │
+│          Token issued for D365 OData access                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. Data Flow — End to End
+## 3. 🔄 Data Flow — End to End
 
 ```
-1. User clicks "Generate Dashboard" button in D365 form
+👆 Step  1 — User clicks "Generate Dashboard" button in D365 form
         │
         ▼
-2. GenerateButton.clicked() calls DashboardControl.loadDashboard()
+🖱️  Step  2 — GenerateButton.clicked() calls DashboardControl.loadDashboard()
         │
         ▼
-3. SalesIntelligenceControl.loadDashboard() calls
-   SalesIntelligenceService::getDashboardHtml()
+🔧  Step  3 — SalesIntelligenceControl.loadDashboard() calls
+              SalesIntelligenceService::getDashboardHtml()
         │
         ▼
-4. X++ makes HTTP POST to http://localhost:8000/ask-chart
+📡  Step  4 — X++ makes HTTP POST to http://localhost:8000/ask-chart
         │
         ▼
-5. Python server: odata.py acquires Azure AD token
+🔐  Step  5 — Python server: odata.py acquires Azure AD token
         │
         ▼
-6. odata.py fetches SalesOrderLines from D365 OData
-   Filter: dataAreaId eq 'usmf'
-   Expand: SalesOrderHeader (OrderingCustomerAccountNumber, SalesOrderStatus)
-   Select: SalesOrderNumber, SalesOrderLineStatus, ItemNumber, LineDescription,
-           OrderedSalesQuantity, SalesPrice, LineAmount, CurrencyCode,
-           RequestedReceiptDate, SalesProductCategoryName
+📥  Step  6 — odata.py fetches SalesOrderLines from D365 OData
+              Filter : dataAreaId eq 'usmf'
+              Expand : SalesOrderHeader (OrderingCustomerAccountNumber, SalesOrderStatus)
+              Select : SalesOrderNumber, SalesOrderLineStatus, ItemNumber,
+                       LineDescription, OrderedSalesQuantity, SalesPrice,
+                       LineAmount, CurrencyCode, RequestedReceiptDate,
+                       SalesProductCategoryName
         │
         ▼
-7. Python-side filtering (OData enum filtering not supported in URL):
-   - Skip if SalesOrderLineStatus != 'Invoiced'
-   - Skip if SalesOrderHeader.SalesOrderStatus != 'Invoiced'
-   - Skip if LineAmount <= 0
+🔍  Step  7 — Python-side filtering (OData enum filtering not supported in URL):
+              ❌ Skip if SalesOrderLineStatus    != 'Invoiced'
+              ❌ Skip if SalesOrderHeader.Status != 'Invoiced'
+              ❌ Skip if LineAmount              <= 0
         │
         ▼
-8. summarise_sales_performance() aggregates:
-   - Revenue, orders, products per customer
-   - Revenue, quantity, customer count per product
-   - Revenue per category
-   - Grand total, top customer, top product
+🧮  Step  8 — summarise_sales_performance() aggregates:
+              👥 Revenue, orders, unique products per customer
+              📦 Revenue, quantity, customer count per product
+              🗂️  Revenue per category
+              📊 Grand total, top customer, top product
         │
         ▼
-9. ai_engine.py builds prompt → calls Ollama qwen3:8b → returns narrative
+🤖  Step  9 — ai_engine.py builds prompt → Ollama qwen3:8b → narrative text
         │
         ▼
-10. chart_engine.py builds complete HTML with:
-    - KPI cards (total revenue, top customer, top product, avg order value)
-    - Chart 1: Top 15 customers horizontal bar (colour-coded by tier)
-    - Chart 2: Top 10 products horizontal bar
-    - Chart 3: Revenue by category doughnut
-    - AI narrative section
-    - All styles INLINE (D365 strips <style> blocks)
-    - CDN fallback for Chart.js (for localhost testing)
+🎨  Step 10 — chart_engine.py builds complete HTML with:
+              💳 KPI cards (revenue, top customer, top product, avg order value)
+              📊 Chart 1: Top 15 customers horizontal bar (tier colour-coded)
+              📦 Chart 2: Top 10 products horizontal bar
+              🍩 Chart 3: Revenue by category doughnut
+              🤖 AI narrative section
+              ✏️  All styles INLINE — D365 strips <style> blocks
+              🌐 CDN fallback for Chart.js (localhost testing only)
         │
         ▼
-11. HTML string returned to X++ via HTTP response
+📤  Step 11 — HTML string returned to X++ via HTTP response
         │
         ▼
-12. SalesIntelligenceControl.parmHtmlContent(html) sets HtmlContent observable
+🔗  Step 12 — SalesIntelligenceControl.parmHtmlContent(html) sets observable
         │
         ▼
-13. SalesIntelligenceControlScript.js observes HtmlContent change:
-    - Injects HTML into #SalesIntelligenceDashboardContainer
-    - Extracts all <script> tags, removes them from DOM
-    - Checks if Chart global exists
-    - If not: loads Chart.js from /resources/scripts/SalesIntelligenceChartJS.js
-    - Executes chart scripts after 300ms delay (DOM settle time)
+⚙️  Step 13 — SalesIntelligenceControlScript.js observes HtmlContent change:
+              ➕ Injects HTML into #SalesIntelligenceDashboardContainer
+              ✂️  Extracts all <script> tags, removes them from DOM
+              🔎 Checks if Chart global already exists
+              📥 If not: loads Chart.js from AOT resource via $dyn.internal.getResourceUrl
+              ⏱️  Executes chart scripts after 300ms delay (DOM settle time)
         │
         ▼
-14. Chart.js renders all 3 charts on HTML5 canvas elements
-    Dashboard is fully visible inside the D365 form
+✅  Step 14 — Chart.js renders all 3 charts on HTML5 canvas elements 🎉
 ```
 
 ---
 
-## 4. Repository Structure
+## 4. 📁 Repository Structure
 
 ```
-D365-AI-Sales_Revenue-Intelligence/
+📂 D365-AI-Sales_Revenue-Intelligence/
 │
-├── python/                              # Python FastAPI service layer
-│   ├── .env                             # Environment variables (secrets — never commit)
-│   ├── server.py                        # FastAPI app — 4 endpoints
-│   ├── odata.py                         # D365 OData fetch + data aggregation
-│   ├── chart_engine.py                  # HTML/Chart.js dashboard builder
-│   ├── ai_engine.py                     # Ollama LLM integration
-│   └── config.py                        # Environment variable loader
+├── 🐍 python/                            # Python FastAPI service layer
+│   ├── 🔑 .env                           # Secrets & config (never commit!)
+│   ├── 🚀 server.py                      # FastAPI app — 4 endpoints
+│   ├── 📡 odata.py                       # D365 OData fetch + data aggregation
+│   ├── 🎨 chart_engine.py                # HTML/Chart.js dashboard builder
+│   ├── 🤖 ai_engine.py                   # Ollama LLM integration
+│   └── ⚙️  config.py                     # Environment variable loader
 │
-├── SalesRevenueIntelligence/            # D365 Visual Studio AOT project
+├── 🧩 SalesRevenueIntelligence/          # D365 Visual Studio AOT project
 │   └── (AOT metadata — managed by VS)
 │
-└── SalesIntelligence_Output.html        # Test output file (generated by SalesIntelligenceTest)
+└── 📄 SalesIntelligence_Output.html      # Test output (generated by SalesIntelligenceTest)
 ```
 
 ---
 
-## 5. D365 AOT Project Structure
+## 5. 🧩 D365 AOT Project Structure
 
 ```
-SalesRevenueIntelligence (USR) [OHMS]
+🏗️ SalesRevenueIntelligence (USR) [OHMS]
 │
-├── Base Enums
-│   └── IsEnabled                        # Yes/No enum for enabling/disabling the feature
+├── 📐 Base Enums
+│   └── ✅ IsEnabled                      # Yes/No — enable or disable the feature
 │
-├── Classes
-│   ├── SalesIntelligenceControl         # Extensible control class — core bridge
-│   ├── SalesIntelligenceControlBuild    # Build class — required by D365 control framework
-│   ├── SalesIntelligenceService         # HTTP service — calls Python server
-│   └── SalesIntelligenceTest            # Runnable test class — outputs HTML to disk
+├── 💻 Classes
+│   ├── 🔧 SalesIntelligenceControl       # Extensible control — core X++ bridge
+│   ├── 🔩 SalesIntelligenceControlBuild  # Build class — required by control framework
+│   ├── 🌐 SalesIntelligenceService       # HTTP service — calls Python server
+│   └── 🧪 SalesIntelligenceTest          # Runnable test — outputs HTML to disk
 │
-├── Display Menu Items
-│   └── SalesIntelligenceDashboard       # Menu item — makes form accessible from navigation
+├── 🧭 Display Menu Items
+│   └── 📌 SalesIntelligenceDashboard     # Makes the form accessible from D365 nav
 │
-├── Forms
-│   └── SalesIntelligenceDashboard       # The D365 form containing the dashboard
+├── 📋 Forms
+│   └── 🖥️  SalesIntelligenceDashboard    # The D365 form that hosts the dashboard
 │
-├── Menu Extensions
-│   └── AccountsReceivable.OHMS          # Adds dashboard to Accounts Receivable menu
+├── 🗂️ Menu Extensions
+│   └── 📎 AccountsReceivable.OHMS        # Adds dashboard to Accounts Receivable menu
 │
-├── Resources
-│   ├── SalesIntelligenceChartJS         # AOT resource containing Chart.js v4.4.0 UMD
-│   │   └── SalesIntelligenceChartJS.js
-│   ├── SalesIntelligenceControlHTM      # AOT resource: HTML shell template
-│   │   └── SalesIntelligenceControl.htm
-│   └── SalesIntelligenceControlScript   # AOT resource: control JavaScript logic
-│       └── SalesIntelligenceControlScript.js
+├── 📦 Resources
+│   ├── 📊 SalesIntelligenceChartJS
+│   │   └── SalesIntelligenceChartJS.js   # Chart.js v4.4.0 UMD — full library
+│   ├── 📄 SalesIntelligenceControlHTM
+│   │   └── SalesIntelligenceControl.htm  # HTML shell template for the control
+│   └── ⚙️  SalesIntelligenceControlScript
+│       └── SalesIntelligenceControlScript.js  # Control JavaScript logic
 │
-└── Tables
-    └── SalesIntelligenceParameters      # Configuration table (server URL, timeout, IsEnabled)
+└── 🗃️ Tables
+    └── ⚙️  SalesIntelligenceParameters   # Config table: server URL, timeout, IsEnabled
 ```
 
 ---
 
-## 6. Component Deep Dive
+## 6. 🔬 Component Deep Dive
 
-### 6.1 SalesIntelligenceControl.htm
+### 6.1 📄 SalesIntelligenceControl.htm
 
-**File:** `SalesRevenueIntelligence/Resources/SalesIntelligenceControlHTM/SalesIntelligenceControl.htm`  
-**AOT Resource name:** `SalesIntelligenceControlHTM`  
-**Served at:** `/resources/html/SalesIntelligenceControl`
+**📍 File:** `SalesRevenueIntelligence/Resources/SalesIntelligenceControlHTM/SalesIntelligenceControl.htm`  
+**🏷️ AOT Resource name:** `SalesIntelligenceControlHTM`  
+**🌐 Served at:** `/resources/html/SalesIntelligenceControl`
 
 ```html
 <script src="/resources/scripts/SalesIntelligenceControl.js"></script>
@@ -266,58 +269,62 @@ SalesRevenueIntelligence (USR) [OHMS]
 </div>
 ```
 
-**Purpose and explanation:**
+**🧠 Purpose and explanation:**
 
 This is the **HTML shell template** for the Extensible Control. It defines the DOM structure that D365 renders when the control is placed on a form. It has two critical roles:
 
-1. **Loads the control's JavaScript** — the `<script src="/resources/scripts/SalesIntelligenceControl.js">` tag tells D365 to load `SalesIntelligenceControlScript.js` from its AOT resource server. The URL pattern `/resources/scripts/{ResourceName}.js` is D365's internal resource serving convention.
+- 📥 **Loads the control's JavaScript** — the `<script src="/resources/scripts/SalesIntelligenceControl.js">` tag tells D365 to load `SalesIntelligenceControlScript.js` from its AOT resource server. The URL pattern `/resources/scripts/{ResourceName}.js` is D365's internal resource serving convention.
 
-2. **Provides the injection target** — the inner `<div id="SalesIntelligenceDashboardContainer">` is the empty container that `SalesIntelligenceControlScript.js` will later fill with the complete dashboard HTML received from Python.
+- 🎯 **Provides the injection target** — the inner `<div id="SalesIntelligenceDashboardContainer">` is the empty container that `SalesIntelligenceControlScript.js` will later fill with the complete dashboard HTML received from Python.
 
 The `data-dyn-bind` attribute on the outer div is D365's **Knockout.js binding syntax**. It wires the control's sizing and visibility to D365's layout engine so the control respects the form's sizing rules.
 
-**How to create this for a new project:**
-- In Visual Studio AOT, add a new Resource of type HTML
-- Name it `{YourControl}HTM` (the HTM suffix is convention)
-- The file must contain the outer control div with `data-dyn-bind`, the script tag pointing to your JS resource, and an inner container div with a unique ID
-- The resource name in the `FormControlAttribute` on your X++ class must match: `/resources/html/{ResourceName}`
+**🔧 How to create this for a new project:**
+- ➕ In Visual Studio AOT, add a new Resource of type HTML
+- 🏷️ Name it `{YourControl}HTM` (the HTM suffix is convention)
+- ✏️ The file must contain the outer control div with `data-dyn-bind`, the script tag pointing to your JS resource, and an inner container div with a unique ID
+- 🔗 The resource name in the `FormControlAttribute` on your X++ class must match: `/resources/html/{ResourceName}`
 
 ---
 
-### 6.2 SalesIntelligenceControlScript.js
+### 6.2 ⚙️ SalesIntelligenceControlScript.js
 
-**File:** `SalesRevenueIntelligence/Resources/SalesIntelligenceControlScript/SalesIntelligenceControlScript.js`  
-**AOT Resource name:** `SalesIntelligenceControlScript`  
-**Served at:** `/resources/scripts/SalesIntelligenceControl.js`
+**📍 File:** `SalesRevenueIntelligence/Resources/SalesIntelligenceControlScript/SalesIntelligenceControlScript.js`  
+**🏷️ AOT Resource name:** `SalesIntelligenceControlScript`  
+**🌐 Served at:** `/resources/scripts/SalesIntelligenceControl.js`
 
-**Purpose and explanation:**
+**🧠 Purpose and explanation:**
 
 This is the **JavaScript brain of the Extensible Control**. It implements D365's client-side control framework using the `$dyn` API — D365's internal JavaScript framework built on Knockout.js. When D365 loads the HTM template, this script runs and wires the control to the server-side X++ properties.
 
-**Key sections explained:**
+**🔑 Key sections explained:**
 
 ```javascript
+// 📌 Register the control with D365's control registry
 $dyn.ui.defaults.SalesIntelligenceControl = {};
 $dyn.controls.SalesIntelligenceControl = function (data, element) {
 ```
-Registers the control with D365's control registry. `data` contains the observable properties from X++ (including `HtmlContent`), `element` is the DOM element rendered from the HTM template.
+> `data` contains the observable properties from X++ (including `HtmlContent`). `element` is the DOM node rendered from the HTM template.
 
 ```javascript
+// 👁️ Reactive observer — fires automatically every time X++ sets HtmlContent
 $dyn.observe(self.HtmlContent, function (htmlValue) {
 ```
-Sets up a **reactive observer** on the `HtmlContent` property. Every time X++ calls `parmHtmlContent(html)`, this callback fires automatically — this is the bridge between X++ server-side and browser client-side.
+> Every time X++ calls `parmHtmlContent(html)`, this callback fires — this is the live bridge between X++ server-side and browser client-side.
 
 ```javascript
+// ✂️ Extract scripts BEFORE injection — browser blocks injected <script> tags
 container.html(htmlValue);
 var scripts = [];
 container.find('script').each(function () {
     scripts.push($(this).text());
-    $(this).remove();
+    $(this).remove();          // 🗑️ Remove from DOM before injecting
 });
 ```
-**Critical technique:** When you inject HTML containing `<script>` tags via jQuery's `.html()`, browsers block their execution for security reasons. This code extracts all script content into an array and removes the `<script>` tags from the DOM before injection.
+> ⚠️ **Critical technique:** When you inject HTML containing `<script>` tags via jQuery's `.html()`, browsers block their execution for security. This code extracts all script content first, then removes the tags.
 
 ```javascript
+// ⏱️ 300ms delay — waits for DOM to settle, then re-executes scripts
 function runCharts() {
     setTimeout(function () {
         for (var i = 0; i < scripts.length; i++) {
@@ -326,12 +333,14 @@ function runCharts() {
     }, 300);
 }
 ```
-Re-executes the extracted scripts using `new Function()` — this bypasses the browser's script injection block. The **300ms delay** is intentional: it allows the DOM to fully settle after HTML injection before Chart.js tries to find canvas elements.
+> Re-executes the extracted scripts using `new Function()` — bypasses the browser's script injection block. The **300ms delay** allows the DOM to settle after HTML injection before Chart.js attempts to find canvas elements.
 
 ```javascript
+// 📊 Chart.js loading — check AOT resource or already loaded
 if (typeof Chart !== 'undefined') {
-    runCharts();
+    runCharts();    // ✅ Already loaded — run immediately
 } else {
+    // 📥 Load Chart.js from AOT resource via D365's internal URL resolver
     var chartUrl = $dyn.internal.getResourceUrl('ChartJS');
     var script = document.createElement('script');
     script.src = chartUrl;
@@ -339,622 +348,658 @@ if (typeof Chart !== 'undefined') {
     document.head.appendChild(script);
 }
 ```
-**Chart.js loading logic:** Checks if Chart.js is already loaded (preventing double-loading). If not, uses `$dyn.internal.getResourceUrl('ChartJS')` — D365's internal API to resolve an AOT resource URL by its resource name — to load `SalesIntelligenceChartJS.js` from the D365 resource server. Only runs charts after the library is confirmed loaded.
+> 💡 `$dyn.internal.getResourceUrl('ChartJS')` resolves to `/resources/scripts/SalesIntelligenceChartJS.js` — served directly from D365, no CDN needed.
 
-**How to create this for a new project:**
-- Create a new JavaScript file as an AOT Resource
-- Register it with `$dyn.ui.defaults.{ControlName}` and `$dyn.controls.{ControlName}`
-- Always observe properties with `$dyn.observe` — never read them directly
-- Always extract and re-execute scripts manually — never rely on jQuery `.html()` to run them
-- Always check `typeof Chart !== 'undefined'` before loading Chart.js again
-
----
-
-### 6.3 SalesIntelligenceChartJS.js
-
-**File:** `SalesRevenueIntelligence/Resources/SalesIntelligenceChartJS/SalesIntelligenceChartJS.js`  
-**AOT Resource name:** `SalesIntelligenceChartJS`  
-**Served at:** `/resources/scripts/SalesIntelligenceChartJS.js`
-
-**Purpose and explanation:**
-
-This file **contains the entire Chart.js v4.4.0 library** in UMD (Universal Module Definition) minified format. It is not written by hand — it is a copy of the official Chart.js distribution file, stored as a D365 AOT Resource so D365 can serve it to the browser from its own resource server without any external network dependency.
-
-**Why this approach is necessary:**
-
-D365 F&O OneBox and on-premise environments often **block outbound internet requests** from the browser. A `<script src="https://cdn.jsdelivr.net/...">` tag would silently fail. By embedding Chart.js in an AOT Resource, D365 serves it internally via `/resources/scripts/SalesIntelligenceChartJS.js` — always available, regardless of network access.
-
-**How to get Chart.js UMD content:**
-
-1. Go to: `https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js`
-2. Or download from: `https://github.com/chartjs/Chart.js/releases/tag/v4.4.0`
-3. Open the file — it is a single minified JavaScript file starting with `!function(...`
-4. Copy the **entire content** (Ctrl+A, Ctrl+C)
-
-**How to populate it in AOT:**
-
-1. In Visual Studio Solution Explorer, click on `SalesIntelligenceChartJS.js`
-2. Press **F4** to open the Properties panel
-3. Find the **Full Path** property — this is the file on disk
-4. Open that path in VS Code or Notepad++
-5. Select All (Ctrl+A) → Delete → Paste the Chart.js content → Save
-6. Rebuild the project in Visual Studio → Deploy to LocalDB
-
-**Why UMD format specifically:**
-
-D365's control script runs in a browser context without a module bundler (no webpack, no require.js). UMD format is the only Chart.js distribution that works as a plain `<script>` tag and exposes the `Chart` global variable — which is what the control script checks with `typeof Chart !== 'undefined'`.
-
-**For a new project using a different version:**
-
-Simply replace the content of your AOT resource JS file with the new version's `chart.umd.min.js` content. The resource name and URL remain the same — no AOT metadata changes needed.
+**🔧 How to create this for a new project:**
+- ➕ Create a new JavaScript AOT Resource
+- 📌 Register with `$dyn.ui.defaults.{ControlName}` and `$dyn.controls.{ControlName}`
+- 👁️ Always observe properties with `$dyn.observe` — never read them directly
+- ✂️ Always extract and re-execute scripts manually — never rely on jQuery `.html()` to run them
+- 🔎 Always check `typeof Chart !== 'undefined'` before loading Chart.js again
 
 ---
 
-### 6.4 SalesIntelligenceDashboard (Form)
+### 6.3 📊 SalesIntelligenceChartJS.js
 
-**File:** `SalesRevenueIntelligence/Forms/SalesIntelligenceDashboard.xml`
+**📍 File:** `SalesRevenueIntelligence/Resources/SalesIntelligenceChartJS/SalesIntelligenceChartJS.js`  
+**🏷️ AOT Resource name:** `SalesIntelligenceChartJS`  
+**🌐 Served at:** `/resources/scripts/SalesIntelligenceChartJS.js`
 
-The D365 form is minimal by design — it contains only two controls:
+**🧠 Purpose and explanation:**
+
+This file **contains the entire Chart.js v4.4.0 library** in UMD (Universal Module Definition) minified format. It is not written by hand — it is a verbatim copy of the official Chart.js distribution file, stored as a D365 AOT Resource so D365 can serve it to the browser internally without any external network dependency.
+
+**❓ Why this approach is necessary:**
+
+> 🚫 D365 F&O OneBox and on-premise environments often **block all outbound internet requests** from the browser. A `<script src="https://cdn.jsdelivr.net/...">` tag would silently fail with no error shown to the user.
+
+By storing Chart.js as an AOT Resource, D365 serves it from its own resource server at `/resources/scripts/SalesIntelligenceChartJS.js` — always available regardless of network access.
+
+**📥 How to get Chart.js UMD content:**
+
+Option A — 🌐 From CDN (requires internet):
+1. Open: `https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js`
+2. ⌨️ Ctrl+A → Ctrl+C to copy the entire file content
+
+Option B — 📦 From npm (offline):
+```powershell
+npm pack chart.js@4.4.0
+# Extract the tarball → find package/dist/chart.umd.min.js
+```
+
+**🛠️ How to populate it in the AOT Resource:**
+
+1. 🖱️ In Visual Studio Solution Explorer, click `SalesIntelligenceChartJS.js`
+2. ⌨️ Press **F4** to open the Properties panel
+3. 📋 Copy the **Full Path** value — this is the physical file on disk
+4. 📂 Open that file in VS Code
+5. ⌨️ Ctrl+A → Delete → Ctrl+V to paste the Chart.js content → Save
+6. 🔨 Rebuild the AOT project → Deploy to LocalDB
+
+**✅ How to verify it worked:**
+- 🌐 Open D365 in browser → F12 DevTools → Network tab
+- 🔘 Click Generate Dashboard
+- 🔍 Find the request to `/resources/scripts/SalesIntelligenceChartJS.js`
+- ✅ It must return HTTP **200** with a large JS payload (not empty, not 404)
+
+**❓ Why UMD format specifically:**
+
+> 💡 D365's control script runs in a plain browser context with **no module bundler** (no webpack, no require.js). UMD format is the only Chart.js distribution that works as a plain `<script>` tag and exposes the `Chart` global variable — which is what the control script checks with `typeof Chart !== 'undefined'`.
+
+**🆕 For a new project using a different Chart.js version:**
+Simply replace the file content with the new version's `chart.umd.min.js`. The AOT resource name, URL, and all references remain identical — no metadata changes needed.
+
+---
+
+### 6.4 🖥️ SalesIntelligenceDashboard (Form)
+
+**📍 File:** `SalesRevenueIntelligence/Forms/SalesIntelligenceDashboard.xml`
+
+The D365 form is intentionally minimal — it contains only two controls:
 
 ```xml
 <Controls>
+  <!-- 🔘 Button that triggers dashboard generation -->
   <AxFormButtonControl>
     <n>GenerateButton</n>
     <Text>Generate Dashboard</Text>
-    <!-- clicked() calls DashboardControl.loadDashboard() -->
+    <!-- clicked() → DashboardControl.loadDashboard() -->
   </AxFormButtonControl>
 
+  <!-- 🧩 The custom extensible control container -->
   <AxFormControl>
     <n>DashboardControl</n>
-    <AutoDeclaration>Yes</AutoDeclaration>
-    <Height>700</Height>
+    <AutoDeclaration>Yes</AutoDeclaration>   <!-- ✅ Typed var available in X++ form code -->
+    <Height>700</Height>                     <!-- 📏 Fixed height — increase if needed -->
     <HeightMode>Manual</HeightMode>
-    <WidthMode>SizeToAvailable</WidthMode>
+    <WidthMode>SizeToAvailable</WidthMode>   <!-- ↔️ Fills available form width -->
     <FormControlExtension>
-      <n>SalesIntelligenceControl</n>  <!-- links to the Extensible Control -->
+      <n>SalesIntelligenceControl</n>        <!-- 🔗 Links to the Extensible Control -->
     </FormControlExtension>
   </AxFormControl>
 </Controls>
 ```
 
-- `AutoDeclaration>Yes` makes `DashboardControl` available as a typed variable in the form's X++ code, allowing `DashboardControl.loadDashboard()` to be called directly from the button's `clicked()` method.
-- `Height=700` with `HeightMode=Manual` gives the dashboard fixed height. Increase this if the dashboard content is taller than the form area.
-- `WidthMode=SizeToAvailable` makes the control fill the available form width.
-- `FormControlExtension` with `<n>SalesIntelligenceControl</n>` is what tells D365 this control should use the custom Extensible Control registered under that name.
+**📌 Key design notes:**
+- 🏷️ `AutoDeclaration=Yes` — allows `DashboardControl.loadDashboard()` to be called directly from the button's `clicked()` event method
+- 📏 `Height=700` with `HeightMode=Manual` — fixed height. If the dashboard content overflows, increase this value
+- ↔️ `WidthMode=SizeToAvailable` — control fills the full form width automatically
+- 🔗 `FormControlExtension` with `SalesIntelligenceControl` — tells D365 this is a custom Extensible Control, not a built-in form control
 
 ---
 
-### 6.5 SalesIntelligenceControl (X++ Class)
+### 6.5 🔧 SalesIntelligenceControl (X++ Class)
 
-This is the **server-side half of the Extensible Control**. It bridges X++ properties to the browser-side JavaScript.
+This is the **server-side half of the Extensible Control**. It bridges X++ properties to the browser-side JavaScript observer.
 
 ```xpp
+// 🔗 Three-parameter decorator — registers this as an Extensible Control
 [FormControlAttribute(
-    'SalesIntelligenceControl',
-    '/resources/html/SalesIntelligenceControl',
-    classStr(SalesIntelligenceControlBuild))]
+    'SalesIntelligenceControl',                  // Control name — must match JS $dyn.controls registration
+    '/resources/html/SalesIntelligenceControl',  // HTM template AOT resource path
+    classStr(SalesIntelligenceControlBuild))]    // Companion build class
 public class SalesIntelligenceControl extends FormTemplateControl
 ```
 
-The `FormControlAttribute` registers this class as the server-side implementation of an Extensible Control. Three parameters:
-- `'SalesIntelligenceControl'` — the control name, must match `$dyn.controls.SalesIntelligenceControl` in the JS
-- `'/resources/html/SalesIntelligenceControl'` — the AOT resource path of the HTM template
-- `classStr(SalesIntelligenceControlBuild)` — the associated build class
-
 ```xpp
+// 📡 Two-way observable property — browser is notified automatically on change
 [FormPropertyAttribute(FormPropertyKind::Value, 'HtmlContent', true)]
-public str parmHtmlContent(str _value = ...)
+public str parmHtmlContent(str _value = htmlContentProperty.parmValue())
 ```
-
-Declares `HtmlContent` as a **two-way observable property**. When X++ sets this property, D365's framework automatically notifies the browser-side `$dyn.observe(self.HtmlContent, ...)` callback. The `true` parameter marks it as bindable.
+> 💡 When X++ sets this property, D365's framework automatically triggers the browser-side `$dyn.observe(self.HtmlContent, ...)` callback — no manual signalling required.
 
 ```xpp
+// 🎯 Form command — declared here, called from the form's button clicked() event
 [FormCommandAttribute('LoadDashboard')]
 public void loadDashboard()
 {
-    str html = SalesIntelligenceService::getDashboardHtml();
-    this.parmHtmlContent(html);
+    str html = SalesIntelligenceService::getDashboardHtml();  // 🌐 Fetch from Python
+    this.parmHtmlContent(html);                               // 📤 Push to browser
 }
 ```
 
-Declares `loadDashboard` as a **form command** callable from the form. Fetches HTML from Python and pushes it to the observable property, triggering the browser-side observer.
-
 ---
 
-### 6.6 SalesIntelligenceControlBuild (X++ Class)
+### 6.6 🔩 SalesIntelligenceControlBuild (X++ Class)
 
 ```xpp
+// 🏗️ Required companion — used by D365 form designer to recognise the control
 [FormDesignControlAttribute('SalesIntelligenceControl')]
 public class SalesIntelligenceControlBuild extends FormBuildControl
 {
+    // ℹ️ Intentionally empty — must exist, decorator is all that's needed
 }
 ```
 
-This is a **required companion class** for any Extensible Control. It is used by the D365 form designer at design time to recognize and place the control. The class body is empty — it simply needs to exist and carry the `FormDesignControlAttribute` decorator with the control's name.
+> ⚠️ This class is **mandatory** for every Extensible Control. Without it, the form designer cannot place the control on a form at design time. The body is always empty.
 
 ---
 
-### 6.7 SalesIntelligenceService (X++ Class)
+### 6.7 🌐 SalesIntelligenceService (X++ Class)
 
-The HTTP service layer. Makes a synchronous `System.Net.HttpWebRequest` to the Python FastAPI server.
+The HTTP service layer. Makes a synchronous `System.Net.HttpWebRequest` call to the Python FastAPI server and returns the dashboard HTML to X++.
 
-**Key design decisions:**
-- Uses `SalesIntelligenceParameters::find()` to read the server URL and timeout from a D365 configuration table — making the server address configurable without redeployment
-- Calls `/ask-chart` (POST) with a JSON body — kept for backward compatibility. The `/dashboard` endpoint (GET) exists for direct browser testing
-- Returns an HTML error page string on failure (rather than throwing) so the control always has something to display
-- Timeout is configurable via `SalesIntelligenceParameters.TimeoutSeconds` — set this to at least 120 seconds on first run as AOS may be idle
-
----
-
-### 6.8 SalesIntelligenceTest (X++ Runnable Class)
-
-A **developer utility** for testing the full pipeline without opening the D365 form. Run it from Visual Studio (right-click → Run) to:
-1. Call `SalesIntelligenceService::getDashboardHtml()`
-2. Save the returned HTML to disk at the repo root as `SalesIntelligence_Output.html`
-3. Open `SalesIntelligence_Output.html` in a browser to visually verify the dashboard before deploying the form
-
-This is invaluable during development — it bypasses the D365 form/control layer entirely and lets you verify the Python server is returning correct HTML.
+**🔑 Key design decisions:**
+- 📋 Reads server URL and timeout from `SalesIntelligenceParameters` table — configurable without code changes or redeployment
+- 📮 Calls `/ask-chart` (POST) with a JSON body — backward compatible with direct API testing
+- 🛡️ Returns an HTML error page string on any failure — the control always has something to render
+- ⏱️ Timeout is in `SalesIntelligenceParameters.TimeoutSeconds` — **set to ≥ 120 seconds** on first use, as an idle AOS needs time to wake
 
 ---
 
-## 7. Python Service Layer
+### 6.8 🧪 SalesIntelligenceTest (X++ Runnable Class)
 
-### 7.1 server.py
+A **developer-only utility** for testing the entire pipeline without opening the D365 form.
 
-FastAPI application exposing four endpoints. Starts Ollama warm-up on startup.
+**▶️ How to run:** Visual Studio → Right-click the class → **Run**
 
-| Endpoint | Method | Purpose |
+**🔄 What it does:**
+1. 📞 Calls `SalesIntelligenceService::getDashboardHtml()`
+2. 💾 Saves the returned HTML to disk at the repo root as `SalesIntelligence_Output.html`
+3. 📊 Logs the HTML character length to the infolog
+
+**💡 Why this is invaluable during development:**
+> It completely bypasses the D365 form and Extensible Control layer, letting you verify the Python server is alive and returning correct HTML — before spending time debugging the D365 client side.
+
+---
+
+## 7. 🐍 Python Service Layer
+
+### 7.1 🚀 server.py
+
+FastAPI application exposing four endpoints. Warms up Ollama automatically on startup.
+
+| 🔌 Endpoint | Method | 📝 Purpose |
 |---|---|---|
-| `/health` | GET | Confirm server is running, returns model and company info |
-| `/test-sales-data` | GET | Validate OData data — check totals, top customers, top products |
-| `/ask-chart` | POST | Primary endpoint called by X++, returns full dashboard HTML |
-| `/dashboard` | GET | GET version of ask-chart, for direct browser access and localhost testing |
+| `/health` | `GET` | ❤️ Confirm server is running — returns model, company, project name |
+| `/test-sales-data` | `GET` | ✅ Validate OData data — totals, top customers, top products, match flags |
+| `/ask-chart` | `POST` | 📊 Primary endpoint called by X++ — returns full dashboard HTML |
+| `/dashboard` | `GET` | 🌐 Browser-accessible version of `/ask-chart` — for localhost testing |
 
-**Important notes:**
-- `StaticFiles` mount has been removed — Chart.js is now served from D365 AOT resource
-- CORS is open (`allow_origins=["*"]`) — appropriate for local VHD development
-- Ollama is warmed up on startup with a dummy request to avoid cold-start timeout on first dashboard load
+**📌 Important notes:**
+- 🗑️ `StaticFiles` mount has been removed — Chart.js is now served from D365 AOT resource only
+- 🌍 CORS is fully open (`allow_origins=["*"]`) — appropriate for local VHD development
+- 🔥 Ollama is warmed up on server startup to prevent cold-start timeout on the first dashboard request
 
 ---
 
-### 7.2 odata.py
+### 7.2 📡 odata.py
 
-Handles all D365 OData communication and data aggregation.
+Handles all D365 OData communication, pagination, filtering, and data aggregation.
 
-**Authentication:** Uses Azure AD client credentials flow (OAuth2). A fresh token is acquired before each fetch call. Token URL: `https://login.windows.net/{tenant_id}/oauth2/token`.
+**🔐 Authentication:** Azure AD client credentials flow (OAuth2). A fresh token is acquired before each fetch call.
 
-**OData entity used:** `SalesOrderLines`  
-This entity was chosen over `SalesOrderHeadersV2` because it provides line-level detail (item, quantity, price, category) needed for product and category analytics, while the header is accessed via `$expand`.
+**📦 OData entity:** `SalesOrderLines` — chosen because it provides line-level detail (item, quantity, price, category) needed for product and category analytics, while the order header is accessed via `$expand`.
 
-**OData parameters:**
+**⚠️ Critical — Why Python-side filtering is required:**
+
+> 🚫 D365 F&O OData does **not** support filtering enum fields in the URL `$filter` parameter. Attempting this returns HTTP 400:
+> ```
+> "A binary operator with incompatible types was detected. Found operand types
+>  'Microsoft.Dynamics.DataEntities.SalesStatus' and 'Edm.String'"
+> ```
+
+✅ Solution — fetch all, filter in Python:
 ```python
-"$filter": f"dataAreaId eq '{COMPANY}'",
-"$select": "SalesOrderNumber,SalesOrderLineStatus,ItemNumber,LineDescription,
-             OrderedSalesQuantity,SalesPrice,LineAmount,CurrencyCode,
-             RequestedReceiptDate,SalesProductCategoryName",
-"$expand": "SalesOrderHeader($select=OrderingCustomerAccountNumber,SalesOrderStatus)",
-"$top":    10000
-```
-
-**Critical filtering decision — why Python-side filtering:**
-
-D365 F&O OData does not support filtering enum fields directly in the URL `$filter` parameter. Attempting `SalesOrderLineStatus eq 'Invoiced'` returns a 400 error:
-```
-"A binary operator with incompatible types was detected. Found operand types 
-'Microsoft.Dynamics.DataEntities.SalesStatus' and 'Edm.String'"
-```
-
-The solution is to fetch all records and filter in Python:
-```python
-if line_status != "Invoiced":      # line-level filter
+if line_status != "Invoiced":    # 📋 Line-level: skip non-invoiced lines
     continue
-if header_status != "Invoiced":    # header-level filter (matches SQL SALESSTATUS = 3)
+if header_status != "Invoiced":  # 📋 Header-level: skip open/delivered orders
     continue
-if line_amount <= 0:               # exclude zero/negative lines
+if line_amount <= 0:             # 💰 Skip zero and negative lines
     continue
 ```
 
-**Why both header AND line status must be checked:**
+**❓ Why BOTH header AND line status must be checked:**
 
-D365 can have orders where the header status is still "Open" (being processed) but individual lines have been invoiced. Filtering on line status alone would incorrectly include revenue from open/unconfirmed orders. Filtering on header status alone would include cancelled lines within invoiced orders. Both checks together exactly match SQL: `SALESSTATUS = 3 (header) AND SALESSTATUS = 3 (line)`.
+> 🔍 D365 supports partial invoicing — an order header can remain "Open" while some individual lines have been invoiced. Filtering on line status alone would include revenue from still-open orders. Filtering on header status alone would include cancelled lines within fully invoiced orders. **Both checks together exactly replicate SQL `SALESSTATUS = 3` on both `SALESTABLE` and `SALESLINE`.**
 
-**Aggregation output (`summarise_sales_performance`):**
+**📊 Aggregation outputs from `summarise_sales_performance`:**
 
-| Field | Description |
+| 📦 Field | 📝 Description |
 |---|---|
-| `customer_stats` | List of customers sorted by revenue desc, with tier, order count, product diversity |
-| `product_stats` | List of products sorted by revenue desc, with customer reach |
-| `category_stats` | Dict of categories with revenue, quantity, order count |
-| `grand_total` | Sum of all invoiced line amounts |
-| `total_customers` | Count of unique customer accounts |
-| `total_orders` | Count of unique sales order numbers |
-| `total_lines` | Raw count of line records after filtering |
+| `customer_stats` | 👥 Customers sorted by revenue desc — includes tier, order count, product diversity |
+| `product_stats` | 📦 Products sorted by revenue desc — includes customer reach count |
+| `category_stats` | 🗂️ Dict of categories with revenue, quantity, and unique order counts |
+| `grand_total` | 💰 Sum of all filtered invoiced line amounts |
+| `total_customers` | 👥 Count of unique customer account numbers |
+| `total_orders` | 📦 Count of unique sales order numbers |
+| `total_lines` | 📋 Raw record count after all filters applied |
 
 ---
 
-### 7.3 chart_engine.py
+### 7.3 🎨 chart_engine.py
 
-Builds the complete self-contained HTML dashboard string.
+Builds the complete, self-contained HTML dashboard string returned to X++.
 
-**Critical design decision — all CSS is inline:**
+**⚠️ Critical design decision — all CSS must be INLINE:**
 
-D365's Extensible Control framework **strips `<style>` block content** when injecting HTML into the control container. Any CSS defined in a `<style>` tag will be ignored. The solution is to use inline `style=""` attributes on every HTML element. The `S` dictionary at the top of the file stores all inline style strings, making them easy to maintain:
+> 🚫 D365's Extensible Control framework **silently strips `<style>` block content** when injecting HTML into the control container. Any CSS inside a `<style>` tag will simply be ignored with no error.
 
+✅ Solution — every element uses inline `style=""` via the `S` dictionary:
 ```python
 S = {
-    "stat_card": "background:white;border-radius:8px;padding:12px 18px;flex:1;
-                  min-width:140px;box-shadow:0 1px 4px rgba(0,0,0,0.08);
-                  border-left:4px solid #7c3aed;",
-    ...
+    "stat_card": "background:white;border-radius:8px;padding:12px 18px;"
+                 "flex:1;min-width:140px;box-shadow:0 1px 4px rgba(0,0,0,0.08);"
+                 "border-left:4px solid #7c3aed;",
+    ...  # 25+ style constants
 }
 ```
 
-**Chart.js loading strategy:**
+**📊 Charts generated:**
 
-A CDN `<script>` tag is included in the HTML head for localhost testing:
+| # | 📊 Chart | Type | 🎨 Colour scheme |
+|---|---|---|---|
+| 1 | 💰 Top 15 Customers by Revenue | Horizontal bar | Tier colour-coded (💜 Platinum / 🥇 Gold / 🥈 Silver / 🥉 Bronze) |
+| 2 | 📦 Top 10 Products by Revenue | Horizontal bar | Uniform blue `#3b82f6` |
+| 3 | 🍩 Revenue by Category | Doughnut | 10-colour rotating palette |
+
+**🌐 Dual-environment Chart.js loading:**
 ```html
+<!-- Included in HTML head — works on localhost via CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 ```
-In D365, the control script's Chart.js loading logic takes precedence (loading from AOT resource). The CDN tag serves as a fallback for localhost development. If D365 blocks external CDN requests, the AOT resource ensures the charts still render.
+- 🏠 **Localhost:** CDN loads Chart.js ✅
+- 🏢 **D365:** AOT resource loads Chart.js via `$dyn.internal.getResourceUrl` ✅ (CDN tag is harmless even if blocked)
 
-**Charts generated:**
-
-| Chart | Type | Data | Colors |
-|---|---|---|---|
-| Top 15 Customers by Revenue | Horizontal bar | Customer revenue, sorted desc | Color-coded by tier (purple/gold/silver/bronze) |
-| Top 10 Products by Revenue | Horizontal bar | Product revenue, sorted desc | Blue (#3b82f6) |
-| Revenue by Category | Doughnut | Category revenue breakdown | 10-color palette |
-
-**Label safety:**
-
-Product names containing quotes or backslashes (e.g. `Television HDTV X590 52" White`) are escaped via `_safe_label()` before being embedded in JavaScript strings, preventing JSON/JS parse errors.
+**🔒 Label safety:** Product and customer names containing `"`, `'`, or `\` (e.g. `Television HDTV X590 52" White`) are escaped via `_safe_label()` before embedding in JavaScript string literals.
 
 ---
 
-### 7.4 ai_engine.py
+### 7.4 🤖 ai_engine.py
 
-Manages all Ollama LLM integration.
+Manages all Ollama LLM communication.
 
-**Model:** `qwen3:8b` — a reasoning model that may emit `<think>` tags in its output. These are stripped by `re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL)`.
+**🧠 Model:** `qwen3:8b` — a reasoning model that may emit `<think>` tags, which are stripped via regex before the narrative is returned. `temperature=0.3` keeps output factual and consistent.
 
-**Prompt engineering:** The prompt is structured as a senior sales analyst persona with specific instructions: state revenue health, name top customers with exact figures, highlight top products, and recommend 2 specific actions. `temperature=0.3` keeps the output factual and consistent.
+**🔄 Retry logic:** One automatic retry with Ollama re-warm-up if the first call fails — handles cases where Ollama has unloaded the model from memory between requests.
 
-**Retry logic:** One automatic retry with Ollama re-warm-up if the first call fails — handles cases where Ollama has unloaded the model from memory.
+**🔥 Warm-up:** Called on server startup with `keep_alive: "10m"` to keep the model resident in GPU/CPU memory and prevent cold-start timeouts on the first real dashboard request.
 
-**Warm-up:** Called on server startup with `keep_alive: "10m"` to keep the model loaded in GPU/CPU memory and avoid cold-start delays on the first real request.
-
----
-
-### 7.5 config.py
-
-Simple environment variable loader using `python-dotenv`. All credentials and URLs are read from `.env` — nothing is hardcoded.
+**✂️ Think-tag stripping:**
+```python
+clean = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+```
+> `qwen3:8b` is a reasoning model that shows its internal chain-of-thought inside `<think>` tags. These are stripped before the narrative is passed to `chart_engine.py`.
 
 ---
 
-## 8. Prerequisites
+### 7.5 ⚙️ config.py
 
-**Python environment:**
-- Python 3.10+
-- pip packages: `fastapi`, `uvicorn`, `requests`, `httpx`, `python-dotenv`, `pydantic`
+Simple environment variable loader using `python-dotenv`. All credentials and server URLs are read from `.env` at startup — nothing is hardcoded in any Python file.
 
-**D365 environment:**
-- Microsoft Dynamics 365 Finance & Operations (OneBox VHD or cloud sandbox)
-- Visual Studio 2019/2022 with D365 developer tools installed
-- Access to deploy AOT customizations (USR layer)
-
-**Azure AD:**
-- App registration with client credentials (client ID + secret)
-- API permission: `Dynamics CRM — user_impersonation` (or equivalent D365 scope)
-- App registered as a D365 user in System Administration → Users
-
-**AI (local):**
-- [Ollama](https://ollama.ai) installed and running
-- Model pulled: `ollama pull qwen3:8b`
+```python
+ODATA_BASE_URL = os.getenv("ODATA_BASE_URL")   # 🌐 D365 OData base URL
+COMPANY        = os.getenv("COMPANY")            # 🏢 Legal entity (e.g. usmf)
+AAD_TENANT_ID  = os.getenv("AAD_TENANT_ID")     # 🔑 Azure AD tenant
+AAD_CLIENT_ID  = os.getenv("AAD_CLIENT_ID")     # 🔑 App registration client ID
+AAD_CLIENT_SECRET = os.getenv("AAD_CLIENT_SECRET") # 🔒 Client secret
+AAD_RESOURCE   = os.getenv("AAD_RESOURCE")      # 🎯 OAuth2 audience/resource
+LOGIN_URL      = os.getenv("LOGIN_URL")          # 🔐 Azure AD token endpoint base
+OLLAMA_URL     = os.getenv("OLLAMA_URL")         # 🤖 Ollama server URL
+OLLAMA_MODEL   = os.getenv("OLLAMA_MODEL")       # 🧠 Model name (e.g. qwen3:8b)
+HOST           = os.getenv("HOST", "0.0.0.0")   # 🌍 FastAPI bind host
+PORT           = int(os.getenv("PORT", 8000))    # 🔌 FastAPI bind port
+```
 
 ---
 
-## 9. Installation & Setup
+## 8. 📋 Prerequisites
 
-**Step 1 — Clone the repository:**
+**🐍 Python environment:**
+- ✅ Python 3.10+
+- ✅ pip packages: `fastapi`, `uvicorn`, `requests`, `httpx`, `python-dotenv`, `pydantic`
+
+**🏢 D365 environment:**
+- ✅ Microsoft Dynamics 365 Finance & Operations (OneBox VHD or cloud sandbox)
+- ✅ Visual Studio 2019/2022 with D365 developer tools installed
+- ✅ Access to deploy AOT customizations (USR layer)
+
+**🔐 Azure Active Directory:**
+- ✅ App registration with client credentials (client ID + secret)
+- ✅ API permission: `Dynamics CRM — user_impersonation` (or equivalent D365 scope)
+- ✅ App registered as a D365 user: **System Administration → Users**
+
+**🤖 AI (local):**
+- ✅ [Ollama](https://ollama.ai) installed and running locally
+- ✅ Model pulled: `ollama pull qwen3:8b`
+
+---
+
+## 9. 🛠️ Installation & Setup
+
+**📥 Step 1 — Clone the repository:**
 ```powershell
 cd C:\Users\localadmin\source\repos\FO_Customizations
 git clone <repo-url> D365-AI-Sales_Revenue-Intelligence
 ```
 
-**Step 2 — Install Python dependencies:**
+**🐍 Step 2 — Install Python dependencies:**
 ```powershell
 cd D365-AI-Sales_Revenue-Intelligence\python
 pip install fastapi uvicorn requests httpx python-dotenv pydantic
 ```
 
-**Step 3 — Configure `.env`** (see Section 10)
+**🔑 Step 3 — Configure `.env`**
+See [Section 10](#10--configuration--env-file) for all fields and where to find the values.
 
-**Step 4 — Open D365 AOT project in Visual Studio:**
+**🏗️ Step 4 — Open D365 AOT project in Visual Studio:**
 - Open `SalesRevenueIntelligence.sln` from the `SalesRevenueIntelligence` folder
-- Verify all AOT objects are present in Solution Explorer
+- Verify all AOT objects are visible in Solution Explorer
 
-**Step 5 — Populate SalesIntelligenceChartJS.js** (see Section 11)
+**📊 Step 5 — Populate SalesIntelligenceChartJS.js**
+See [Section 11](#11--aot-resource-deployment) for the full step-by-step process.
 
-**Step 6 — Build and deploy the AOT project:**
+**🔨 Step 6 — Build and deploy the AOT project:**
 ```
 Visual Studio → Right-click project → Rebuild
 Visual Studio → Dynamics 365 → Deploy → Deploy to LocalDB
 ```
 
-**Step 7 — Start the Python server** (see Section 12)
+**▶️ Step 7 — Start the Python server**
+See [Section 12](#12-️-running-the-python-server).
 
-**Step 8 — Test:**
-- Open D365 → navigate to `SalesIntelligenceDashboard` (via Accounts Receivable menu)
+**🧪 Step 8 — Test with SalesIntelligenceTest (optional but recommended):**
+- Visual Studio → Right-click `SalesIntelligenceTest` → Run
+- Open `SalesIntelligence_Output.html` from the repo root in a browser
+- Verify charts and AI narrative render correctly before testing in D365
+
+**🖥️ Step 9 — Open the D365 Dashboard:**
+- D365 → Accounts Receivable → (OHMS menu extension) → Sales Intelligence Dashboard
 - Click **Generate Dashboard**
-- Wait 30–90 seconds for data fetch + AI narrative generation
+- ⏳ Wait 30–90 seconds for data fetch + AI narrative generation on first load
 
 ---
 
-## 10. Configuration — .env File
+## 10. 🔑 Configuration — .env File
 
 Create `python/.env` with the following fields:
 
 ```env
-# D365 OData base URL — your D365 environment data endpoint
+# 🌐 D365 OData base URL — your D365 environment data endpoint
 ODATA_BASE_URL=https://<your-aos-url>/data
 
-# D365 company (legal entity) to query
+# 🏢 D365 company (legal entity) to query
 COMPANY=usmf
 
-# Azure AD app registration credentials
+# 🔑 Azure AD app registration credentials
 AAD_TENANT_ID=<your-tenant-id>
 AAD_CLIENT_ID=<your-app-client-id>
 AAD_CLIENT_SECRET=<your-app-client-secret>
 
-# D365 resource URI for OAuth2 scope
+# 🎯 D365 resource URI — must match the app's configured audience
 AAD_RESOURCE=https://<your-aos-url>/
 
-# Azure AD OAuth2 token endpoint base URL
+# 🔐 Azure AD OAuth2 token endpoint base URL
 LOGIN_URL=https://login.windows.net/
 
-# Ollama local server URL (default port 11434)
+# 🤖 Ollama local server URL (default port 11434)
 OLLAMA_URL=http://localhost:11434
 
-# Ollama model to use for AI narrative generation
+# 🧠 Ollama model for AI narrative generation
 OLLAMA_MODEL=qwen3:8b
 
-# Python server host and port
+# 🌍 Python server bind settings
 HOST=0.0.0.0
 PORT=8000
 ```
 
-**How to find these values:**
-- `ODATA_BASE_URL`: Your D365 URL + `/data` (e.g. `https://usnconeboxax1aos.cloud.onebox.dynamics.com/data`)
-- `AAD_TENANT_ID`: Azure Portal → Azure Active Directory → Overview → Tenant ID
-- `AAD_CLIENT_ID`: Azure Portal → App registrations → your app → Application (client) ID
-- `AAD_CLIENT_SECRET`: Azure Portal → App registrations → your app → Certificates & secrets
-- `AAD_RESOURCE`: Your D365 URL with trailing slash (must match the app's audience)
+**📍 Where to find each value:**
 
-> ⚠️ **Never commit `.env` to source control.** Add it to `.gitignore`.
+| 🔑 Field | 📍 Where to find it |
+|---|---|
+| `ODATA_BASE_URL` | Your D365 URL + `/data` |
+| `AAD_TENANT_ID` | Azure Portal → Azure Active Directory → Overview → Tenant ID |
+| `AAD_CLIENT_ID` | Azure Portal → App registrations → your app → Application (client) ID |
+| `AAD_CLIENT_SECRET` | Azure Portal → App registrations → your app → Certificates & secrets |
+| `AAD_RESOURCE` | Your D365 base URL with trailing slash |
+| `LOGIN_URL` | Always `https://login.windows.net/` for Azure AD v1 endpoint |
+
+> ⚠️ **Never commit `.env` to source control.** Add `python/.env` to your `.gitignore` immediately.
 
 ---
 
-## 11. AOT Resource Deployment
+## 11. 🚢 AOT Resource Deployment
 
-### Populating SalesIntelligenceChartJS.js
+### 📊 Populating SalesIntelligenceChartJS.js
 
-This step must be completed once before the dashboard will render in D365. The AOT resource file must contain the full Chart.js v4.4.0 UMD library.
+This step is **mandatory** and must be completed once before the dashboard will render charts in D365. The AOT resource file must contain the full Chart.js v4.4.0 UMD minified library.
 
-**Step 1 — Get the Chart.js content:**
+**📥 Step 1 — Get the Chart.js UMD content:**
 
-Option A — From CDN (requires internet):
-- Open: `https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js`
-- Ctrl+A → Ctrl+C to copy entire content
+> 🌐 Option A — From CDN (requires internet):
+> Open `https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js` → Ctrl+A → Ctrl+C
 
-Option B — From npm (offline):
-```powershell
-npm pack chart.js@4.4.0
-# Extract the tarball, find dist/chart.umd.min.js
-```
+> 📦 Option B — From npm (offline-friendly):
+> ```powershell
+> npm pack chart.js@4.4.0
+> # Extract tarball → find dist/chart.umd.min.js inside
+> ```
 
-**Step 2 — Find the file on disk:**
+**🗂️ Step 2 — Find the file on disk:**
 - In Visual Studio Solution Explorer, click `SalesIntelligenceChartJS.js`
-- Press **F4** to open Properties
-- Copy the value of **Full Path**
+- Press **F4** to open the Properties panel
+- Copy the **Full Path** value
 
-**Step 3 — Replace file contents:**
-- Open the path from Step 2 in VS Code
-- Ctrl+A → Delete all existing content
-- Ctrl+V → Paste the Chart.js content
-- Save (Ctrl+S)
+**✏️ Step 3 — Replace file contents:**
+- Open the path from Step 2 in VS Code or Notepad++
+- `Ctrl+A` → Delete all existing content
+- `Ctrl+V` → Paste the Chart.js UMD content
+- `Ctrl+S` → Save
 
-**Step 4 — Rebuild and deploy:**
+**🔨 Step 4 — Rebuild and deploy:**
 ```
 Visual Studio → Right-click SalesRevenueIntelligence → Rebuild
 Visual Studio → Dynamics 365 → Deploy → Deploy to LocalDB
 ```
 
-**Step 5 — Verify:**
-- Open browser, navigate to D365
-- Open DevTools (F12) → Network tab
+**✅ Step 5 — Verify deployment:**
+- Open D365 in browser → F12 DevTools → Network tab
 - Generate the dashboard
-- Confirm a request to `/resources/scripts/SalesIntelligenceChartJS.js` returns status 200 with a large JS payload
+- Confirm a request to `/resources/scripts/SalesIntelligenceChartJS.js` returns **HTTP 200** with a large JavaScript payload (~200KB+)
+
+> 💡 **Why UMD format specifically?** D365's control runtime has no module bundler (no webpack, no require.js). UMD is the only Chart.js distribution that works as a plain `<script>` tag and exposes the `Chart` global — which `SalesIntelligenceControlScript.js` checks with `typeof Chart !== 'undefined'`.
 
 ---
 
-## 12. Running the Python Server
+## 12. ▶️ Running the Python Server
 
-**Start the server:**
+**🚀 Start the server:**
 ```powershell
 cd C:\Users\localadmin\source\repos\FO_Customizations\D365-AI-Sales_Revenue-Intelligence\python
 uvicorn server:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-**Before making OData calls — wake the AOS:**
-D365 OneBox AOS goes idle after inactivity. An idle AOS causes OData calls to time out. Before calling any endpoint, open any D365 page (e.g. Accounts Receivable → Inquiries → Open transactions) to wake the AOS.
+**😴 Before making OData calls — wake the AOS:**
+> D365 OneBox AOS goes idle after inactivity. An idle AOS causes OData calls to silently time out. Before calling any endpoint, open **any D365 page** (e.g. Accounts Receivable → Inquiries → Open transactions) to wake the AOS first.
 
-**Verify server is running:**
+**❤️ Verify server is running:**
 ```
 GET http://localhost:8000/health
 ```
 
-**Validate data before generating dashboard:**
+**✅ Validate data before generating dashboard:**
 ```
 GET http://localhost:8000/test-sales-data
 ```
-Expected: `total_customers: 29`, `grand_total: ~99451085`, `match_revenue: true`
+> Expected: `total_customers: 29`, `grand_total: ~99451085`, `match_revenue: true`
 
-**Test full dashboard generation:**
+**🌐 Test full dashboard in browser:**
 ```
 GET http://localhost:8000/dashboard
 ```
-Open in browser — should show the full styled dashboard with all 3 charts and AI narrative.
+> Should render the complete styled dashboard with all 3 charts and the AI narrative.
 
 ---
 
-## 13. API Endpoints
+## 13. 🔌 API Endpoints
 
-### GET /health
-Returns server status, model, and company.
+### ❤️ GET /health
 ```json
 {
-  "status": "ok",
-  "model": "qwen3:8b",
+  "status":  "ok",
+  "model":   "qwen3:8b",
   "company": "usmf",
   "project": "D365 AI Sales & Revenue Intelligence v1.0"
 }
 ```
 
-### GET /test-sales-data
-Validates OData data against expected SQL ground truth. Use this to confirm data is correct before generating the full dashboard.
+### ✅ GET /test-sales-data
 ```json
 {
-  "status": "ok",
-  "total_lines": 5736,
+  "status":          "ok",
+  "total_lines":     5736,
   "total_customers": 29,
-  "total_orders": 708,
-  "grand_total": 99451085.5,
-  "top_customer": "DE-001",
-  "top_product": "Projector Television",
+  "total_orders":    708,
+  "grand_total":     99451085.5,
+  "top_customer":    "DE-001",
+  "top_product":     "Projector Television",
   "top_5_customers": [...],
-  "top_5_products": [...],
+  "top_5_products":  [...],
   "validation": {
-    "match_customers": true,
-    "match_revenue": true,
+    "match_customers":   true,
+    "match_revenue":     true,
     "match_top_product": true
   }
 }
 ```
 
-### POST /ask-chart
-Request body:
+### 📊 POST /ask-chart
+**Request body:**
 ```json
 { "question": "Show me the sales revenue dashboard" }
 ```
-Returns: Complete HTML string with embedded Chart.js dashboard. This is the endpoint called by X++.
+**Returns:** Complete self-contained HTML string — KPI cards, 3 Chart.js charts, AI narrative, all inline-styled.
 
-### GET /dashboard
-Same as `/ask-chart` but via GET. Used for direct browser testing and localhost verification.
+### 🌐 GET /dashboard
+Same output as `/ask-chart` but accessible via GET. Use this for browser testing and localhost verification without needing a REST client.
 
 ---
 
-## 14. Data Validation & SQL Ground Truth
+## 14. ✅ Data Validation & SQL Ground Truth
 
 The dashboard data has been validated against direct SQL queries on the D365 AXDB database.
 
-**Correct SQL ground truth query:**
+**🎯 Correct SQL ground truth query:**
 ```sql
-SELECT 
+SELECT
     SUM(l.LINEAMOUNT)             AS TotalRevenue,
     COUNT(DISTINCT h.SALESID)     AS TotalOrders,
     COUNT(DISTINCT h.CUSTACCOUNT) AS TotalCustomers
-FROM [AxDB].[dbo].[SALESLINE] l
-JOIN [AxDB].[dbo].[SALESTABLE] h 
+FROM [AxDB].[dbo].[SALESLINE]  l
+JOIN [AxDB].[dbo].[SALESTABLE] h
     ON l.SALESID = h.SALESID AND l.DATAAREAID = h.DATAAREAID
 WHERE h.DATAAREAID = 'usmf'
-  AND h.SALESSTATUS = 3    -- header fully invoiced
-  AND l.SALESSTATUS = 3    -- line not cancelled
+  AND h.SALESSTATUS = 3   -- ✅ header fully invoiced
+  AND l.SALESSTATUS = 3   -- ✅ line not cancelled
 ```
 
-**Validated results (USMF, March 2026):**
+**📊 Validated results — USMF, March 2026:**
 
-| Metric | Value |
-|---|---|
-| Total Revenue | $99,451,085.50 |
-| Total Orders | 708 |
-| Total Customers | 29 |
+| 📊 Metric | 🔢 SQL | 🐍 OData (Python) | ✅ Match? |
+|---|---|---|---|
+| 💰 Total Revenue | $99,451,085.50 | $99,451,085.50 | ✅ Exact |
+| 📦 Total Orders | 708 | 708 | ✅ Exact |
+| 👥 Customers | 29 | 29 | ✅ Exact |
+| 🏆 Top Customer | DE-001 | DE-001 | ✅ Exact |
+| 🥇 Top Product | Projector Television | Projector Television | ✅ Exact |
 
-**Why the OData filter differs from SQL:**
+**🔍 The $1,369 edge case discovered during validation:**
 
-D365 OData does not support filtering enum fields in the URL. The Python code filters in-memory:
-- `SalesOrderLineStatus == 'Invoiced'` (equivalent to `l.SALESSTATUS = 3`)
-- `SalesOrderStatus == 'Invoiced'` (equivalent to `h.SALESSTATUS = 3`)
-
-**Why not filter all header statuses equally in SQL:**
-
-SQL's `SALESSTATUS = 3` on the header includes one edge case: order `000701` (US-004) has header status Invoiced but one line (`P0001`, $1,369) with status Cancelled (4). The OData line filter correctly excludes this cancelled line. The true ground truth SQL must therefore add `AND l.SALESSTATUS = 3`.
+> Order `000701` (customer US-004) has header status **Invoiced** but contains one line (`P0001`, $1,369) with status **Cancelled (4)**. The original SQL filtering on header status only included this line, inflating the SQL total by $1,369. Adding `AND l.SALESSTATUS = 3` to the SQL query corrects it to exactly match the OData result — confirming that **OData's line-level filter is actually more accurate than a simple header-only SQL filter**.
 
 ---
 
-## 15. Revenue Tier Classification
+## 15. 🥇 Revenue Tier Classification
 
-Customers are classified into tiers based on total invoiced revenue:
+Customers are automatically classified into tiers based on their total invoiced revenue. The tier drives the bar colour in the Top 15 Customers chart.
 
-| Tier | Revenue Range | Color |
+| 🏆 Tier | 💰 Revenue Range | 🎨 Chart Colour | 🖼️ Hex |
+|---|---|---|---|
+| 💜 Platinum | $10M+ | Purple | `#7c3aed` |
+| 🥇 Gold | $5M – $10M | Gold | `#d97706` |
+| 🥈 Silver | $1M – $5M | Grey | `#6b7280` |
+| 🥉 Bronze | Under $1M | Brown | `#92400e` |
+
+> 📌 In the current USMF dataset, all 29 customers fall into the **Gold** tier ($5M–$10M), meaning all bars in Chart 1 are gold-coloured. As new customers are added or revenue shifts, bars will automatically recolour.
+
+---
+
+## 16. ⚠️ Technical Notes & Gotchas
+
+| ⚠️ Issue | 🔍 Root Cause | ✅ Solution |
 |---|---|---|
-| Platinum | $10M+ | Purple `#7c3aed` |
-| Gold | $5M – $10M | Gold `#d97706` |
-| Silver | $1M – $5M | Silver `#6b7280` |
-| Bronze | Under $1M | Bronze `#92400e` |
-
-The tier color is used as the bar color in the Top 15 Customers chart, giving an immediate visual indication of customer value tier.
-
----
-
-## 16. Technical Notes & Gotchas
-
-| Issue | Root Cause | Solution |
-|---|---|---|
-| D365 strips `<style>` blocks | Control framework sanitizes injected HTML | All CSS must be inline `style=""` attributes |
-| `<script>` tags don't execute after jQuery `.html()` | Browser security blocks injected scripts | Extract scripts manually, re-execute with `new Function()` |
-| Chart.js OData enum filter 400 error | D365 OData enum types can't be string-compared in URL | Filter `SalesOrderLineStatus` and `SalesOrderStatus` in Python after fetch |
-| Charts blank despite HTML injecting correctly | Chart.js not loaded yet when scripts execute | 300ms delay in `runCharts()` + `$dyn.internal.getResourceUrl()` for AOT loading |
-| D365 blocks CDN script tags | Outbound internet blocked in OneBox/on-prem | Chart.js stored as AOT Resource, served from `/resources/scripts/` |
-| AOS timeout on first OData call | D365 AOS is idle, takes time to wake | Open any D365 page before calling OData endpoints; set timeout ≥ 120s |
-| Product names with quotes break chart JSON | Chart.js labels embedded in JS string literals | `_safe_label()` escapes `"`, `'`, `\` before embedding |
-| `SalesIntelligenceChartJS.js` is empty | AOT resource created but never populated | Must manually paste Chart.js UMD content; rebuild and redeploy |
-| Inline script double-loading Chart.js | CDN tag in HTML + AOT resource both load Chart.js | `typeof Chart !== 'undefined'` guard in control script prevents double-init |
-| `LINEAMOUNT` vs `SALESQTY * SALESPRICE` difference | None — they are identical in AXDB | Use `LINEAMOUNT` (pre-calculated, more reliable) |
+| 🚫 D365 strips `<style>` blocks | Control framework sanitizes injected HTML | All CSS must be inline `style=""` attributes — use the `S{}` dict in `chart_engine.py` |
+| 🚫 `<script>` tags don't execute after jQuery `.html()` | Browser security policy blocks injected scripts | Extract scripts manually into array, re-execute with `new Function()` |
+| 🚫 OData enum filter returns HTTP 400 | D365 OData enum types can't be string-compared in URL | Filter `SalesOrderLineStatus` and `SalesOrderStatus` in Python after fetch |
+| 🚫 Charts blank despite correct HTML | Chart.js not yet loaded when scripts execute | 300ms delay in `runCharts()` + load Chart.js via `$dyn.internal.getResourceUrl()` |
+| 🚫 D365 blocks CDN `<script>` tags | Outbound internet blocked in OneBox/on-prem | Chart.js stored as AOT Resource — served from `/resources/scripts/` internally |
+| 😴 AOS timeout on first OData call | D365 AOS idle — cold start takes 30–60 seconds | Open any D365 page before calling OData; set `TimeoutSeconds` ≥ 120 |
+| 🚫 Product names with quotes break charts | Label content embedded inside JS string literals | `_safe_label()` escapes `"`, `'`, `\` before embedding |
+| 📭 `SalesIntelligenceChartJS.js` is empty | AOT resource created but content never pasted | Paste Chart.js UMD content manually; rebuild and redeploy |
+| 🔄 Chart.js double-loaded | CDN `<script>` in HTML + AOT resource both trigger | `typeof Chart !== 'undefined'` guard in control script prevents double-init |
+| 💰 $1,369 SQL vs OData gap | SQL header-only filter included a cancelled line | Add `AND l.SALESSTATUS = 3` to SQL; OData line filter was already correct |
 
 ---
 
-## 17. Troubleshooting
+## 17. 🆘 Troubleshooting
 
-**Dashboard shows blank white area:**
-- Check browser DevTools Console for JavaScript errors
-- Verify `SalesIntelligenceChartJS.js` is populated (not empty)
-- Check Network tab: does `/resources/scripts/SalesIntelligenceChartJS.js` return 200?
+**🚫 Dashboard shows blank white area in D365:**
+- 🔍 Open browser DevTools (F12) → Console tab — look for JavaScript errors
+- 📭 Verify `SalesIntelligenceChartJS.js` is populated (not an empty file)
+- 🌐 Network tab: does `/resources/scripts/SalesIntelligenceChartJS.js` return HTTP 200 with large payload?
+- 🔨 If the file was just populated, did you **Rebuild + Deploy** the AOT project?
 
-**"Error connecting to Sales Intelligence server":**
-- Verify Python server is running: `http://localhost:8000/health`
-- Check `SalesIntelligenceParameters` in D365 — is the URL set to `http://localhost:8000`?
-- Check firewall — D365 AOS must be able to reach localhost:8000
+**🚫 "Error connecting to Sales Intelligence server" shown in D365:**
+- ❤️ Verify Python server is running: `GET http://localhost:8000/health`
+- 📋 Check `SalesIntelligenceParameters` table in D365 — is URL set to `http://localhost:8000`?
+- 🔌 Check Windows Firewall — D365 AOS (running as a service) must be able to reach `localhost:8000`
 
-**OData fetch returns 401:**
-- Azure AD token has expired or client secret is wrong
-- Verify the app registration has D365 API permission
-- Verify the app is registered as a D365 user (System Administration → Users)
+**🚫 OData returns HTTP 401 Unauthorized:**
+- 🔑 Azure AD token has expired or client secret is wrong/rotated
+- ✅ Verify app registration has D365 API permission (`user_impersonation`)
+- 👤 Verify the Azure AD app is registered as a D365 user: **System Administration → Users → New**
 
-**OData fetch returns 400:**
-- Do not add enum filters to `$filter` URL parameter
-- All status filtering must be done in Python after fetch
+**🚫 OData returns HTTP 400 Bad Request:**
+- ⚠️ You added an enum filter to the `$filter` URL parameter — this is not supported
+- ✅ All `SalesOrderLineStatus` / `SalesOrderStatus` filtering must happen in Python after fetch
 
-**Ollama timeout:**
-- Run `ollama list` to confirm `qwen3:8b` is pulled
-- Run `ollama run qwen3:8b` manually to verify it starts
-- Increase `TimeoutSeconds` in `SalesIntelligenceParameters`
+**🚫 Ollama times out or returns empty narrative:**
+- 🧠 Run `ollama list` — confirm `qwen3:8b` is downloaded
+- 🔥 Run `ollama run qwen3:8b` manually to verify the model starts
+- ⏱️ Increase `TimeoutSeconds` in `SalesIntelligenceParameters` — first run with a cold model can take 60+ seconds
 
-**`match_revenue: false` in /test-sales-data:**
-- Threshold is `>= 99_000_000`
-- If revenue is below this, check that OData filters are correctly applied (both header and line status = Invoiced)
+**🚫 `match_revenue: false` in /test-sales-data:**
+- 🔍 Threshold is `grand_total >= 99_000_000`
+- ✅ Confirm both header AND line Invoiced filters are applied in `odata.py`
+- 🔍 Log `len(all_recs)` before filtering — if it's 0, AOS is still waking up
+
+**🚫 Charts render on localhost but not in D365:**
+- 🎨 Verify all CSS is inline (no `<style>` blocks) — D365 strips them silently
+- 🧩 Verify `SalesIntelligenceControlScript.js` is extracting and re-executing scripts via `new Function()`
+- ⏱️ Increase the `setTimeout` delay from 300ms to 500ms if canvas elements aren't ready in time
 
 ---
 
-*D365 AI Sales & Revenue Intelligence — OHMS Model*  
-*Developed by Omar Hesham Shehab | March 2026*  
-*Part of the D365 AI Series*
+*📊 D365 AI Sales & Revenue Intelligence — OHMS Model*  
+*👤 Developed by Omar Hesham Shehab | March 2026*  
+*🏢 Part of the D365 AI Series*
