@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <BuildTasksDirectory Condition=" '$(BuildTasksDirectory)' == ''">$(MSBuildProgramFiles32)\MSBuild\Microsoft\Dynamics\AX</BuildTasksDirectory>
+    <Model>OHMS</Model>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <OutputPath>bin</OutputPath>
+    <SchemaVersion>2.0</SchemaVersion>
+    <GenerateCrossReferences>True</GenerateCrossReferences>
+    <RunAppCheckerRules>False</RunAppCheckerRules>
+    <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
+    <DeployOnline>False</DeployOnline>
+    <ProjectGuid>{b5928e74-a0ee-42f6-8ec9-870ae1ed3d3b}</ProjectGuid>
+    <Name>SalesRevenueIntelligence</Name>
+    <RootNamespace>SalesRevenueIntelligence</RootNamespace>
+    <StartupType>Class</StartupType>
+    <StartupObject>SalesIntelligenceTest</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <Configuration>Debug</Configuration>
+    <DBSyncInBuild>True</DBSyncInBuild>
+    <GenerateFormAdaptors>False</GenerateFormAdaptors>
+    <Company>
+    </Company>
+    <Partition>initial</Partition>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DataEntityExpandParentChildRelations>False</DataEntityExpandParentChildRelations>
+    <DataEntityUseLabelTextAsFieldName>False</DataEntityUseLabelTextAsFieldName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Base Enums\" />
+    <Folder Include="Classes\" />
+    <Folder Include="Display Menu Items\" />
+    <Folder Include="Forms\" />
+    <Folder Include="Menu Extensions\" />
+    <Folder Include="Resources\" />
+    <Folder Include="Tables\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AxClass\SalesIntelligenceControl">
+      <SubType>Content</SubType>
+      <Name>SalesIntelligenceControl</Name>
+      <Link>Classes\SalesIntelligenceControl</Link>
+    </Content>
+    <Content Include="AxClass\SalesIntelligenceControlBuild">
+      <SubType>Content</SubType>
+      <Name>SalesIntelligenceControlBuild</Name>
+      <Link>Classes\SalesIntelligenceControlBuild</Link>
+    </Content>
+    <Content Include="AxClass\SalesIntelligenceService">
+      <SubType>Content</SubType>
+      <Name>SalesIntelligenceService</Name>
+      <Link>Classes\SalesIntelligenceService</Link>
+    </Content>
+    <Content Include="AxClass\SalesIntelligenceTest">
+      <SubType>Content</SubType>
+      <Name>SalesIntelligenceTest</Name>
+      <Link>Classes\SalesIntelligenceTest</Link>
+    </Content>
+    <Content Include="AxEnum\IsEnabled">
+      <SubType>Content</SubType>
+      <Name>IsEnabled</Name>
+      <Link>Base Enums\IsEnabled</Link>
+    </Content>
+    <Content Include="AxForm\SalesIntelligenceDashboard">
+      <SubType>Content</SubType>
+      <Name>SalesIntelligenceDashboard</Name>
+      <Link>Forms\SalesIntelligenceDashboard</Link>
+    </Content>
+    <Content Include="AxMenuExtension\AccountsReceivable.OHMS">
+      <SubType>Content</SubType>
+      <Name>AccountsReceivable.OHMS</Name>
+      <Link>Menu Extensions\AccountsReceivable.OHMS</Link>
+    </Content>
+    <Content Include="AxMenuItemDisplay\SalesIntelligenceDashboard">
+      <SubType>Content</SubType>
+      <Name>SalesIntelligenceDashboard</Name>
+      <Link>Display Menu Items\SalesIntelligenceDashboard</Link>
+    </Content>
+    <Content Include="AxResource\SalesIntelligenceChartJS">
+      <SubType>Content</SubType>
+      <Name>SalesIntelligenceChartJS</Name>
+      <Link>Resources\SalesIntelligenceChartJS</Link>
+    </Content>
+    <Content Include="AxResource\SalesIntelligenceControlHTM">
+      <SubType>Content</SubType>
+      <Name>SalesIntelligenceControlHTM</Name>
+      <Link>Resources\SalesIntelligenceControlHTM</Link>
+    </Content>
+    <Content Include="AxResource\SalesIntelligenceControlScript">
+      <SubType>Content</SubType>
+      <Name>SalesIntelligenceControlScript</Name>
+      <Link>Resources\SalesIntelligenceControlScript</Link>
+    </Content>
+    <Content Include="AxTable\SalesIntelligenceParameters">
+      <SubType>Content</SubType>
+      <Name>SalesIntelligenceParameters</Name>
+      <Link>Tables\SalesIntelligenceParameters</Link>
+    </Content>
+    <Content Include="SalesIntelligenceChartJS.js">
+      <SubType>Content</SubType>
+      <Name>SalesIntelligenceChartJS.js</Name>
+      <DependentUpon>AxResource\SalesIntelligenceChartJS</DependentUpon>
+    </Content>
+    <Content Include="SalesIntelligenceControl.htm">
+      <SubType>Content</SubType>
+      <Name>SalesIntelligenceControl.htm</Name>
+      <DependentUpon>AxResource\SalesIntelligenceControlHTM</DependentUpon>
+    </Content>
+    <Content Include="SalesIntelligenceControlScript.js">
+      <SubType>Content</SubType>
+      <Name>SalesIntelligenceControlScript.js</Name>
+      <DependentUpon>AxResource\SalesIntelligenceControlScript</DependentUpon>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="$(BuildTasksDirectory)\Microsoft.Dynamics.Framework.Tools.BuildTasks.17.0.targets" />
+</Project>

@@ -1,0 +1,249 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D365 AI Sales & Revenue Intelligence</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8f9fa; color: #212529; padding: 16px;
+    }
+    h2 { font-size: 20px; font-weight: 600; color: #1a1a2e; margin-bottom: 4px; }
+    .subtitle { font-size: 12px; color: #6c757d; margin-bottom: 16px; }
+    .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-card {
+      background: white; border-radius: 8px; padding: 12px 18px;
+      flex: 1; min-width: 140px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      border-left: 4px solid #7c3aed;
+    }
+    .stat-card.gold  { border-left-color: #d97706; }
+    .stat-card.green { border-left-color: #22c55e; }
+    .stat-card.blue  { border-left-color: #3b82f6; }
+    .stat-label { font-size: 11px; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 20px; font-weight: 700; color: #1a1a2e; margin-top: 2px; }
+    .stat-sub   { font-size: 11px; color: #6c757d; margin-top: 2px; }
+    .chart-section {
+      background: white; border-radius: 8px; padding: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 16px;
+    }
+    .chart-title {
+      font-size: 14px; font-weight: 600; color: #374151;
+      margin-bottom: 12px; padding-bottom: 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .chart-container    { position: relative; height: 320px; }
+    .chart-container-md { position: relative; height: 280px; }
+    .charts-row {
+      display: grid; grid-template-columns: 2fr 1fr;
+      gap: 16px; margin-bottom: 16px;
+    }
+    .tier-legend {
+      display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap;
+    }
+    .tier-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: #6c757d;
+    }
+    .tier-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+    .narrative-section {
+      background: #1a1a2e; color: #e2e8f0;
+      border-radius: 8px; padding: 16px; margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+    .narrative-title {
+      font-size: 13px; font-weight: 600; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
+    }
+    .narrative-text { font-size: 13px; line-height: 1.7; color: #cbd5e1; }
+    .footer { font-size: 11px; color: #adb5bd; text-align: center; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h2>AI Sales & Revenue Intelligence</h2>
+  <p class="subtitle">Customer Sales Performance Analysis — USMF | Live data via D365 OData</p>
+
+  
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value">$104.1M</div>
+        <div class="stat-sub">29 customers | 743 orders</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="stat-label">Top Customer</div>
+        <div class="stat-value">DE-001</div>
+        <div class="stat-sub">$8.1M — 7.7% of total</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Top Product</div>
+        <div class="stat-value" style="font-size:14px">Projector Television</div>
+        <div class="stat-sub">by total revenue</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Avg Order Value</div>
+        <div class="stat-value">$140.2K</div>
+        <div class="stat-sub">across all customers</div>
+      </div>
+    </div>
+    
+
+  <div class="chart-section">
+    <div class="chart-title">💰 Top 15 Customers by Revenue</div>
+    <div class="tier-legend">
+      <div class="tier-item"><div class="tier-dot" style="background:#7c3aed"></div>Platinum ($10M+)</div>
+      <div class="tier-item"><div class="tier-dot" style="background:#d97706"></div>Gold ($5M-$10M)</div>
+      <div class="tier-item"><div class="tier-dot" style="background:#6b7280"></div>Silver ($1M-$5M)</div>
+      <div class="tier-item"><div class="tier-dot" style="background:#92400e"></div>Bronze (under $1M)</div>
+    </div>
+    <br>
+    <div class="chart-container">
+      <canvas id="customerChart"></canvas>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-section" style="margin-bottom:0">
+      <div class="chart-title">📦 Top 10 Products by Revenue</div>
+      <div class="chart-container-md">
+        <canvas id="productChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-section" style="margin-bottom:0">
+      <div class="chart-title">🗂️ Revenue by Category</div>
+      <div class="chart-container-md">
+        <canvas id="categoryChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <br>
+  
+    <div class="narrative-section">
+      <div class="narrative-title">🤖 AI Sales Intelligence</div>
+      <div class="narrative-text">The company generated $104,140,313 in revenue from 29 customers, with significant concentration risk due to the top five customers accounting for over 40% of total revenue, led by DE-001 at $8,058,523. The highest-value products include Projector Television ($36,330,000) and Television HDTV X590 52" White ($20,258,900), which collectively serve 41 customers. To mitigate concentration risk and boost revenue, the company should diversify its customer base by targeting mid-tier customers and expand the market reach of high-performing products like Projector Television.</div>
+    </div>
+    
+
+  <p class="footer">D365 AI Sales & Revenue Intelligence · OHMS Model · Omar Hesham Shehab</p>
+
+  <script>
+    function initCharts() {
+      var canvases = ['customerChart', 'productChart', 'categoryChart'];
+      var ready = canvases.every(function(id) {
+        return document.getElementById(id) !== null;
+      });
+      if (!ready || typeof Chart === 'undefined') {
+        setTimeout(initCharts, 100);
+        return;
+      }
+      
+    new Chart(document.getElementById('customerChart'), {
+      type: 'bar',
+      data: {
+        labels: ["DE-001", "US-001", "US-012", "US-002", "US-007", "US-013", "US-011", "US-009", "US-008", "US-010", "US-003", "US-015", "US-022", "US-018", "US-006"],
+        datasets: [{
+          label: 'Total Revenue (USD)',
+          data: [8058523.0, 7380434.0, 7119737.0, 7094186.0, 6915889.0, 6748670.0, 6646236.0, 6633676.0, 6073086.0, 5609029.0, 4971000.0, 2535589.0, 2445926.0, 2334126.0, 2321294.0],
+          backgroundColor: ["#d97706", "#d97706", "#d97706", "#d97706", "#d97706", "#d97706", "#d97706", "#d97706", "#d97706", "#d97706", "#6b7280", "#6b7280", "#6b7280", "#6b7280", "#6b7280"],
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ' $' + ctx.parsed.x.toLocaleString('en-US', {minimumFractionDigits: 0})
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { callback: val => '$' + (val/1000000).toFixed(1) + 'M' },
+            grid: { color: '#f0f0f0' }
+          },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+    
+      
+    new Chart(document.getElementById('productChart'), {
+      type: 'bar',
+      data: {
+        labels: ["Projector Television", "Television HDTV X590", "High End Speaker", "Car Audio System", "Speaker cable 10", "Television M120 37" ", "Mid-Range Speaker 2", "Surround Sound Recei", "Mid-Range Speaker", "Acoustic Foam panel"],
+        datasets: [{
+          label: 'Revenue (USD)',
+          data: [36330000.0, 20258900.0, 12289870.0, 6970620.0, 6834500.0, 4549650.0, 4338676.0, 4245300.0, 3368520.0, 2702098.0],
+          backgroundColor: '#3b82f6',
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ' $' + ctx.parsed.x.toLocaleString('en-US')
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { callback: val => '$' + (val/1000000).toFixed(1) + 'M' },
+            grid: { color: '#f0f0f0' }
+          },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+    
+      
+    new Chart(document.getElementById('categoryChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ["Television", "Speakers", "Auto audio systems", "Accessories", "Receivers", "Other"],
+        datasets: [{
+          data: [61138550.0, 21727168.0, 6970620.0, 6834500.0, 4245300.0, 3224175.0],
+          backgroundColor: ["#7c3aed", "#3b82f6", "#22c55e", "#f97316", "#ec4899", "#14b8a6"],
+          borderWidth: 2,
+          borderColor: '#fff',
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { boxWidth: 10, font: { size: 10 } }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => ' $' + ctx.parsed.toLocaleString('en-US')
+            }
+          }
+        }
+      }
+    });
+    
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() { setTimeout(initCharts, 200); });
+    } else {
+      setTimeout(initCharts, 200);
+    }
+  </script>
+</body>
+</html>
