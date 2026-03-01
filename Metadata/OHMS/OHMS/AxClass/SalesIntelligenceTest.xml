@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SalesIntelligenceTest</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Runnable class to test SalesIntelligenceService and save output to file.
+/// Run this before building the form to verify the dashboard HTML is correct.
+/// Output saved to: C:\Users\localadmin\source\repos\FO_Customizations\D365-AI-Sales_Revenue-Intelligence\
+/// </summary>
+public class SalesIntelligenceTest
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    public static void main(Args _args)
+    {
+        str htmlResult;
+        str filePath;
+        str fileName;
+        str fullPath;
+
+        System.IO.StreamWriter  writer;
+        System.Text.Encoding    encoding;
+
+        filePath = @'C:\Users\localadmin\source\repos\FO_Customizations\D365-AI-Sales_Revenue-Intelligence\';
+        fileName = 'SalesIntelligence_Output.html';
+        fullPath = filePath + fileName;
+
+        info("Starting Sales Intelligence test...");
+        info("Calling Python server — this may take up to 60 seconds...");
+
+        try
+        {
+            htmlResult = SalesIntelligenceService::getDashboardHtml();
+
+            if (htmlResult)
+            {
+                encoding = System.Text.Encoding::get_UTF8();
+                writer   = new System.IO.StreamWriter(fullPath, false, encoding);
+                writer.Write(htmlResult);
+                writer.Close();
+
+                info(strFmt("Success — output saved to: %1", fullPath));
+                info(strFmt("HTML length: %1 characters", strLen(htmlResult)));
+            }
+            else
+            {
+                warning("Service returned empty response.");
+            }
+        }
+        catch (Exception::CLRError)
+        {
+            System.Exception clrEx = CLRInterop::getLastException();
+            error(strFmt("CLR Error: %1", clrEx.get_Message()));
+        }
+        catch (Exception::Error)
+        {
+            error("Unexpected error during test.");
+        }
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

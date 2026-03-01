@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SalesIntelligenceControl</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+[FormControlAttribute(
+'SalesIntelligenceControl',
+    '/resources/html/SalesIntelligenceControl',
+    classStr(SalesIntelligenceControlBuild))]
+public class SalesIntelligenceControl extends FormTemplateControl
+{
+    FormProperty htmlContentProperty;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>new</Name>
+				<Source><![CDATA[
+    public void new(FormBuildControl _build, FormRun _formRun)
+    {
+        super(_build, _formRun);
+        this.setTemplateId('SalesIntelligenceControl');
+        this.setResourceBundleName('/resources/html/SalesIntelligenceControl');
+        htmlContentProperty = this.addProperty(
+            methodStr(SalesIntelligenceControl, parmHtmlContent),
+            Types::String);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmHtmlContent</Name>
+				<Source><![CDATA[
+    [FormPropertyAttribute(FormPropertyKind::Value, 'HtmlContent', true)]
+    public str parmHtmlContent(str _value = htmlContentProperty.parmValue())
+    {
+        if (!prmIsDefault(_value))
+        {
+            htmlContentProperty.setValueOrBinding(_value);
+        }
+        return htmlContentProperty.parmValue();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>loadDashboard</Name>
+				<Source><![CDATA[
+    [FormCommandAttribute('LoadDashboard')]
+    public void loadDashboard()
+    {
+        str html = SalesIntelligenceService::getDashboardHtml();
+        this.parmHtmlContent(html);
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxForm xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="Microsoft.Dynamics.AX.Metadata.V6">
+	<Name>SalesIntelligenceDashboard</Name>
+	<SourceCode>
+		<Methods xmlns="">
+			<Method>
+				<Name>classDeclaration</Name>
+				<Source><![CDATA[
+[Form]
+public class SalesIntelligenceDashboard extends FormRun
+{
+}
+]]></Source>
+			</Method>
+		</Methods>
+		<DataSources xmlns="" />
+		<DataControls xmlns="">
+			<Control>
+				<Name>GenerateButton</Name>
+				<Type>Button</Type>
+				<Methods>
+					<Method>
+						<Name>clicked</Name>
+						<Source><![CDATA[
+        public void clicked()
+        {
+            super();
+            DashboardControl.loadDashboard();
+        }
+
+]]></Source>
+					</Method>
+				</Methods>
+			</Control>
+		</DataControls>
+		<Members xmlns="" />
+	</SourceCode>
+	<DataSources />
+	<Design>
+		<Caption xmlns="">AI Sales &amp; Revenue Intelligence</Caption>
+		<Pattern xmlns="">Custom</Pattern>
+		<Style xmlns="">DetailsFormMaster</Style>
+		<Controls xmlns="">
+			<AxFormControl xmlns=""
+				i:type="AxFormButtonControl">
+				<Name>GenerateButton</Name>
+				<AllowEdit>No</AllowEdit>
+				<Type>Button</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<Text>Generate Dashboard</Text>
+			</AxFormControl>
+			<AxFormControl>
+				<Name>DashboardControl</Name>
+				<AllowEdit>No</AllowEdit>
+				<AutoDeclaration>Yes</AutoDeclaration>
+				<Height>700</Height>
+				<HeightMode>Manual</HeightMode>
+				<WidthMode>SizeToAvailable</WidthMode>
+				<FormControlExtension>
+					<Name>SalesIntelligenceControl</Name>
+					<ExtensionComponents />
+					<ExtensionProperties />
+				</FormControlExtension>
+			</AxFormControl>
+		</Controls>
+	</Design>
+	<Parts />
+</AxForm>

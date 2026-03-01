@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxTable xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SalesIntelligenceParameters</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class SalesIntelligenceParameters extends common
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>shouldThrowExceptionOnZeroDelete</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Determines if concurrent deletes should throw exception.
+    /// </summary>
+    /// <returns>true, if exception should be thrown; otherwise, false.</returns>
+    public boolean shouldThrowExceptionOnZeroDelete()
+    {
+        return true;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>find</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Returns the single parameters record, creating it if it doesn't exist.
+    /// Standard D365 parameters table pattern.
+    /// </summary>
+    /// <param name="_forUpdate">Set true if record will be modified.</param>
+    /// <returns>SalesIntelligenceParameters record.</returns>
+    public static SalesIntelligenceParameters find(boolean _forUpdate = false)
+    {
+        SalesIntelligenceParameters parameters;
+
+        if (_forUpdate)
+        {
+            parameters.selectForUpdate(_forUpdate);
+        }
+
+        select firstonly parameters;
+
+        if (!parameters)
+        {
+            parameters.PythonServerUrl  = "http://localhost:8000";
+            parameters.TimeoutSeconds   = 300;
+            parameters.IsEnabled        = IsEnabled::Yes;
+            parameters.insert();
+        }
+
+        return parameters;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+	<Label>Sales Intelligence Parameters</Label>
+	<SubscriberAccessLevel>
+		<Read>Allow</Read>
+	</SubscriberAccessLevel>
+	<TableGroup>Parameter</TableGroup>
+	<AllowRowVersionChangeTracking>Yes</AllowRowVersionChangeTracking>
+	<CacheLookup>Found</CacheLookup>
+	<CreatedBy>Yes</CreatedBy>
+	<ModifiedBy>Yes</ModifiedBy>
+	<DeleteActions />
+	<FieldGroups>
+		<AxTableFieldGroup>
+			<Name>AutoReport</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoLookup</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoIdentification</Name>
+			<AutoPopulate>Yes</AutoPopulate>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoSummary</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoBrowse</Name>
+			<Fields />
+		</AxTableFieldGroup>
+	</FieldGroups>
+	<Fields>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>IsEnabled</Name>
+			<EnumType>IsEnabled</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>PythonServerUrl</Name>
+			<Label>Python Server URL</Label>
+			<StringSize>255</StringSize>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt">
+			<Name>TimeoutSeconds</Name>
+			<Label>Timeout (seconds)</Label>
+		</AxTableField>
+	</Fields>
+	<FullTextIndexes />
+	<Indexes />
+	<Mappings />
+	<Relations />
+	<StateMachines />
+</AxTable>

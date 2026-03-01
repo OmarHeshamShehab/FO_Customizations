@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxResource xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SalesIntelligenceControlScript</Name>
+	<FileName>SalesIntelligenceControlScript.js</FileName>
+	<RelativeUriInModelStore>OHMS\OHMS\AxResource\ResourceContent\Scripts\SalesIntelligenceControlScript.js</RelativeUriInModelStore>
+	<TypeOfResource>Scripts</TypeOfResource>
+</AxResource>

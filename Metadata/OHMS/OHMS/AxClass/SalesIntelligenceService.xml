@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SalesIntelligenceService</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Service class for D365 AI Sales and Revenue Intelligence.
+/// Calls Python FastAPI server to retrieve AI-powered sales dashboard HTML.
+/// Pattern identical to Project 1 SalesAIAssistantService.
+/// </summary>
+public class SalesIntelligenceService
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>getDashboardHtml</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Calls Python /ask-chart endpoint and returns dashboard HTML.
+    /// Called by the Sales Intelligence form WebControl.
+    /// </summary>
+    /// <returns>HTML string for WebControl rendering.</returns>
+    public static str getDashboardHtml()
+    {
+        SalesIntelligenceParameters parameters = SalesIntelligenceParameters::find();
+
+        if (parameters.IsEnabled == IsEnabled::No)
+        {
+            return '<html><body><p>Sales Intelligence is currently disabled. Enable it in Sales Intelligence Parameters.</p></body></html>';
+        }
+
+        str serverUrl   = parameters.PythonServerUrl;
+        int timeout     = parameters.TimeoutSeconds;
+        str endpoint    = serverUrl + '/ask-chart';
+        str requestBody = '{"question": "Show me the sales revenue dashboard"}';
+        str htmlResult  = '';
+
+        System.Net.HttpWebRequest  request;
+        System.Net.HttpWebResponse response;
+        System.IO.Stream           requestStream;
+        System.IO.StreamReader     responseReader;
+        System.Text.Encoding       encoding;
+        System.Byte[]              bodyBytes;
+
+        try
+        {
+            encoding   = System.Text.Encoding::get_UTF8();
+            bodyBytes  = encoding.GetBytes(requestBody);
+
+            request    = System.Net.WebRequest::Create(endpoint);
+            request.Method        = 'POST';
+            request.ContentType   = 'application/json';
+            request.ContentLength = bodyBytes.Length;
+            request.Timeout       = timeout * 1000;
+
+            requestStream = request.GetRequestStream();
+            requestStream.Write(bodyBytes, 0, bodyBytes.Length);
+            requestStream.Close();
+
+            response       = request.GetResponse();
+            responseReader = new System.IO.StreamReader(response.GetResponseStream());
+            htmlResult     = responseReader.ReadToEnd();
+            responseReader.Close();
+            response.Close();
+        }
+        catch (Exception::CLRError)
+        {
+            System.Exception clrEx = CLRInterop::getLastException();
+            htmlResult = strFmt('<html><body><p>Error connecting to Sales Intelligence server: %1</p></body></html>',
+                                clrEx.get_Message());
+        }
+        catch (Exception::Error)
+        {
+            htmlResult = '<html><body><p>Unexpected error loading Sales Intelligence dashboard.</p></body></html>';
+        }
+
+        return htmlResult;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

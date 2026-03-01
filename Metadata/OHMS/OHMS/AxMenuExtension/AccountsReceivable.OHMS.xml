@@ -21,6 +21,14 @@
 				<MenuItemName>SalesAIAssistant</MenuItemName>
 			</MenuElement>
 		</AxMenuExtensionElement>
+		<AxMenuExtensionElement xmlns="">
+			<Parent>InquiriesAndReports</Parent>
+			<MenuElement xmlns=""
+				i:type="AxMenuElementMenuItem">
+				<Name>SalesIntelligenceDashboard</Name>
+				<MenuItemName>SalesIntelligenceDashboard</MenuItemName>
+			</MenuElement>
+		</AxMenuExtensionElement>
 	</Elements>
 	<MenuElementModifications />
 	<PropertyModifications />
