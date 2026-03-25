@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxForm xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="Microsoft.Dynamics.AX.Metadata.V6">
+	<Name>VoxD365Form</Name>
+	<SourceCode>
+		<Methods xmlns="">
+			<Method>
+				<Name>classDeclaration</Name>
+				<Source><![CDATA[
+/// <summary>
+/// VoxD365 Voice Assistant Form.
+/// Hosts the VoxD365 Extensible Control for warehouse voice commands.
+/// </summary>
+[Form]
+public class VoxD365Form extends FormRun
+{
+}
+]]></Source>
+			</Method>
+			<Method>
+				<Name>init</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Initialize form and load voice assistant UI.
+    /// </summary>
+    public void init()
+    {
+        super();
+        
+        // Load the voice assistant HTML into the control
+        DashboardControl.loadVoiceAssistant();
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+		<DataSources xmlns="" />
+		<DataControls xmlns="" />
+		<Members xmlns="" />
+	</SourceCode>
+	<DataSources />
+	<Design>
+		<Pattern xmlns="">Custom</Pattern>
+		<Controls xmlns="">
+			<AxFormControl xmlns=""
+				i:type="AxFormGroupControl">
+				<Name>MainGroup</Name>
+				<HeightMode>SizeToAvailable</HeightMode>
+				<Type>Group</Type>
+				<WidthMode>SizeToAvailable</WidthMode>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl>
+						<Name>DashboardControl</Name>
+						<AutoDeclaration>Yes</AutoDeclaration>
+						<HeightMode>SizeToAvailable</HeightMode>
+						<WidthMode>SizeToAvailable</WidthMode>
+						<FormControlExtension>
+							<Name>VoxD365Control</Name>
+							<ExtensionComponents />
+							<ExtensionProperties />
+						</FormControlExtension>
+					</AxFormControl>
+				</Controls>
+			</AxFormControl>
+		</Controls>
+	</Design>
+	<Parts />
+</AxForm>

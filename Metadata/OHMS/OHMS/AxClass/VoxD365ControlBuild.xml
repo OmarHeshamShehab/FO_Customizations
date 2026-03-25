@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>VoxD365ControlBuild</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Build class for VoxD365 Extensible Control.
+/// Required for FormControlAttribute pattern.
+/// </summary>
+[FormDesignControlAttribute('VoxD365Control')]
+public class VoxD365ControlBuild extends FormBuildControl
+{
+}
+
+]]></Declaration>
+		<Methods />
+	</SourceCode>
+</AxClass>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>VoxD365Control</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// VoxD365 Voice Assistant Extensible Control.
+/// Renders HTML UI that communicates with Python FastAPI backend.
+/// </summary>
+[FormControlAttribute(
+    'VoxD365Control',
+    '/resources/html/VoxD365Control',
+    classStr(VoxD365ControlBuild))]
+public class VoxD365Control extends FormTemplateControl
+{
+    FormProperty htmlContentProperty;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>new</Name>
+				<Source><![CDATA[
+    public void new(FormBuildControl _build, FormRun _formRun)
+    {
+        super(_build, _formRun);
+        
+        this.setTemplateId('VoxD365Control');
+        this.setResourceBundleName('/resources/html/VoxD365Control');
+        
+        htmlContentProperty = this.addProperty(
+            methodStr(VoxD365Control, parmHtmlContent),
+            Types::String);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmHtmlContent</Name>
+				<Source><![CDATA[
+    [FormPropertyAttribute(FormPropertyKind::Value, 'HtmlContent', true)]
+    public str parmHtmlContent(str _value = htmlContentProperty.parmValue())
+    {
+        if (!prmIsDefault(_value))
+        {
+            htmlContentProperty.setValueOrBinding(_value);
+        }
+        return htmlContentProperty.parmValue();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>loadVoiceAssistant</Name>
+				<Source><![CDATA[
+    [FormCommandAttribute('LoadVoiceAssistant')]
+    public void loadVoiceAssistant()
+    {
+        str html = VoxD365Control::getVoiceAssistantHtml();
+        this.parmHtmlContent(html);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getVoiceAssistantHtml</Name>
+				<Source><![CDATA[
+    private static str getVoiceAssistantHtml()
+    {
+        str html = '';
+        str endpoint = 'http://localhost:8000/ui';
+        
+        System.Net.HttpWebRequest  request;
+        System.Net.HttpWebResponse response;
+        System.IO.StreamReader     reader;
+        
+        try
+        {
+            request = System.Net.WebRequest::Create(endpoint);
+            request.Method = 'GET';
+            request.Timeout = 10000;
+            
+            response = request.GetResponse();
+            reader = new System.IO.StreamReader(response.GetResponseStream());
+            html = reader.ReadToEnd();
+            
+            reader.Close();
+            response.Close();
+        }
+        catch (Exception::CLRError)
+        {
+            System.Exception clrEx = CLRInterop::getLastException();
+            html = strFmt('<div style="color:red;padding:40px;font-family:Segoe UI;background:#1a1a2e;min-height:400px;text-align:center;"><h2>VoxD365 Server Error</h2><p>%1</p><p style="color:gray;">Start FastAPI on localhost:8000</p></div>',
+                          clrEx.get_Message());
+        }
+        catch
+        {
+            html = '<div style="color:red;padding:40px;font-family:Segoe UI;background:#1a1a2e;min-height:400px;text-align:center;"><h2>VoxD365 Server Unavailable</h2><p>Cannot connect to FastAPI server.</p><p style="color:gray;">Run: uvicorn app.main:app --host 0.0.0.0 --port 8000</p></div>';
+        }
+        
+        return html;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
