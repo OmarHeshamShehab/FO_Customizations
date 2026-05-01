@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>MaxCustAccountStatementExtHandler</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Report handler class for the custom Customer Account Statement report.
+///
+/// PURPOSE:
+/// Populates the custom field <c>MaxTxT</c> on the temp table
+/// <c>CustAccountStatementExtTmp</c> with the customer group description (the
+/// <c>Name</c> field on <c>CustGroup</c>), so the value becomes available to
+/// the SSRS report design at runtime.
+///
+/// SOURCE: Step 5 - "Create new report handler class"
+///
+/// CORRECTION NOTE (vs. the original 2019 blog post):
+/// The original blog code used <c>tempTable.CustGroup</c> and
+/// <c>custGroup.Description</c>. Verified against the current standard tables
+/// in this environment:
+///   - <c>CustAccountStatementExtTmp</c> has NO <c>CustGroup</c> field. It has
+///     <c>CustTable_AccountNum</c> (EDT <c>CustAccount</c>) and a relation to
+///     <c>CustTable</c> via <c>AccountNum</c>.
+///   - <c>CustGroup</c> has NO <c>Description</c> field. The description text
+///     is stored in the <c>Name</c> field (EDT <c>Description</c>).
+/// The lookup therefore goes:
+///   CustAccountStatementExtTmp.CustTable_AccountNum
+///     -> CustTable.AccountNum
+///     -> CustTable.CustGroup
+///     -> CustGroup.CustGroup
+///     -> CustGroup.Name  ==>  MaxTxT
+///
+/// IMPORTANT (from the document, verbatim):
+/// "We have two different ways to Populate the data in the Report handler class:
+///   1. Add a temp table Inserting event, row-by-row calculations.
+///   2. Add a data processing post-handler, inserting operations that use a single pass
+///      over the result set of the standard solution."
+///
+/// Below, BOTH ways are included in the same class. WAY 1 is active. WAY 2 is commented
+/// out and is functionally EQUIVALENT to WAY 1 — it achieves the same end result
+/// (populating <c>MaxTxT</c> with the customer group's <c>Name</c>) but using a different
+/// trigger point. The document presents them as two alternatives; you typically pick one.
+/// </summary>
+class MaxCustAccountStatementExtHandler
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>CustAccountStatementExtTmpInsertEvent</Name>
+				<Source><![CDATA[
+    // =========================================================================
+    // WAY 1 — TEMP TABLE INSERTING EVENT (ACTIVE)
+    // =========================================================================
+    // Description (from document):
+    //   "Add a temp table Inserting event, row-by-row calculations.
+    //    Go to CustAccountStatementExtTmp in AOT, expand Events node,
+    //    and Copy event handler method."
+    //
+    // Behavior:
+    //   This subscribes to the Inserting data event on the temp table. It fires
+    //   ONCE PER ROW as each row is being inserted into CustAccountStatementExtTmp.
+    //   For each row, it reads CustTable_AccountNum, looks up the matching
+    //   CustTable record to get its CustGroup, then looks up the matching
+    //   CustGroup record and assigns its Name into the new MaxTxT field
+    //   before the row is committed.
+    // =========================================================================
+
+    /// <summary>
+    /// Event handler that subscribes to the Inserting event on
+    /// <c>CustAccountStatementExtTmp</c>. Runs row-by-row during insertion.
+    /// </summary>
+    /// <param name = "c">The Common buffer (cast to the temp table).</param>
+    /// <param name = "e">Data event arguments.</param>
+    [DataEventHandlerAttribute(tableStr(CustAccountStatementExtTmp), DataEventType::Inserting)]
+    public static void CustAccountStatementExtTmpInsertEvent(Common c, DataEventArgs e)
+    {
+        CustAccountStatementExtTmp  tempTable = c;
+        CustTable                   custTable;
+        CustGroup                   custGroup;
+
+        // Resolve customer -> customer group -> group name for THIS row.
+        select firstonly CustGroup from custTable
+            where custTable.AccountNum == tempTable.CustTable_AccountNum
+            join Name from custGroup
+                where custGroup.CustGroup == custTable.CustGroup;
+
+        tempTable.MaxTxT = custGroup.Name;
+    }
+
+    // =========================================================================
+    // WAY 2 — DATA PROCESSING POST-HANDLER (COMMENTED OUT — EQUIVALENT TO WAY 1)
+    // =========================================================================
+    // Description (from document):
+    //   "Add a data processing post-handler, inserting operations that use a
+    //    single pass over the result set of the standard solution."
+    //
+    // Behavior:
+    //   This subscribes as a post-handler on CustAccountStatementExtDP.processReport().
+    //   It fires ONCE, AFTER the standard data provider has finished populating the
+    //   temp table. It then iterates the temp table rows in a single pass and
+    //   updates the MaxTxT field for each one.
+    //
+    // EQUIVALENCE NOTE:
+    //   This produces the SAME end result as WAY 1 above (every row in the temp
+    //   table will have MaxTxT set to the matching customer group's Name).
+    //   The difference is purely WHEN the work happens:
+    //     - WAY 1 runs row-by-row at insert time.
+    //     - WAY 2 runs once at the end of the data provider's processReport method,
+    //       in a single update pass over the already-populated result set.
+    //   You typically pick ONE of the two — not both.
+    // =========================================================================
+
+    /*
+    /// <summary>
+    /// Post-handler for <c>CustAccountStatementExtDP.processReport()</c>.
+    /// Performs a single-pass update over the temp table after the standard
+    /// data provider has finished processing.
+    /// </summary>
+    /// <param name = "arguments">XppPrePostArgs supplied by the post-handler framework.</param>
+    [PostHandlerFor(classStr(CustAccountStatementExtDP), methodstr(CustAccountStatementExtDP, processReport))]
+    public static void TmpTablePostHandler(XppPrePostArgs arguments)
+    {
+        CustAccountStatementExtDP   dpInstance = arguments.getThis() as CustAccountStatementExtDP;
+        CustAccountStatementExtTmp  tmpTable   = dpInstance.getCustAccountStatementExtTmp();
+        CustTable                   custTable;
+        CustGroup                   custGroup;
+
+        ttsbegin;
+        while select forUpdate tmpTable
+        {
+            select firstonly CustGroup from custTable
+                where custTable.AccountNum == tmpTable.CustTable_AccountNum
+                join Name from custGroup
+                    where custGroup.CustGroup == custTable.CustGroup;
+
+            tmpTable.MaxTxT = custGroup.Name;
+            tmpTable.update();
+        }
+        ttscommit;
+    }
+    */
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

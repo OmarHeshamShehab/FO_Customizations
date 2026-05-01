@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>MaxCustAccountStatementExtController_Ext</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Extension controller class for the custom Customer Account Statement report.
+///
+/// PURPOSE:
+/// This class extends the standard <c>CustAccountStatementExtController</c> to redirect
+/// the report execution to our custom report design (<c>MaxCustAccountStatementExt</c>)
+/// instead of the standard one.
+///
+/// SOURCE: Step 4 - "Create a new Extension class that extends the standard report controller class."
+/// </summary>
+class MaxCustAccountStatementExtController_Ext extends CustAccountStatementExtController
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>construct</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Construct method - factory method to instantiate this controller class.
+    /// </summary>
+    /// <returns>
+    /// A new instance of <c>MaxCustAccountStatementExtController_Ext</c>.
+    /// </returns>
+    public static MaxCustAccountStatementExtController_Ext construct()
+    {
+        return new MaxCustAccountStatementExtController_Ext();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Main entry point for the report.
+    ///
+    /// This method is copied from the standard controller class and modified to reference
+    /// the new (extended) controller class. It is responsible for:
+    ///   - Creating an instance of the custom controller.
+    ///   - Setting the default report format from Print Management.
+    ///   - Passing the args from the caller menu item.
+    ///   - Starting the controller operation.
+    /// </summary>
+    /// <param name = "_args">The Args object passed from the menu item.</param>
+    public static void main(Args _args)
+    {
+        SrsPrintMgmtFormLetterController controller = new MaxCustAccountStatementExtController_Ext();
+        controller.parmReportName(PrintMgmtDocType::construct(PrintMgmtDocumentType::CustAccountStatement).getDefaultReportFormat());
+        controller.parmArgs(_args);
+        MaxCustAccountStatementExtController_Ext::startControllerOperation(controller, _args);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>startControllerOperation</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Starts the controller operation (runs the report).
+    /// </summary>
+    /// <param name = "_controller">The print management form letter controller.</param>
+    /// <param name = "_args">The Args object.</param>
+    protected static void startControllerOperation(SrsPrintMgmtFormLetterController _controller, Args _args)
+    {
+        _controller.startOperation();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>outputReport</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// (Optional) Determines which design the report should use.
+    ///
+    /// NOTE FROM DOCUMENT:
+    /// "Optional method, determine which default design for report, some reports don't use
+    /// SrsPrintMgmtFormLetterController, so you can implement this method by your own."
+    ///
+    /// This override forces the report to render using the custom design
+    /// <c>MaxCustAccountStatementExt.Report</c>.
+    /// </summary>
+    protected void outputReport()
+    {
+        SRSCatalogItemName  reportDesign;
+        reportDesign = ssrsReportStr(MaxCustAccountStatementExt, Report);
+        this.parmReportName(reportDesign);
+        this.parmReportContract().parmReportName(reportDesign);
+        formletterReport.parmReportRun().settingDetail().parmReportFormatName(reportDesign);
+        super();
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

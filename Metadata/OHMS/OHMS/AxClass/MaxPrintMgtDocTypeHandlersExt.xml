@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>MaxPrintMgtDocTypeHandlersExt</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Delegate subscriber class that redirects the default report format for the
+/// Customer Account Statement print management document type to the custom
+/// design <c>MaxCustAccountStatementExt.Report</c>.
+///
+/// SOURCE: Step 6 - "Add a delegate handler method to start to use your custom report."
+///
+/// =========================================================================
+/// WHAT IS A DELEGATE? (CONCEPT EXPLANATION)
+/// =========================================================================
+/// A delegate in X++ (Dynamics 365 Finance and Operations) is a special method
+/// declared on a class that does NOT contain logic of its own. Instead, it is
+/// declared as an extension point — a "hook" — that other classes can subscribe
+/// to from outside the original model, without modifying the original code.
+///
+/// HOW IT WORKS:
+///   1. The base/standard class declares a delegate method (e.g.
+///      PrintMgmtDocType.getDefaultReportFormatDelegate). The delegate's body
+///      is empty by Microsoft's design.
+///   2. At a chosen point, the standard code RAISES (calls) the delegate.
+///   3. Any subscriber method in any class — including in your own model —
+///      that has been registered with [SubscribesTo(...)] for that delegate
+///      will be invoked at that point.
+///   4. The subscriber can read the input parameters and, if an
+///      EventHandlerResult is provided, write a result back that the
+///      standard code will read.
+///
+/// WHY DELEGATES EXIST:
+///   - They allow extending standard behavior without overlayering or
+///     modifying Microsoft code.
+///   - They keep your customizations in your own model, which makes
+///     upgrades safer and cleaner.
+///   - They are part of the broader extension model alongside event handlers
+///     (pre/post handlers) and Chain of Command (CoC).
+///
+/// IN THIS SPECIFIC CASE:
+///   - Standard delegate: <c>PrintMgmtDocType.getDefaultReportFormatDelegate</c>.
+///   - Standard purpose: it asks "for this document type, what report design
+///     should I use by default?"
+///   - Our subscriber answers: "for CustAccountStatement, use
+///     MaxCustAccountStatementExt.Report instead of the standard design."
+///   - We write our answer back through the <c>EventHandlerResult</c> object
+///     by calling <c>_result.result(...)</c>.
+/// =========================================================================
+/// </summary>
+class MaxPrintMgtDocTypeHandlersExt
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>getDefaultReportFormatDelegate</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Subscriber for the <c>PrintMgmtDocType.getDefaultReportFormatDelegate</c> delegate.
+    ///
+    /// This method is invoked by the standard framework whenever it asks for the
+    /// default report format for a print management document type. When the document
+    /// type is <c>CustAccountStatement</c>, we override the default by writing our
+    /// custom report design name into the result.
+    /// </summary>
+    /// <param name = "_docType">The print management document type being requested.</param>
+    /// <param name = "_result">
+    /// The result object used to return the chosen report design back to the
+    /// standard framework.
+    /// </param>
+    [SubscribesTo(classstr(PrintMgmtDocType), delegatestr(PrintMgmtDocType, getDefaultReportFormatDelegate))]
+    public static void getDefaultReportFormatDelegate(PrintMgmtDocumentType _docType, EventHandlerResult _result)
+    {
+        switch (_docType)
+        {
+            case PrintMgmtDocumentType::CustAccountStatement:
+                _result.result(ssrsReportStr(MaxCustAccountStatementExt, Report));
+                break;
+        }
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

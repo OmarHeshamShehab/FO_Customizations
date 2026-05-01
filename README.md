@@ -16,6 +16,7 @@ A curated collection of real-world customizations, tutorials, and best practices
   - [📊 D365 AI Sales & Revenue Intelligence](#d365-ai-sales--revenue-intelligence)
   - [🚗 ConVehicleManagement](#convehiclemanagement)
   - [📋 Reports (SSRS Custom Report)](#reports-ssrs-custom-report)
+  - [📑 CustomerAccountStamentReport (Extended SSRS Report)](#customeraccountstamentreport-extended-ssrs-report)
   - [🏢 Halwani](#halwani)
   - [🗂️ Metadata](#metadata)
   - [🛒 Commerce_CustomerListExtension](#commerce_customerlistextension)
@@ -52,6 +53,7 @@ All solutions follow Microsoft extensibility guidelines to ensure upgrade safety
 - 📊 **D365-AI-Sales_Revenue-Intelligence** — AI-powered sales revenue dashboard with Chart.js visualizations embedded as a D365 Extensible Control
 - 🚗 **ConVehicleManagement** — Vehicle tracking and maintenance scheduling
 - 📋 **Reports** — Custom SSRS reporting solution
+- 📑 **CustomerAccountStamentReport** — Extension of the standard Customer Account Statement SSRS report (adds customer group name column)
 - 🏢 **Halwani** — Client-specific customizations
 - 🗂️ **Metadata** — Data model and UI extensions
 - 🛒 **Commerce_CustomerListExtension** — Customer entity extension
@@ -458,6 +460,42 @@ Custom SSRS Daily Sales Report using:
 - 🎨 Precision Design Layout
 
 Report Name: **DSRReport**
+
+---
+
+<a id="customeraccountstamentreport-extended-ssrs-report"></a>
+### 📑 CustomerAccountStamentReport (Extended SSRS Report)
+
+> 📁 `CustomerAccountStamentReport/` — [📖 Full Documentation](CustomerAccountStamentReport/README.md)
+
+Extension of the standard **Customer Account Statement** SSRS report. Adds a new column (`MaxTxT`) that displays the **customer group name** for each transaction row, demonstrating the complete pattern for extending standard SSRS reports without modifying any standard objects.
+
+#### 🧩 D365 AOT Components
+
+| 📦 Component | 🗂️ Type | 📝 Purpose |
+|---|---|---|
+| `CustAccountStatementExtTmp.OHMS` | Table Extension | Adds `MaxTxT` field (EDT: `Description`) to the standard temp table |
+| `MaxCustAccountStatementExt` | SSRS Report | Duplicate of standard report with modified design |
+| `MaxCustAccountStatementExtController_Ext` | X++ Class | Extension controller redirecting execution to the custom report |
+| `MaxCustAccountStatementExtHandler` | X++ Class | Report handler — populates `MaxTxT` via `Inserting` event on the temp table |
+| `MaxPrintMgtDocTypeHandlersExt` | X++ Class | Delegate subscriber redirecting Print Management to the custom design |
+| `CustAccountStatementExt.OHMS` | Menu Item Extension | Routes UI navigation to the custom controller |
+
+#### 🌟 Key Highlights
+
+- 🛡️ **100% extension-based** — no standard objects modified
+- 🔗 **Lookup chain** — `CustAccountStatementExtTmp.CustTable_AccountNum` → `CustTable.CustGroup` → `CustGroup.Name` → `MaxTxT`
+- 🔁 **Two population patterns documented** — `Inserting` event (row-by-row, active) and `processReport` post-handler (single-pass, commented as equivalent)
+- 🧠 **Demonstrates X++ delegates** — `PrintMgmtDocType.getDefaultReportFormatDelegate` subscriber pattern
+- 🧪 **Validated on USMF** — customer `US-004` (group `10`) → `MaxTxT` = "Wholesales customers"
+
+#### ⚡ Quick Start
+
+1. 🔨 Build the solution
+2. 🗄️ Synchronize database (table extension)
+3. 🚢 Deploy reports
+4. 🖨️ Configure Print Management → Customer account statement → Original → set Report format to `MaxCustAccountStatementExt.Report`
+5. 🧪 Run from **Accounts receivable → Inquiries and reports → Customers → Customer account statement** (test dates `1/1/2016` to `2/2/2016` on USMF)
 
 ---
 
