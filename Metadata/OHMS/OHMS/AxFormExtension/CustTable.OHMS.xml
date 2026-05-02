@@ -16,6 +16,19 @@
 			</FormControl>
 			<Parent>Identification</Parent>
 		</AxFormExtensionControl>
+		<AxFormExtensionControl xmlns="">
+			<Name>FormExtensionControl1doyrkij1</Name>
+			<FormControl xmlns=""
+				i:type="AxFormStringControl">
+				<Name>CustTable_OHMSCommunicationPreference</Name>
+				<Type>String</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<DataField>OHMSCommunicationPreference</DataField>
+				<DataSource>CustTable</DataSource>
+			</FormControl>
+			<Parent>Administration</Parent>
+		</AxFormExtensionControl>
 	</Controls>
 	<DataSourceModifications />
 	<DataSourceReferences />

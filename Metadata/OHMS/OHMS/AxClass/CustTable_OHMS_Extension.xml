@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>CustTable_OHMS_Extension</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+[ExtensionOf(tableStr(CustTable))]
+final class CustTable_OHMS_Extension
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>validateDelete</Name>
+				<Source><![CDATA[
+    public boolean validateDelete()
+    {
+        boolean ret;
+        SalesTable salesTable;
+
+        select firstonly RecId, SalesId from salesTable
+            where salesTable.CustAccount  == this.AccountNum
+               && salesTable.SalesStatus  != SalesStatus::Invoiced
+               && salesTable.SalesStatus  != SalesStatus::Canceled;
+
+        ret = next validateDelete();   // always called, exactly once
+
+        if (salesTable.RecId)
+        {
+            ret = checkFailed(strFmt(
+                "[OHMS] Customer %1 cannot be deleted. Open sales order %2 exists.",
+                this.AccountNum,
+                salesTable.SalesId));
+        }
+
+        return ret;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

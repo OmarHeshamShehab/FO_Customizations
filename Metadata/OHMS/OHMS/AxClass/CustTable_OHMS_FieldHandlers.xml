@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>CustTable_OHMS_FieldHandlers</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Event handlers for the OHMSCommunicationPreference field on the CustTable form.
+///
+/// Scenario 03 of the Extensibility-Patterns repo.
+///
+/// Business rule: changing the Communication preference is a sensitive
+/// operation that requires manager approval. We prompt the user with a
+/// confirmation dialog. If they decline, we revert the field to its
+/// previous value.
+///
+/// Why event handler (not CoC):
+///  - We need to react AFTER the field is modified to know the new value
+///  - We need to compare new vs old value to log the audit trail
+///  - We do not need to participate in any chain or modify a return value
+///  - Field-level Modified events are the standard, reliable hook for this
+/// </summary>
+public class CustTable_OHMS_FieldHandlers
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>OHMSCommunicationPreference_OnModified</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Fires when the user modifies the OHMSCommunicationPreference field
+    /// on the CustTable form and tabs out (commits the change to the buffer).
+    /// </summary>
+    /// <param name="sender">The field-level form data object.</param>
+    /// <param name="e">Event arguments (not used).</param>
+    /// <remarks>
+    /// Field Modified handlers receive a FormDataObject as sender, not a
+    /// FormDataSource. We walk back to the datasource via sender.datasource()
+    /// to access the current record.
+    ///
+    /// orig() returns the record as it was before the current edit session,
+    /// which lets us show the user what they're changing FROM.
+    /// </remarks>
+    [FormDataFieldEventHandler(formDataFieldStr(CustTable, CustTable, OHMSCommunicationPreference),
+                               FormDataFieldEventType::Modified)]
+    public static void OHMSCommunicationPreference_OnModified(FormDataObject sender,
+                                                              FormDataFieldEventArgs e)
+    {
+        info('[OHMS] OnModified fired');
+
+        FormDataSource dataSource = sender.datasource();
+        CustTable      custTable  = dataSource.cursor();
+        CustTable      origRecord = custTable.orig();
+
+        str oldValue = origRecord.OHMSCommunicationPreference;
+        str newValue = custTable.OHMSCommunicationPreference;
+
+        // Don't prompt on initial defaulting (when old value was empty).
+        // Only prompt on a real change to a non-empty new value.
+        if (oldValue && oldValue != newValue)
+        {
+            str promptText = strFmt(
+                "[OHMS] You are changing the Communication preference for customer %1.\n\n"
+              + "From: %2\n"
+              + "To:   %3\n\n"
+              + "This change requires manager approval. Continue?",
+                custTable.AccountNum,
+                oldValue,
+                newValue);
+
+            if (Box::yesNo(promptText, DialogButton::No) == DialogButton::Yes)
+            {
+                info(strFmt("[OHMS] Communication preference change accepted for %1: '%2' -> '%3'",
+                            custTable.AccountNum, oldValue, newValue));
+            }
+            else
+            {
+                // User declined: revert the buffer to the original value.
+                custTable.OHMSCommunicationPreference = oldValue;
+
+                // Tell the form to refresh so the UI shows the reverted value.
+                dataSource.refresh();
+
+                info(strFmt("[OHMS] Communication preference change cancelled for %1. Value reverted to '%2'.",
+                            custTable.AccountNum, oldValue));
+            }
+        }
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

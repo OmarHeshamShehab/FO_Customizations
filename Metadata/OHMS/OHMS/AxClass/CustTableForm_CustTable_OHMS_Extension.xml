@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>CustTableForm_CustTable_OHMS_Extension</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+[ExtensionOf(formDataSourceStr(CustTable, CustTable))]
+final class CustTableForm_CustTable_OHMS_Extension
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>active</Name>
+				<Source><![CDATA[
+    public int active()
+    {
+        // 1. Run the standard active logic
+        int ret = next active();
+
+        // 2. Get the current record
+        CustTable custTable = this.cursor();
+
+        // 3. Trigger logic if the field is currently empty
+        if (!custTable.OHMSCommunicationPreference)
+        {
+            switch (custTable.CustGroup)
+            {
+                case '10':
+                    custTable.OHMSCommunicationPreference = '[OHMS] Direct phone';
+                    break;
+                case '20':
+                    custTable.OHMSCommunicationPreference = '[OHMS] Email - bulk';
+                    break;
+                default:
+                    custTable.OHMSCommunicationPreference = '[OHMS] Standard email';
+                    break;
+            }
+        }
+
+        return ret;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

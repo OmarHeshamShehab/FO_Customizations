@@ -12,9 +12,9 @@
     <RunAppCheckerRules>False</RunAppCheckerRules>
     <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
     <DeployOnline>False</DeployOnline>
-    <ProjectGuid>{a2e072e1-cc1d-45bd-8ed4-fb28215625aa}</ProjectGuid>
-    <Name>OHMS_Scenario02_DefaultDeliveryInstructions</Name>
-    <RootNamespace>OHMS_Scenario02_DefaultDeliveryInstructions</RootNamespace>
+    <ProjectGuid>{345f8625-2a51-44f3-8c06-8df91bd9c150}</ProjectGuid>
+    <Name>OHMS_Scenario02_CustTable_Customizations</Name>
+    <RootNamespace>OHMS_Scenario02_DefaultCommunicationPreference</RootNamespace>
     <StartupType>Class</StartupType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
@@ -32,6 +32,33 @@
     <DebugSymbols>true</DebugSymbols>
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Classes\" />
+    <Folder Include="Form Extensions\" />
+    <Folder Include="Table Extensions\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AxClass\CustTableForm_CustTable_OHMS_Extension">
+      <SubType>Content</SubType>
+      <Name>CustTableForm_CustTable_OHMS_Extension</Name>
+      <Link>Classes\CustTableForm_CustTable_OHMS_Extension</Link>
+    </Content>
+    <Content Include="AxClass\CustTable_OHMS_FieldHandlers">
+      <SubType>Content</SubType>
+      <Name>CustTable_OHMS_FieldHandlers</Name>
+      <Link>Classes\CustTable_OHMS_FieldHandlers</Link>
+    </Content>
+    <Content Include="AxFormExtension\CustTable.OHMS">
+      <SubType>Content</SubType>
+      <Name>CustTable.OHMS</Name>
+      <Link>Form Extensions\CustTable.OHMS</Link>
+    </Content>
+    <Content Include="AxTableExtension\CustTable.OHMS">
+      <SubType>Content</SubType>
+      <Name>CustTable.OHMS</Name>
+      <Link>Table Extensions\CustTable.OHMS</Link>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <Import Project="$(BuildTasksDirectory)\Microsoft.Dynamics.Framework.Tools.BuildTasks.17.0.targets" />
 </Project>

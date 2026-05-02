@@ -11,6 +11,12 @@
 			<Label>Refrence Number</Label>
 			<StringSize>255</StringSize>
 		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>OHMSCommunicationPreference</Name>
+			<Label>Communication preference (OHMS)</Label>
+			<StringSize>255</StringSize>
+		</AxTableField>
 	</Fields>
 	<FullTextIndexes />
 	<Indexes />
