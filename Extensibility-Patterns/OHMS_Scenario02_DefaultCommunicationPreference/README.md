@@ -1,4 +1,4 @@
-# Scenarios 02 & 03 — CustTable Customizations
+# Scenarios 02 — CustTable Customizations
 
 **Project:** `OHMS_Scenario02_CustTable_Customizations`
 **Patterns:** Chain of Command (form datasource) + Event Handler (form data field)
