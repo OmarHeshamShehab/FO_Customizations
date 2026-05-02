@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>CustTable_OHMS_LookupHandlers</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Form control event handler that overrides the Lookup event of the
+/// Posting_CustGroup field on the CustTable form.
+///
+/// Replaces the default 2-column lookup with a 3-column lookup adding
+/// the Payment Terms column for context.
+///
+/// Scenario 04 of the Extensibility-Patterns repo.
+///
+/// Verified pattern - multiple working sources:
+///   https://dynamics365musings.com/override-an-existing-lookup-method-event-handler/
+///   https://stoneridgesoftware.com/use-event-handlers-to-override-a-form-control-lookup-method-in-dynamics-365-finance-and-operations/
+///
+/// Why FormControlEventHandler on Lookup with CancelSuperCall:
+///  - Lookup is the most reliably-cancellable form control event in D365.
+///  - SysTableLookup builds the custom lookup from a real backing table.
+///  - CancelSuperCall prevents "More than one form was opened at once
+///    for the lookup control" - both lookups would otherwise try to display.
+/// </summary>
+public class CustTable_OHMS_LookupHandlers
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>Posting_CustGroup_OnLookup</Name>
+				<Source><![CDATA[
+    [FormControlEventHandler(formControlStr(CustTable, Posting_CustGroup),
+                             FormControlEventType::Lookup)]
+    public static void Posting_CustGroup_OnLookup(FormControl sender,
+                                                  FormControlEventArgs e)
+    {
+        info('[OHMS] Posting_CustGroup custom lookup fired');
+
+        SysTableLookup sysTableLookup = SysTableLookup::newParameters(
+            tableNum(CustGroup), sender);
+
+        // Add three columns to the lookup (standard shows only first two)
+        sysTableLookup.addLookupfield(fieldNum(CustGroup, CustGroup));
+        sysTableLookup.addLookupfield(fieldNum(CustGroup, Name));
+        sysTableLookup.addLookupfield(fieldNum(CustGroup, PaymTermId));
+
+        sysTableLookup.performFormLookup();
+
+        // Cancel the standard super lookup to prevent a duplicate form opening.
+        FormControlCancelableSuperEventArgs cancelArgs = e as FormControlCancelableSuperEventArgs;
+        if (cancelArgs)
+        {
+            cancelArgs.CancelSuperCall();
+        }
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

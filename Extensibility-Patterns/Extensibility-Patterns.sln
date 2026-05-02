@@ -9,6 +9,10 @@ Project("{FC65038C-1B2F-41E1-A629-BED71D161FFF}") = "OHMS_Scenario02_CustTable_C
 EndProject
 Project("{FC65038C-1B2F-41E1-A629-BED71D161FFF}") = "OHMS_Scenario03_SalesLineType_Stamp (USR) [OHMS]", "OHMS_Scenario03_SalesLineType_Stamp\OHMS_Scenario03_SalesLineType_Stamp.rnrproj", "{3063B34E-33AA-427C-AAD5-F24BCC73F9E1}"
 EndProject
+Project("{FC65038C-1B2F-41E1-A629-BED71D161FFF}") = "OHMS_Scenario05_Delegate_SubscribesTo (USR) [OHMS]", "OHMS_Scenario05_Delegate_SubscribesTo\OHMS_Scenario05_Delegate_SubscribesTo.rnrproj", "{784CC829-8102-47E0-B853-EF870427A4A1}"
+EndProject
+Project("{FC65038C-1B2F-41E1-A629-BED71D161FFF}") = "OHMS_Scenario04_CustGroup_LookupOverride (USR) [OHMS]", "OHMS_Scenario04_FieldLookup_Override\OHMS_Scenario04_CustGroup_LookupOverride.rnrproj", "{47B82211-730C-4DA2-BAC0-84ED1FE0DB52}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +24,10 @@ Global
 		{345F8625-2A51-44F3-8C06-8DF91BD9C150}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3063B34E-33AA-427C-AAD5-F24BCC73F9E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3063B34E-33AA-427C-AAD5-F24BCC73F9E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{784CC829-8102-47E0-B853-EF870427A4A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{784CC829-8102-47E0-B853-EF870427A4A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47B82211-730C-4DA2-BAC0-84ED1FE0DB52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47B82211-730C-4DA2-BAC0-84ED1FE0DB52}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

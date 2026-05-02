@@ -31,6 +31,9 @@ final class CustTableForm_CustTable_OHMS_Extension
                 case '20':
                     custTable.OHMSCommunicationPreference = '[OHMS] Email - bulk';
                     break;
+                case '30':
+                    custTable.OHMSCommunicationPreference = '[OHMS] Restricted - legal team only';
+                    break;
                 default:
                     custTable.OHMSCommunicationPreference = '[OHMS] Standard email';
                     break;
