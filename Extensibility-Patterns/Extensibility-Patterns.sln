@@ -7,6 +7,8 @@ Project("{FC65038C-1B2F-41E1-A629-BED71D161FFF}") = "OHMS_Scenario01_BlockCustom
 EndProject
 Project("{FC65038C-1B2F-41E1-A629-BED71D161FFF}") = "OHMS_Scenario02_CustTable_Customizations (USR) [OHMS]", "OHMS_Scenario02_DefaultCommunicationPreference\OHMS_Scenario02_CustTable_Customizations.rnrproj", "{345F8625-2A51-44F3-8C06-8DF91BD9C150}"
 EndProject
+Project("{FC65038C-1B2F-41E1-A629-BED71D161FFF}") = "OHMS_Scenario03_SalesLineType_Stamp (USR) [OHMS]", "OHMS_Scenario03_SalesLineType_Stamp\OHMS_Scenario03_SalesLineType_Stamp.rnrproj", "{3063B34E-33AA-427C-AAD5-F24BCC73F9E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -16,6 +18,8 @@ Global
 		{30BD25EE-BAF4-4692-9799-FDE97F593BA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{345F8625-2A51-44F3-8C06-8DF91BD9C150}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{345F8625-2A51-44F3-8C06-8DF91BD9C150}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3063B34E-33AA-427C-AAD5-F24BCC73F9E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3063B34E-33AA-427C-AAD5-F24BCC73F9E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

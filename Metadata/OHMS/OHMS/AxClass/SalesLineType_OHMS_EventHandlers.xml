@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SalesLineType_OHMS_EventHandlers</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Pre and Post event handlers on SalesLineType.initFromSalesTable.
+/// Pure observation - logs to infolog before and after standard runs.
+/// Does not modify any data.
+///
+/// Scenario 03 (companion to the CoC scenario in this same project).
+///
+/// Why this class exists alongside SalesLineType_OHMS_Extension:
+///  - Demonstrates the THREE ways to extend a class method:
+///       1. Chain of Command  -> SalesLineType_OHMS_Extension (changes behavior)
+///       2. Pre-event handler -> this class    (observes before)
+///       3. Post-event handler-> this class    (observes after)
+///  - In the real world, all three can coexist on the same standard
+///    method without conflict. Microsoft itself uses event handlers
+///    extensively in Application Suite.
+///
+/// Pre vs Post - when to use which:
+///  - Pre-handler  : runs BEFORE standard. Can cancel via args.Cancel(true)
+///                   for methods that support cancellation. Cannot read
+///                   the method's return value (it hasn't been computed yet).
+///  - Post-handler : runs AFTER standard. Can READ and WRITE the return
+///                   value via args.returnValue() / args.returnValueXxx().
+///                   Cannot cancel - the work is already done.
+///
+/// CoC vs event handlers - when to use which:
+///  - CoC          : when you need to MODIFY behavior (change parameters,
+///                   change return value, run code conditionally around
+///                   standard). Tight binding, full chain semantics.
+///  - Handlers     : when you just need to OBSERVE behavior (log, audit,
+///                   trigger a side effect). Loose coupling.
+/// </summary>
+public class SalesLineType_OHMS_EventHandlers
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>SalesLineType_Pre_initFromSalesTable</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Pre-event handler: fires BEFORE standard initFromSalesTable runs.
+    /// Receives the original method's arguments via XppPrePostArgs.
+    /// </summary>
+    /// <param name="args">
+    ///   Carries the calling object (getThis), the method's parameters
+    ///   (getArg by index), and a Cancel flag (for cancellable methods).
+    /// </param>
+    /// <remarks>
+    /// To get the parameters that were passed in, use args.getArg(N)
+    /// where N is the zero-based parameter index, matching the method
+    /// signature: initFromSalesTable(SalesTable _salesTable, boolean _ignoreInventDim).
+    /// </remarks>
+    [PreHandlerFor(classStr(SalesLineType), methodStr(SalesLineType, initFromSalesTable))]
+    public static void SalesLineType_Pre_initFromSalesTable(XppPrePostArgs args)
+    {
+        // Param 0 = SalesTable _salesTable
+        SalesTable salesTable = args.getArg('_salesTable') as SalesTable;
+
+        info(strFmt("[OHMS] PRE handler: about to initialize sales line for customer %1 (SO %2)",
+                    salesTable.CustAccount,
+                    salesTable.SalesId));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>SalesLineType_Post_initFromSalesTable</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Post-event handler: fires AFTER standard initFromSalesTable
+    /// (and after any CoC extensions) have completed.
+    /// </summary>
+    /// <param name="args">
+    ///   Same XppPrePostArgs object. Use getThis() to access the
+    ///   SalesLineType instance and reach the now-initialized SalesLine.
+    /// </param>
+    /// <remarks>
+    /// At this point the line buffer has been populated by standard
+    /// AND by our CoC. Reading it here shows the final state.
+    /// </remarks>
+    [PostHandlerFor(classStr(SalesLineType), methodStr(SalesLineType, initFromSalesTable))]
+    public static void SalesLineType_Post_initFromSalesTable(XppPrePostArgs args)
+    {
+        // Get the SalesLineType instance whose method just ran
+        SalesLineType salesLineType = args.getThis() as SalesLineType;
+
+        // Read the now-populated SalesLine using the same parmSalesLine
+        // accessor we used in the CoC class
+        SalesLine salesLine = salesLineType.parmSalesLine();
+
+        info(strFmt("[OHMS] POST handler: sales line initialized. Item=%1, CommunicationPreference=%2",
+                    salesLine.ItemId ? salesLine.ItemId : 'not yet set',
+                    salesLine.OHMSCommunicationPreference ? salesLine.OHMSCommunicationPreference : '(empty)'));
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

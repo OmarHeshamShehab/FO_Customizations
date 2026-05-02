@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SalesLineType_OHMS_Extension</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Extension on the SalesLineType class.
+/// Stamps the customer's OHMSCommunicationPreference onto every newly
+/// created sales line by hooking into initFromSalesTable, the same
+/// method standard uses to copy header fields onto lines.
+///
+/// Scenario 03 of the Extensibility-Patterns repo.
+/// </summary>
+[ExtensionOf(classStr(SalesLineType))]
+final class SalesLineType_OHMS_Extension
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>initFromSalesTable</Name>
+				<Source><![CDATA[
+    public void initFromSalesTable(SalesTable _salesTable, boolean _ignoreInventDim)
+    {
+        info('[OHMS] SalesLineType.initFromSalesTable CoC fired');
+
+        next initFromSalesTable(_salesTable, _ignoreInventDim);
+
+        CustTable custTable = CustTable::find(_salesTable.CustAccount);
+
+        if (custTable.RecId)
+        {
+            this.parmSalesLine().OHMSCommunicationPreference =
+                custTable.OHMSCommunicationPreference;
+        }
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
