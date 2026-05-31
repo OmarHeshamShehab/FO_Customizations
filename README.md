@@ -24,6 +24,7 @@ A curated collection of real-world customizations, tutorials, and best practices
   - [📤 SalesOrderExcelUpload](#salesorderexcelupload-sales-order-upload-from-excel)
   - [✅ SalesOrderWorkflow (Custom Approval Workflow)](#salesorderworkflow-custom-approval-workflow)
   - [🔌 OHMS Service Integration](#ohms-service-integration)
+  - [🎁 LoyaltyMemberIntegration (Custom OData Entity + Action)](#loyaltymemberintegration-custom-odata-entity--action)
 - [📐 Development Guidelines](#development-guidelines)
 - [🧪 Testing & Verification](#testing--verification)
 - [🤝 Contributing](#contributing)
@@ -62,6 +63,7 @@ All solutions follow Microsoft extensibility guidelines to ensure upgrade safety
 - 📤 **SalesOrderExcelUpload** — Excel-driven sales order automation
 - ✅ **SalesOrderWorkflow** — Custom header-level approval workflow on the Sales order (`SalesTable`), surfacing a Submit button with full approval lifecycle, no over-layering
 - 🔌 **OHMS Service Integration** — Custom integration service module
+- 🎁 **LoyaltyMemberIntegration** — Custom public OData entity with a bound action (`addPoints`) and an unmapped computed field; full create/read/update/invoke flow tested via Postman
 
 ---
 
@@ -730,6 +732,143 @@ Example endpoint:
 ```
 /api/services/ohmsServiceGroup/ohmsService/Create
 ```
+
+---
+
+<a id="loyaltymemberintegration-custom-odata-entity--action"></a>
+### 🎁 LoyaltyMemberIntegration (Custom OData Entity + Action)
+
+> 📁 `LoyaltyMemberIntegration/` — [📖 Full Documentation](LoyaltyMemberIntegration/README.md)
+
+A from-scratch **custom OData integration surface** that lets an external system (e-commerce site, CRM, loyalty engine) create, read, and update loyalty members **and invoke a business operation** — `addPoints` adds points and recalculates the member's tier server-side. Demonstrates the full anatomy of an F&O integration endpoint: custom table → public data entity → **unmapped (computed) field** → **bound OData action** → secured CRUD, all driven and verified from Postman.
+
+#### 🏗️ Architecture
+
+```
+External system (storefront / CRM / loyalty engine)
+        │  OAuth2 client-credentials  ·  reports activity ("add 600 points")
+        ▼ OData REST  /data/OHM_LoyaltyMembers
+┌─────────────────────────────────────────────────────────────┐
+│         OHM_LoyaltyMemberEntity  (public OData entity)        │
+│   GET / POST / PATCH  +  bound action: …/…addPoints           │
+│   postLoad() ──► computes unmapped field PointsToNextTier     │
+└───────────────┬───────────────────────────────┬─────────────┘
+                │ delegates                       │ reads/writes
+                ▼                                 ▼
+      OHM_LoyaltyMemberHelper            OHM_LoyaltyMember (table)
+   resolveTier · nextTierThreshold ────► PointsBalance, Tier, …
+   addPoints (ttsbegin + row lock)       (D365 owns the tier rule)
+                                                  │
+                                                  ▼
+                                    OHM_LoyaltyMemberForm (Simple List)
+```
+
+#### 🌟 Key Highlights
+
+- 🚪 **Custom public OData entity** — `OHM_LoyaltyMember` exposed at `/data/OHM_LoyaltyMembers`, no DMF staging (live OData)
+- ⚙️ **Bound OData action** — `[SysODataActionAttribute('addPoints', true)]` lets the caller *invoke logic*, not just edit columns; D365 owns the tier rule
+- 🧮 **Unmapped (computed) field** — `PointsToNextTier` filled in `postLoad`, surfaced only on the API (not stored, not on the form)
+- 🔒 **Concurrency-safe writes** — `addPoints` runs in `ttsbegin/ttscommit` with `selectForUpdate` to prevent lost updates
+- 🪪 **Idempotent by design** — `MemberId` is a unique alternate key owned by the source system; duplicate POST is rejected ("record already exists")
+- 🔗 **Validated customer link** — optional `CustAccount` relation to `CustTable` (member can exist before becoming a customer)
+- 🧪 **End-to-end verified in Postman** — GET / POST / PATCH / action, plus tier promotion, redemption/demotion, and guard-rail tests
+
+#### 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| 🗄️ Data | Table `OHM_LoyaltyMember` (Main, per-company), EDTs, base enum |
+| 🚪 OData | Public Data Entity `OHM_LoyaltyMemberEntity` → `OHM_LoyaltyMembers` |
+| 🧠 Logic | X++ class `OHM_LoyaltyMemberHelper` (tier rules + transactional point updates) |
+| 🖥️ UI | Form `OHM_LoyaltyMemberForm` (Simple List) + display menu item + menu extension |
+| 🔐 Auth | Azure AD OAuth2 client credentials (bearer token) |
+| 📡 Client | Postman (GET / POST / PATCH / bound action) |
+
+#### 🧩 D365 AOT Components
+
+| 📦 Component | 🗂️ Type | 📝 Purpose |
+|---|---|---|
+| `OHM_LoyaltyTier` | Base Enum | Tier values: None, Bronze, Silver, Gold, Platinum |
+| `OHM_LoyaltyMemberId` | EDT (String) | Member key, owned by the external system |
+| `OHM_LoyaltyPoints` | EDT (Int) | Points balance |
+| `OHM_LoyaltyMember` | Table | Member master data (unique key `MemberIdIdx`, `CustTable` relation) |
+| `OHM_LoyaltyMemberEntity` | Data Entity | Public OData contract; hosts `postLoad` + `addPoints` action |
+| `OHM_LoyaltyMemberHelper` | X++ Class | Tier resolution, next-tier threshold, transactional `addPoints` |
+| `OHM_LoyaltyMemberForm` | Form | Simple List view inside F&O |
+| `OHM_LoyaltyMember` | Display Menu Item | Opens the form |
+| `<Module>.OHMS` | Menu Extension | Places the menu item under the module |
+
+#### 💻 Component Snippets
+
+**Tier rules (single source of truth) — `OHM_LoyaltyMemberHelper`**
+```xpp
+#define.SilverThreshold(500)
+#define.GoldThreshold(1500)
+#define.PlatinumThreshold(5000)
+
+public static OHM_LoyaltyTier resolveTier(OHM_LoyaltyPoints _points)
+{   // highest tier first
+    if (_points >= #PlatinumThreshold) return OHM_LoyaltyTier::Platinum;
+    if (_points >= #GoldThreshold)     return OHM_LoyaltyTier::Gold;
+    if (_points >= #SilverThreshold)   return OHM_LoyaltyTier::Silver;
+    return OHM_LoyaltyTier::Bronze;
+}
+```
+
+**Transactional point update — `OHM_LoyaltyMemberHelper::addPoints`**
+```xpp
+ttsbegin;
+member = OHM_LoyaltyMember::find(_memberId, true); // row lock
+if (!member.RecId)                       { ttsabort; throw error("Member not found."); }
+if (member.PointsBalance + _points < 0)  { ttsabort; throw error("Balance cannot be negative."); }
+member.PointsBalance += _points;
+member.Tier = OHM_LoyaltyMemberHelper::resolveTier(member.PointsBalance);
+member.update();
+ttscommit;
+```
+
+**Computed field + bound action — `OHM_LoyaltyMemberEntity`**
+```xpp
+public void postLoad()
+{   // unmapped field, computed on every read
+    super();
+    this.PointsToNextTier =
+        OHM_LoyaltyMemberHelper::nextTierThreshold(this.PointsBalance) - this.PointsBalance;
+}
+
+[SysODataActionAttribute('addPoints', true)] // bound to one member ("this")
+public int addPoints(int pointsToAdd)
+{
+    return OHM_LoyaltyMemberHelper::addPoints(this.MemberId, pointsToAdd).PointsBalance;
+}
+```
+
+**Postman — create, then invoke the action**
+```
+POST /data/OHM_LoyaltyMembers
+{ "dataAreaId":"USMF", "MemberId":"LM-0001", "MemberName":"Test Member", "PointsBalance":0 }
+
+POST /data/OHM_LoyaltyMembers(dataAreaId='USMF',MemberId='LM-0001')/Microsoft.Dynamics.DataEntities.addPoints
+{ "pointsToAdd": 600 }      // → 200, returns new balance; Tier flips to Silver
+```
+
+#### ⚠️ Key Technical Gotchas
+
+- 🚫 **Reserved field names** — `CreatedBy/CreatedDateTime/ModifiedBy/ModifiedDateTime` cannot be exposed on an entity under those names; remove them or rename (e.g. `CreatedOn`) keeping the `Data Field` mapping.
+- 🧮 **Unmapped ≠ computed** — `PointsToNextTier` is an *unmapped* field filled in `postLoad` (X++), not a SQL *computed* field; `Is Computed Field = No`.
+- 🔗 **Action URL hygiene** — a stray `}` / space between the base variable and the collection name yields `404 "No route data was found"`. Suffix must be exactly `/Microsoft.Dynamics.DataEntities.addPoints`.
+- 🪪 **Idempotency** — re-POSTing an existing `MemberId` returns "The record already exists"; middleware should treat this as success on retry.
+- 🔁 **DB sync required** — the OData endpoint and action don't register until **Synchronize database** completes (calls 404 before that).
+- 🧾 **CustAccount validation** — the `CustTable` relation rejects a `CustAccount` that doesn't exist in the company; link only real accounts (e.g. `US-001` on USMF).
+
+#### ⚡ Quick Start
+
+1. 🔨 Build the **OHMS** model and **Synchronize database** (0 errors)
+2. 🔑 In Postman, set the OAuth2 bearer token and a base URL variable ending in `/data/`
+3. 📨 **POST** `OHM_LoyaltyMembers` to create `LM-0001`
+4. ➕ Call the **addPoints** action with `{ "pointsToAdd": 600 }` → tier becomes **Silver**; `{ "pointsToAdd": 900 }` → **Gold**
+5. 🔍 **GET** the single member and confirm `PointsToNextTier` recalculates on each read
+6. 🖥️ Open **Loyalty members** in F&O to see the row, customer link, and tier
 
 ---
 

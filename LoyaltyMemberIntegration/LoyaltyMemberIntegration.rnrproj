@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <BuildTasksDirectory Condition=" '$(BuildTasksDirectory)' == ''">$(MSBuildProgramFiles32)\MSBuild\Microsoft\Dynamics\AX</BuildTasksDirectory>
+    <Model>OHMS</Model>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <OutputPath>bin</OutputPath>
+    <SchemaVersion>2.0</SchemaVersion>
+    <GenerateCrossReferences>True</GenerateCrossReferences>
+    <RunAppCheckerRules>False</RunAppCheckerRules>
+    <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
+    <DeployOnline>False</DeployOnline>
+    <ProjectGuid>{c583e447-d5fa-4d49-8182-687270c726fc}</ProjectGuid>
+    <Name>LoyaltyMemberIntegration</Name>
+    <RootNamespace>LoyaltyMemberIntegration</RootNamespace>
+    <StartupType>Class</StartupType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <Configuration>Debug</Configuration>
+    <DBSyncInBuild>True</DBSyncInBuild>
+    <GenerateFormAdaptors>False</GenerateFormAdaptors>
+    <Company>
+    </Company>
+    <Partition>initial</Partition>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DataEntityExpandParentChildRelations>False</DataEntityExpandParentChildRelations>
+    <DataEntityUseLabelTextAsFieldName>False</DataEntityUseLabelTextAsFieldName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Base Enums\" />
+    <Folder Include="Classes\" />
+    <Folder Include="Data Entities\" />
+    <Folder Include="Display Menu Items\" />
+    <Folder Include="EDT Integers\" />
+    <Folder Include="EDT Strings\" />
+    <Folder Include="Forms\" />
+    <Folder Include="Menu Extensions\" />
+    <Folder Include="Security Privileges\" />
+    <Folder Include="Tables\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AxClass\OHM_LoyaltyMemberHelper">
+      <SubType>Content</SubType>
+      <Name>OHM_LoyaltyMemberHelper</Name>
+      <Link>Classes\OHM_LoyaltyMemberHelper</Link>
+    </Content>
+    <Content Include="AxDataEntityView\OHM_LoyaltyMemberEntity">
+      <SubType>Content</SubType>
+      <Name>OHM_LoyaltyMemberEntity</Name>
+      <Link>Data Entities\OHM_LoyaltyMemberEntity</Link>
+    </Content>
+    <Content Include="AxEdt\OHM_LoyaltyMemberId">
+      <SubType>Content</SubType>
+      <Name>OHM_LoyaltyMemberId</Name>
+      <Link>EDT Strings\OHM_LoyaltyMemberId</Link>
+    </Content>
+    <Content Include="AxEdt\OHM_LoyaltyPoints">
+      <SubType>Content</SubType>
+      <Name>OHM_LoyaltyPoints</Name>
+      <Link>EDT Integers\OHM_LoyaltyPoints</Link>
+    </Content>
+    <Content Include="AxEnum\OHM_LoyaltyTier">
+      <SubType>Content</SubType>
+      <Name>OHM_LoyaltyTier</Name>
+      <Link>Base Enums\OHM_LoyaltyTier</Link>
+    </Content>
+    <Content Include="AxForm\OHM_LoyaltyMemberForm">
+      <SubType>Content</SubType>
+      <Name>OHM_LoyaltyMemberForm</Name>
+      <Link>Forms\OHM_LoyaltyMemberForm</Link>
+    </Content>
+    <Content Include="AxMenuExtension\SalesAndMarketing.OHMS">
+      <SubType>Content</SubType>
+      <Name>SalesAndMarketing.OHMS</Name>
+      <Link>Menu Extensions\SalesAndMarketing.OHMS</Link>
+    </Content>
+    <Content Include="AxMenuItemDisplay\OHM_LoyaltyMember">
+      <SubType>Content</SubType>
+      <Name>OHM_LoyaltyMember</Name>
+      <Link>Display Menu Items\OHM_LoyaltyMember</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\OHM_LoyaltyMemberEntityMaintain">
+      <SubType>Content</SubType>
+      <Name>OHM_LoyaltyMemberEntityMaintain</Name>
+      <Link>Security Privileges\OHM_LoyaltyMemberEntityMaintain</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\OHM_LoyaltyMemberEntityView">
+      <SubType>Content</SubType>
+      <Name>OHM_LoyaltyMemberEntityView</Name>
+      <Link>Security Privileges\OHM_LoyaltyMemberEntityView</Link>
+    </Content>
+    <Content Include="AxTable\OHM_LoyaltyMember">
+      <SubType>Content</SubType>
+      <Name>OHM_LoyaltyMember</Name>
+      <Link>Tables\OHM_LoyaltyMember</Link>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="$(BuildTasksDirectory)\Microsoft.Dynamics.Framework.Tools.BuildTasks.17.0.targets" />
+</Project>

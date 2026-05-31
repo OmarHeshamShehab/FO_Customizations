@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>OHM_LoyaltyMemberHelper</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Central home for all loyalty business logic: tier resolution and point updates.
+///
+/// WHY THIS CLASS EXISTS:
+/// The tier rules (how many points = which tier) are needed in three places —
+/// the entity's virtual field (PointsToNextTier), the OData action (addPoints),
+/// and any future report or form. Putting the rules HERE, in one class, means
+/// there is exactly one definition of "what makes someone Gold." Change it once,
+/// and everything that depends on it stays consistent. Scattering the rules across
+/// the form, entity, and action is how systems drift into disagreeing with themselves.
+///
+/// All methods are STATIC because this class holds pure logic — it has no state of
+/// its own to remember between calls. You call it like a toolbox:
+/// OHM_LoyaltyMemberHelper::resolveTier(...), no need to create an instance first.
+/// </summary>
+public class OHM_LoyaltyMemberHelper
+{
+    // ---------------------------------------------------------------------
+    // TIER THRESHOLDS
+    //
+    // #define is an X++ MACRO: a named text substitution done by the compiler
+    // BEFORE the code is built. It is NOT a variable. Everywhere the compiler
+    // sees "#SilverThreshold" it literally pastes "500" in its place, so
+    //     if (_points >= #SilverThreshold)
+    // is compiled as
+    //     if (_points >= 500)
+    //
+    // Why use a macro instead of typing 500 everywhere:
+    //   1. ONE place to change. The value is used in two methods below. With a
+    //      macro you edit it here once and both methods follow. Hardcoding the
+    //      raw number in each method invites them to fall out of sync.
+    //   2. READABILITY. "#SilverThreshold" says WHY the number matters; a bare
+    //      "500" makes the reader guess.
+    //
+    // Limitation to know: a macro is fixed in code — it cannot be changed at
+    // runtime or configured by a business user. For a real product you would
+    // usually store thresholds in a SETUP TABLE so finance can adjust tiers
+    // without a code deployment. Macros are the simple, learning-friendly version.
+    //
+    // Each value is the point total required to REACH that tier. Bronze is the
+    // entry tier (starts at 0), so it needs no threshold.
+    // ---------------------------------------------------------------------
+    #define.SilverThreshold(500)
+    #define.GoldThreshold(1500)
+    #define.PlatinumThreshold(5000)
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>resolveTier</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Returns the tier that a given points balance maps to.
+    /// </summary>
+    /// <param name="_points">The member's current points balance.</param>
+    /// <returns>The matching loyalty tier.</returns>
+    /// <remarks>
+    /// The checks run from HIGHEST tier to LOWEST on purpose. Each "else if" only
+    /// runs if the ones above it failed, so the first condition that is true wins.
+    /// If we checked Silver before Platinum, a member with 6000 points would match
+    /// the Silver test first (6000 >= 500 is true) and be wrongly labelled Silver.
+    /// Highest-first guarantees they are correctly caught as Platinum.
+    /// </remarks>
+    public static OHM_LoyaltyTier resolveTier(OHM_LoyaltyPoints _points)
+    {
+        OHM_LoyaltyTier tier;
+
+        if (_points >= #PlatinumThreshold)
+        {
+            tier = OHM_LoyaltyTier::Platinum;
+        }
+        else if (_points >= #GoldThreshold)
+        {
+            tier = OHM_LoyaltyTier::Gold;
+        }
+        else if (_points >= #SilverThreshold)
+        {
+            tier = OHM_LoyaltyTier::Silver;
+        }
+        else
+        {
+            // Below the Silver threshold = entry tier.
+            tier = OHM_LoyaltyTier::Bronze;
+        }
+
+        return tier;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>nextTierThreshold</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Returns the point total of the NEXT tier up from the current balance.
+    /// </summary>
+    /// <param name="_points">The member's current points balance.</param>
+    /// <returns>The threshold of the next tier, or the current balance if already at the top.</returns>
+    /// <remarks>
+    /// This powers the PointsToNextTier virtual field on the entity. The caller
+    /// (postLoad) subtracts the current balance from this to show "how many more
+    /// points to advance." The checks here run LOWEST to HIGHEST — the opposite of
+    /// resolveTier — because we want the FIRST threshold the member has not yet
+    /// reached. A Platinum member has no higher tier, so we return their own balance,
+    /// which makes "points to next" compute to zero in the caller.
+    /// </remarks>
+    public static int nextTierThreshold(OHM_LoyaltyPoints _points)
+    {
+        int threshold;
+
+        if (_points < #SilverThreshold)
+        {
+            // Still Bronze → next goal is Silver.
+            threshold = #SilverThreshold;
+        }
+        else if (_points < #GoldThreshold)
+        {
+            // Silver → next goal is Gold.
+            threshold = #GoldThreshold;
+        }
+        else if (_points < #PlatinumThreshold)
+        {
+            // Gold → next goal is Platinum.
+            threshold = #PlatinumThreshold;
+        }
+        else
+        {
+            // Already Platinum — no tier above. Return own balance so the
+            // caller's (threshold - balance) yields 0 rather than a negative number.
+            threshold = _points;
+        }
+
+        return threshold;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>addPoints</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Adds points to a member and recalculates their tier, as one atomic operation.
+    /// This is the business operation the OData action (addPoints) will expose to
+    /// external systems.
+    /// </summary>
+    /// <param name="_memberId">The member to update.</param>
+    /// <param name="_points">Points to add. May be NEGATIVE to redeem/deduct points.</param>
+    /// <returns>The updated member record.</returns>
+    /// <remarks>
+    /// WHY THE TRANSACTION (ttsbegin / ttscommit / ttsabort):
+    /// We read the current balance, change it, and save it. If two "add points"
+    /// calls hit the same member at the same instant, both could read the old
+    /// balance and one overwrites the other — a lost update. ttsbegin together with
+    /// the selectForUpdate (the "true" passed to find) LOCKS the row for the duration
+    /// of this block, so the second call waits until the first commits. ttsabort
+    /// rolls everything back if we hit an error, leaving the data untouched.
+    ///
+    /// This is the SERVER-SIDE version of the same concern that ETags handle on the
+    /// client side: making sure concurrent updates don't corrupt the balance.
+    /// </remarks>
+    public static OHM_LoyaltyMember addPoints(OHM_LoyaltyMemberId _memberId, OHM_LoyaltyPoints _points)
+    {
+        OHM_LoyaltyMember member;
+
+        // Guard: refuse to proceed without an ID. "!_memberId" is true when the
+        // string is empty. Failing fast here gives a clear error to the API caller.
+        if (!_memberId)
+        {
+            throw error("Member ID is required.");
+        }
+
+        ttsbegin;
+
+        // find(..., true) selects the row FOR UPDATE, taking a lock so no other
+        // process can modify this member until we commit.
+        member = OHM_LoyaltyMember::find(_memberId, true);
+
+        // RecId is the table's internal record number. A blank RecId means find()
+        // returned an empty buffer — i.e. no such member exists.
+        if (!member.RecId)
+        {
+            ttsabort; // release the transaction before throwing
+            throw error(strFmt("Loyalty member %1 was not found.", _memberId));
+        }
+
+        // Because _points can be negative (redemptions), guard against driving the
+        // balance below zero.
+        if (member.PointsBalance + _points < 0)
+        {
+            ttsabort;
+            throw error("Resulting points balance cannot be negative.");
+        }
+
+        // Apply the change, then re-derive the tier from the NEW balance so tier
+        // and balance can never disagree.
+        member.PointsBalance += _points;
+        member.Tier = OHM_LoyaltyMemberHelper::resolveTier(member.PointsBalance);
+        member.update();
+
+        ttscommit;
+
+        return member;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

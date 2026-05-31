@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxEnum xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>OHM_LoyaltyTier</Name>
+	<Label>Loyalty tier</Label>
+	<UseEnumValue>No</UseEnumValue>
+	<EnumValues>
+		<AxEnumValue>
+			<Name>None</Name>
+			<Label>None</Label>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Bronze</Name>
+			<Label>Bronze</Label>
+			<Value>1</Value>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Silver</Name>
+			<Label>Silver</Label>
+			<Value>2</Value>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Gold</Name>
+			<Label>Gold</Label>
+			<Value>3</Value>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Platinum</Name>
+			<Label>Platinum</Label>
+			<Value>4</Value>
+		</AxEnumValue>
+	</EnumValues>
+	<IsExtensible>true</IsExtensible>
+</AxEnum>

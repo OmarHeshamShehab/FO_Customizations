@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxDataEntityView xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>OHM_LoyaltyMemberEntity</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Code-behind for the OHM_LoyaltyMember data entity (the OData layer / "doorway"
+/// that external systems call). The entity itself — its fields, key, and public
+/// names — is defined in metadata; this class only holds the X++ BEHAVIOUR layered
+/// on top of it: filling the computed field and exposing the custom action.
+///
+/// Note it extends "common", the base every entity/table buffer derives from. The
+/// editor generates this declaration for you — don't change it.
+/// </summary>
+public class OHM_LoyaltyMemberEntity extends common
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>postLoad</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Runs automatically AFTER each record is read through this entity — including
+    /// on every OData GET. This is where UNMAPPED (virtual) fields get their value.
+    ///
+    /// A mapped field is read straight from a table column by the database. An
+    /// unmapped field like PointsToNextTier maps to no column; it exists only on the
+    /// entity and must be filled in code. postLoad is the hook for exactly that:
+    /// the row's stored fields are already populated when it runs, so we can derive
+    /// the virtual value from them here.
+    /// </summary>
+    public void postLoad()
+    {
+        // Always call super() first so the standard framework load logic completes
+        // and the record's mapped fields (e.g. PointsBalance) are available before
+        // we read them.
+        super();
+
+        // Ask the helper for the threshold of the next tier up. Keeping this in the
+        // helper means the entity and the addPoints action share ONE definition of
+        // the tier rules rather than each having its own copy.
+        int nextThreshold = OHM_LoyaltyMemberHelper::nextTierThreshold(this.PointsBalance);
+
+        // "this" is the entity record just loaded, so this.PointsBalance is its
+        // stored balance and this.PointsToNextTier is the virtual field we fill.
+        // If the member is already at the top tier, nextTierThreshold returns their
+        // own balance, so this subtraction yields 0 rather than a negative number.
+        this.PointsToNextTier = nextThreshold - this.PointsBalance;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>addPoints</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// OData ACTION: adds points to THIS member and recalculates the tier.
+    ///
+    /// This is the part that makes the OData surface "custom." Plain OData only lets
+    /// a caller create/read/update/delete COLUMNS. An action lets an external system
+    /// INVOKE a business operation — "add 600 points and re-evaluate the tier" — that
+    /// runs real server-side logic. The rule about who becomes Gold stays inside F&O;
+    /// the caller just reports activity.
+    ///
+    /// Callable from an external system at:
+    ///   POST /data/OHM_LoyaltyMembers(MemberId='...',dataAreaId='...')/Microsoft.Dynamics.DataEntities.addPoints
+    /// with body: { "pointsToAdd": 600 }
+    /// </summary>
+    /// <param name="pointsToAdd">Points to add (may be NEGATIVE to redeem/deduct).</param>
+    /// <returns>The member's new points balance after the update.</returns>
+    /// <remarks>
+    /// The attribute is what publishes this method to the OData metadata:
+    ///   - 'addPoints' is the action NAME external callers use in the URL.
+    ///   - the second argument, true, means the action is BOUND TO AN INSTANCE — it
+    ///     operates on one specific member, the one addressed in the URL, which is
+    ///     why "this" refers to that record. (false would make it an unbound/global
+    ///     action not tied to a particular row.)
+    ///
+    /// The method is an INSTANCE method (not static) for the same reason: it acts on
+    /// "this" member. It deliberately does almost nothing itself — it delegates to
+    /// the helper (which owns the transaction, locking, and validation) and returns
+    /// the new balance so the caller gets immediate confirmation without a second GET.
+    /// </remarks>
+    [SysODataActionAttribute('addPoints', true)]
+    public int addPoints(int pointsToAdd)
+    {
+        OHM_LoyaltyMember updated = OHM_LoyaltyMemberHelper::addPoints(this.MemberId, pointsToAdd);
+        return updated.PointsBalance;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+	<SubscriberAccessLevel>
+		<Read>Allow</Read>
+	</SubscriberAccessLevel>
+	<IsPublic>Yes</IsPublic>
+	<PrimaryCompanyContext>DataAreaId</PrimaryCompanyContext>
+	<PrimaryKey>EntityKey</PrimaryKey>
+	<PublicCollectionName>OHM_LoyaltyMembers</PublicCollectionName>
+	<PublicEntityName>OHM_LoyaltyMember</PublicEntityName>
+	<SupportsSetBasedSqlOperations>Yes</SupportsSetBasedSqlOperations>
+	<DeleteActions />
+	<FieldGroups>
+		<AxTableFieldGroup>
+			<Name>AutoReport</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoLookup</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoIdentification</Name>
+			<AutoPopulate>Yes</AutoPopulate>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoSummary</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoBrowse</Name>
+			<Fields />
+		</AxTableFieldGroup>
+	</FieldGroups>
+	<Fields>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>MemberId</Name>
+			<DataField>MemberId</DataField>
+			<DataSource>OHM_LoyaltyMember</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>MemberName</Name>
+			<DataField>MemberName</DataField>
+			<DataSource>OHM_LoyaltyMember</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>CustAccount</Name>
+			<DataField>CustAccount</DataField>
+			<DataSource>OHM_LoyaltyMember</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>PointsBalance</Name>
+			<DataField>PointsBalance</DataField>
+			<DataSource>OHM_LoyaltyMember</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>Tier</Name>
+			<DataField>Tier</DataField>
+			<DataSource>OHM_LoyaltyMember</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>Phone</Name>
+			<DataField>Phone</DataField>
+			<DataSource>OHM_LoyaltyMember</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>CreatedByUser</Name>
+			<DataField>CreatedBy</DataField>
+			<DataSource>OHM_LoyaltyMember</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>CreatedOn</Name>
+			<DataField>CreatedDateTime</DataField>
+			<DataSource>OHM_LoyaltyMember</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>ModifiedByUser</Name>
+			<DataField>ModifiedBy</DataField>
+			<DataSource>OHM_LoyaltyMember</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewMappedField">
+			<Name>ModifiedOn</Name>
+			<DataField>ModifiedDateTime</DataField>
+			<DataSource>OHM_LoyaltyMember</DataSource>
+		</AxDataEntityViewField>
+		<AxDataEntityViewField xmlns=""
+			i:type="AxDataEntityViewUnmappedFieldInt64">
+			<Name>PointsToNextTier</Name>
+			<IsComputedField>No</IsComputedField>
+		</AxDataEntityViewField>
+	</Fields>
+	<Keys>
+		<AxDataEntityViewKey>
+			<Name>EntityKey</Name>
+			<Fields>
+				<AxDataEntityViewKeyField>
+					<DataField>MemberId</DataField>
+				</AxDataEntityViewKeyField>
+			</Fields>
+		</AxDataEntityViewKey>
+	</Keys>
+	<Mappings />
+	<Ranges />
+	<Relations />
+	<StateMachines />
+	<ViewMetadata>
+		<Name>Metadata</Name>
+		<SourceCode>
+			<Methods>
+				<Method>
+					<Name>classDeclaration</Name>
+					<Source><![CDATA[
+[Query]
+public class Metadata extends QueryRun
+{
+}
+]]></Source>
+				</Method>
+			</Methods>
+		</SourceCode>
+		<DataSources>
+			<AxQuerySimpleRootDataSource>
+				<Name>OHM_LoyaltyMember</Name>
+				<DynamicFields>Yes</DynamicFields>
+				<Table>OHM_LoyaltyMember</Table>
+				<DataSources />
+				<DerivedDataSources />
+				<Fields />
+				<Ranges />
+				<GroupBy />
+				<Having />
+				<OrderBy />
+			</AxQuerySimpleRootDataSource>
+		</DataSources>
+	</ViewMetadata>
+</AxDataEntityView>
