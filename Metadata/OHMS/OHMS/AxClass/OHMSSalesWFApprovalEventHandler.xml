@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>OHMSSalesWFApprovalEventHandler</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// The OHMSSalesWFApprovalEventHandler workflow outcome event handler.
+/// Responds to approval-element events (started, canceled, completed, denied,
+/// change requested, returned) and stamps the matching status onto the
+/// originating SalesTable record.
+/// </summary>
+public final class OHMSSalesWFApprovalEventHandler implements WorkflowElementCanceledEventHandler,
+    WorkflowElemChangeRequestedEventHandler,
+    WorkflowElementCompletedEventHandler,
+    WorkflowElementReturnedEventHandler,
+    WorkflowElementStartedEventHandler,
+    WorkflowElementDeniedEventHandler,
+    WorkflowWorkItemsCreatedEventHandler
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>started</Name>
+				<Source><![CDATA[
+    /// <summary>Fires when the approval starts. Marks the order as Started.</summary>
+    /// <param name = "_workflowElementEventArgs">Element event args; supplies the record RecId.</param>
+    public void started(WorkflowElementEventArgs _workflowElementEventArgs)
+    {
+        OHMSSalesWFStatusHelper::updateWorkflowStatus(
+            _workflowElementEventArgs.parmWorkflowContext().parmRecId(),
+            OHMSSalesWFStatus::Started);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>canceled</Name>
+				<Source><![CDATA[
+    /// <summary>Fires when the approval is canceled. Marks the order as Cancelled.</summary>
+    /// <param name = "_workflowElementEventArgs">Element event args; supplies the record RecId.</param>
+    public void canceled(WorkflowElementEventArgs _workflowElementEventArgs)
+    {
+        OHMSSalesWFStatusHelper::updateWorkflowStatus(
+            _workflowElementEventArgs.parmWorkflowContext().parmRecId(),
+            OHMSSalesWFStatus::Cancelled);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>completed</Name>
+				<Source><![CDATA[
+    /// <summary>Fires when the approval completes (approved). Marks the order as Complete.</summary>
+    /// <param name = "_workflowElementEventArgs">Element event args; supplies the record RecId.</param>
+    public void completed(WorkflowElementEventArgs _workflowElementEventArgs)
+    {
+        OHMSSalesWFStatusHelper::updateWorkflowStatus(
+            _workflowElementEventArgs.parmWorkflowContext().parmRecId(),
+            OHMSSalesWFStatus::Complete);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>denied</Name>
+				<Source><![CDATA[
+    /// <summary>Fires when the approval is denied. Marks the order as Denied.</summary>
+    /// <param name = "_workflowElementEventArgs">Element event args; supplies the record RecId.</param>
+    public void denied(WorkflowElementEventArgs _workflowElementEventArgs)
+    {
+        OHMSSalesWFStatusHelper::updateWorkflowStatus(
+            _workflowElementEventArgs.parmWorkflowContext().parmRecId(),
+            OHMSSalesWFStatus::Denied);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>changeRequested</Name>
+				<Source><![CDATA[
+    /// <summary>Fires when a change is requested. Marks the order as ChangeRequested.</summary>
+    /// <param name = "_workflowElementEventArgs">Element event args; supplies the record RecId.</param>
+    public void changeRequested(WorkflowElementEventArgs _workflowElementEventArgs)
+    {
+        OHMSSalesWFStatusHelper::updateWorkflowStatus(
+            _workflowElementEventArgs.parmWorkflowContext().parmRecId(),
+            OHMSSalesWFStatus::ChangeRequested);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>returned</Name>
+				<Source><![CDATA[
+    /// <summary>Fires when the work item is returned. Marks the order as Returned.</summary>
+    /// <param name = "_workflowElementEventArgs">Element event args; supplies the record RecId.</param>
+    public void returned(WorkflowElementEventArgs _workflowElementEventArgs)
+    {
+        OHMSSalesWFStatusHelper::updateWorkflowStatus(
+            _workflowElementEventArgs.parmWorkflowContext().parmRecId(),
+            OHMSSalesWFStatus::Returned);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>created</Name>
+				<Source><![CDATA[
+    /// <summary>Fires when work items are created. No status change needed here.</summary>
+    /// <param name = "_workflowWorkItemsEventArgs">Work item event args.</param>
+    public void created(WorkflowWorkItemsEventArgs _workflowWorkItemsEventArgs)
+    {
+        // No status update required when work items are created.
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

@@ -22,6 +22,7 @@ A curated collection of real-world customizations, tutorials, and best practices
   - [🛒 Commerce_CustomerListExtension](#commerce_customerlistextension)
   - [🔗 Chain_of_Command](#chain_of_command)
   - [📤 SalesOrderExcelUpload](#salesorderexcelupload-sales-order-upload-from-excel)
+  - [✅ SalesOrderWorkflow (Custom Approval Workflow)](#salesorderworkflow-custom-approval-workflow)
   - [🔌 OHMS Service Integration](#ohms-service-integration)
 - [📐 Development Guidelines](#development-guidelines)
 - [🧪 Testing & Verification](#testing--verification)
@@ -59,6 +60,7 @@ All solutions follow Microsoft extensibility guidelines to ensure upgrade safety
 - 🛒 **Commerce_CustomerListExtension** — Customer entity extension
 - 🔗 **Chain_of_Command** — CoC implementation examples
 - 📤 **SalesOrderExcelUpload** — Excel-driven sales order automation
+- ✅ **SalesOrderWorkflow** — Custom header-level approval workflow on the Sales order (`SalesTable`), surfacing a Submit button with full approval lifecycle, no over-layering
 - 🔌 **OHMS Service Integration** — Custom integration service module
 
 ---
@@ -555,6 +557,161 @@ Custom automation allowing upload of Excel (`.xlsx`) file to create:
 ```
 Upload successful. Created 2 sales order(s): SO-000123, SO-000124. Total line(s): 5.
 ```
+
+---
+
+<a id="salesorderworkflow-custom-approval-workflow"></a>
+### ✅ SalesOrderWorkflow (Custom Approval Workflow on SalesTable)
+
+> 📁 `OHMS_SalesWF/` — Custom **header-level approval workflow** for the standard Sales order (`SalesTable`)
+
+Adds a **Submit** button to the *Sales order details* form, routes the order for approval, and tracks its lifecycle through a custom workflow-status field — implemented **entirely through extensions and event handlers**, with **zero over-layering** of standard objects.
+
+#### 🏗️ Architecture
+
+```
+User (Sales order, Draft)
+        │ Submit
+        ▼
+OHMSSalesWFTypeSubmitManager ──► Workflow::activateFromWorkflowType(OHMSSalesWFType)
+        │
+        ▼
+OHMSSalesWFType (Workflow Type) ──► OHMSSalesWFApproval (Approval element)
+        │                                   │
+        │ type events                       │ outcome events
+        ▼                                   ▼
+OHMSSalesWFTypeEventHandler        OHMSSalesWFApprovalEventHandler
+        │                                   │
+        └────────────► OHMSSalesWFStatusHelper ◄────────────┘
+                              │
+                              ▼
+                 SalesTable.OHMSSalesWFStatus (Draft → Submit → Started → Complete/Denied/…)
+```
+
+#### 🌟 Key Highlights
+
+- 🛡️ **100% extension-based** — no standard object (table, form, class) is over-layered
+- 🔘 **Submit button on standard form** — surfaced at runtime via `FormDataUtil` / `SalesTableInteraction` post-handlers (no form metadata change)
+- 🔁 **Full approval lifecycle** — Approve / Reject / Request change / Delegate / Resubmit
+- 🧠 **Centralized status updates** — single helper writes the status for every event
+- 🏷️ **Custom status enum** — independent of standard `VersioningDocumentState`
+
+#### 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| 🧩 Workflow framework | D365 Workflow Type + Approval element |
+| 🗄️ Data | `SalesTable` (header-level), table extension + custom enum |
+| 🔘 Form enablement | X++ post-event handlers (`FormDataUtil`, `SalesTableInteraction`, `SalesTable` form) |
+| 🏷️ Module | Accounts receivable (`ModuleAxapta::Customer`) |
+
+#### 🧩 D365 AOT Components
+
+| 📦 Component | 🗂️ Type | 📝 Purpose |
+|---|---|---|
+| `OHMSSalesWFStatus` | Base Enum | Workflow status values (Draft, Submit, Started, …) |
+| `SalesTable.OHMS` | Table Extension | Adds the `OHMSSalesWFStatus` field to SalesTable |
+| `OHMSSalesWFQuery` | Query | Document query over SalesTable (Dynamic Fields = Yes) |
+| `OHMSSalesWFCategory` | Workflow Category | Links workflow to module (`Customer`) |
+| `OHMSSalesWFType` | Workflow Type | The workflow template |
+| `OHMSSalesWFApproval` | Workflow Approval | Approval element referenced by the type |
+| `OHMSSalesWFTypeDocument` | X++ Class | Returns the workflow query |
+| `OHMSSalesWFTypeSubmitManager` | X++ Class | Activates the workflow on Submit |
+| `OHMSSalesWFTypeEventHandler` | X++ Class | Type-level events (started/canceled/completed) |
+| `OHMSSalesWFApprovalEventHandler` | X++ Class | Approval outcome events (denied/changeReq/returned) |
+| `OHMSSalesWFStatusHelper` | X++ Class | Centralized status-update helper |
+| `OHMSSalesTableWorkflowEventHandler` | X++ Class | Enables the workflow button on the standard form |
+
+#### 💻 Component Snippets
+
+**Status enum — `OHMSSalesWFStatus`**
+```xpp
+// Draft at index 0 → every order defaults to Draft (the only submittable state)
+Draft, Submit, Started, Cancelled, Complete, Denied, ChangeRequested, Returned
+```
+
+**Document class — `OHMSSalesWFTypeDocument`**
+```xpp
+public queryName getQueryName()
+{
+    return querystr(OHMSSalesWFQuery);
+}
+```
+
+**Submit manager — `OHMSSalesWFTypeSubmitManager`**
+```xpp
+workflowSubmitDialog = WorkflowSubmitDialog::construct(args.caller().getActiveWorkflowConfiguration());
+workflowSubmitDialog.run();
+if (workflowSubmitDialog.parmIsClosedOK())
+{
+    Workflow::activateFromWorkflowType(workflowTypeStr(OHMSSalesWFType),
+        salesTable.RecId, workflowSubmitDialog.parmWorkflowComment(), NoYes::No);
+    salesTable.OHMSSalesWFStatus = OHMSSalesWFStatus::Submit;
+    salesTable.update();
+}
+args.caller().updateWorkflowControls();
+```
+
+**Type event handler — `OHMSSalesWFTypeEventHandler`**
+```xpp
+public void started(WorkflowEventArgs _args)
+{
+    OHMSSalesWFStatusHelper::updateWorkflowStatus(
+        _args.parmWorkflowContext().parmRecId(), OHMSSalesWFStatus::Started);
+}   // canceled → Cancelled, completed → Complete
+```
+
+**Approval event handler — `OHMSSalesWFApprovalEventHandler`**
+```xpp
+public void denied(WorkflowElementEventArgs _args)
+{
+    OHMSSalesWFStatusHelper::updateWorkflowStatus(
+        _args.parmWorkflowContext().parmRecId(), OHMSSalesWFStatus::Denied);
+}   // changeRequested → ChangeRequested, returned → Returned, completed → Complete
+```
+
+**Status helper — `OHMSSalesWFStatusHelper`**
+```xpp
+public static void updateWorkflowStatus(RefRecId _recId, OHMSSalesWFStatus _status)
+{
+    SalesTable salesTable;
+    ttsbegin;
+    select forupdate salesTable where salesTable.RecId == _recId;
+    if (salesTable.RecId != 0)
+    {
+        salesTable.OHMSSalesWFStatus = _status;
+        salesTable.update();
+    }
+    ttscommit;
+}
+```
+
+**Form enablement — `OHMSSalesTableWorkflowEventHandler`** (surfaces the button, no over-layering)
+```xpp
+// 1) Make the record submittable while in Draft
+[PostHandlerFor(classStr(FormDataUtil), staticMethodStr(FormDataUtil, canSubmitToWorkflow))]
+// 2) Point the running form at OHMSSalesWFType + updateWorkflowControls()
+[PostHandlerFor(classStr(SalesTableInteraction), methodStr(SalesTableInteraction, enableHeaderActions))]
+// 3) Force the button group visible
+[PostHandlerFor(formStr(SalesTable), formMethodStr(SalesTable, canSubmitToWorkflow))]
+salesTableDetails.design().controlName('WorkflowActionBarButtonGroup').visible(true);
+```
+> 📖 Technique reference: [Extend `canSubmitToWorkflow` without over-layering](https://axraja.blogspot.com/2020/03/d365ax7-extend-cansubmittoworkflow-in.html)
+
+#### ⚠️ Key Technical Gotchas
+
+- 🪤 **`Customer` vs `AccountsReceivable`** — the *Accounts receivable workflows* page filters on `ModuleAxapta::Customer`, **not** `AccountsReceivable`. Set the category module to `Customer` (the value standard customer workflows use), or the type registers but never appears.
+- 🔄 **Reset usage data** — the workflow type lookup is cached **per user**; after changing the category module run **System administration → Users → Reset usage data**. A server restart does **not** clear it.
+- 🔀 **Runtime override** — the standard form is bound to `SalesLine` / `RetailSalesLineWFType`; handler #2 overrides this to the header-level `OHMSSalesWFType` at runtime.
+- 🔘 **Button needs an active config** — the Submit button only renders once a workflow configuration is **activated** for the type.
+
+#### ⚡ Quick Start
+
+1. 🔨 Build the **OHMS** model with **Synchronize Database** (0 errors)
+2. 🗄️ **Accounts receivable → Setup → Accounts receivable workflows → New → Sales order workflow**
+3. 🎨 In the editor (use **Edge**): drag **OHMSSalesWFApproval** between Start & End, set assignment (User), subject & instructions, then **Activate**
+4. 🔄 **Reset usage data** + hard-refresh
+5. 🧪 Open a Sales order in **Draft** → **Submit** button appears → submit and watch `OHMSSalesWFStatus` advance
 
 ---
 

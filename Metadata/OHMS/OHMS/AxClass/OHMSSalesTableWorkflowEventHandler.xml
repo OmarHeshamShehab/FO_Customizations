@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>OHMSSalesTableWorkflowEventHandler</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Form/class event handlers that enable the workflow Submit button on the
+/// standard Sales order details form (form SalesTable) for the custom
+/// OHMSSalesWFType workflow, without over-layering standard objects.
+///
+/// Technique reference:
+/// https://axraja.blogspot.com/2020/03/d365ax7-extend-cansubmittoworkflow-in.html
+/// </summary>
+public class OHMSSalesTableWorkflowEventHandler
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>FormDataUtil_Post_canSubmitToWorkflow</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Table-level submittable check. canSubmitToWorkflow on the standard
+    /// SalesTable is invoked via FormDataUtil::canSubmitToWorkflow, which can
+    /// be extended with a post-handler instead of over-layering the table.
+    /// Returns true only when the order is in our custom Draft status.
+    /// </summary>
+    /// <param name = "args">Post-event arguments; carries the _record and the return value.</param>
+    [PostHandlerFor(classStr(FormDataUtil), staticMethodStr(FormDataUtil, canSubmitToWorkflow))]
+    public static void FormDataUtil_Post_canSubmitToWorkflow(XppPrePostArgs args)
+    {
+        // The record the engine is testing for submittability.
+        Common  record = args.getArg(identifierStr(_record));
+        boolean ret    = args.getReturnValue();
+
+        // Only influence the decision for SalesTable records.
+        if (record && record.TableId == tableNum(SalesTable))
+        {
+            SalesTable salesTable = record as SalesTable;
+
+            // Submittable only while the order sits in our custom Draft status.
+            ret = (salesTable.OHMSSalesWFStatus == OHMSSalesWFStatus::Draft);
+        }
+
+        args.setReturnValue(ret);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>SalesTableInteraction_Post_enableHeaderActions</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Turns the workflow on for the Sales order details form at runtime by
+    /// setting the workflow design properties on both the build design and the
+    /// runtime design, then refreshing the workflow controls. Done through a
+    /// post-handler on SalesTableInteraction.enableHeaderActions to avoid
+    /// over-layering the standard form.
+    /// </summary>
+    /// <param name = "args">Post-event arguments; getThis() is the SalesTableInteraction instance.</param>
+    [PostHandlerFor(classStr(SalesTableInteraction), methodStr(SalesTableInteraction, enableHeaderActions))]
+    public static void SalesTableInteraction_Post_enableHeaderActions(XppPrePostArgs args)
+    {
+        SalesTableInteraction interaction    = args.getThis();
+        Page                  salesTablePage = interaction.page();
+
+        // Only act when the active record on the page is a SalesTable.
+        if (salesTablePage.activeRecord(tableStr(SalesTable)))
+        {
+            FormRun         formRun  = salesTablePage.formRun();
+            FormBuildDesign design   = formRun.form().design();   // build (metadata) design
+            FormDesign      wfDesign = formRun.design();          // runtime design
+
+            // Point the build design at our workflow type / datasource.
+            design.workflowEnabled(true);
+            design.workflowDatasource(tableStr(SalesTable));
+            design.workflowType(workflowTypeStr(OHMSSalesWFType));
+
+            // Mirror the same settings on the runtime design.
+            wfDesign.workflowEnabled(true);
+            wfDesign.workflowDatasource(tableStr(SalesTable));
+            wfDesign.workflowType(workflowTypeStr(OHMSSalesWFType));
+
+            // Rebuild the workflow message bar / controls with the new settings.
+            formRun.updateWorkflowControls();
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>SalesTable_Post_canSubmitToWorkflow</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Makes the workflow button group visible on the Sales order details form.
+    /// canSubmitToWorkflow on the SalesTable form is post-handled to set the
+    /// return value (based on our custom Draft status) and to force the
+    /// WorkflowActionBarButtonGroup control visible. This handler surfaces the button.
+    /// </summary>
+    /// <param name = "args">Post-event arguments; getThis() is the SalesTable FormRun.</param>
+    [PostHandlerFor(formStr(SalesTable), formMethodStr(SalesTable, canSubmitToWorkflow))]
+    public static void SalesTable_Post_canSubmitToWorkflow(XppPrePostArgs args)
+    {
+        FormRun        salesTableDetails = args.getThis();
+        FormDataSource salesTableDS      = salesTableDetails.dataHelper().findDataSource(formDataSourceStr(SalesTable, SalesTable));
+        SalesTable     salesTable        = salesTableDS.cursor();
+
+        // Submittable only while in our custom Draft status.
+        boolean ret = (salesTable.OHMSSalesWFStatus == OHMSSalesWFStatus::Draft);
+        args.setReturnValue(ret);
+
+        // Force the workflow button group visible on the details form.
+        salesTableDetails.design().controlName('WorkflowActionBarButtonGroup').visible(true);
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

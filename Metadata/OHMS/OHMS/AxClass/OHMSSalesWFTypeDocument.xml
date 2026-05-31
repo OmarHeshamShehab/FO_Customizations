@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>OHMSSalesWFTypeDocument</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// The OHMSSalesWFTypeDocument workflow document class.
+/// </summary>
+class OHMSSalesWFTypeDocument extends WorkflowDocument
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>getQueryName</Name>
+				<Source><![CDATA[
+    /// <summary>
+	/// Returns query name for the workflow document.
+	/// </summary>
+	/// <returns>
+	/// Name of the query <c>OHMSSalesWFQuery</c>.
+	/// </returns>
+	public queryName getQueryName()
+	{
+		return querystr(OHMSSalesWFQuery);
+	}
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

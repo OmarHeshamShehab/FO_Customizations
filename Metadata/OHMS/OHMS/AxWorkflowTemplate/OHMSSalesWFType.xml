@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxWorkflowTemplate xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="Microsoft.Dynamics.AX.Metadata.V2">
+	<Name>OHMSSalesWFType</Name>
+	<CancelMenuItem>OHMSSalesWFTypeCancelMenuItem</CancelMenuItem>
+	<CanceledEventHandler>OHMSSalesWFTypeEventHandler</CanceledEventHandler>
+	<Category>OHMSSalesWFCategory</Category>
+	<CompletedEventHandler>OHMSSalesWFTypeEventHandler</CompletedEventHandler>
+	<Document>OHMSSalesWFTypeDocument</Document>
+	<DocumentMenuItem>SalesTableDetails</DocumentMenuItem>
+	<HelpText>Use this type to create approval workflows for sales orders</HelpText>
+	<Label>Sales order workflow</Label>
+	<StartedEventHandler>OHMSSalesWFTypeEventHandler</StartedEventHandler>
+	<SubmitToWorkflowMenuItem>OHMSSalesWFTypeSubmitMenuItem</SubmitToWorkflowMenuItem>
+	<LineItemWorkflows />
+	<SupportedElements>
+		<AxWorkflowElementReference xmlns="">
+			<Name>OHMSSalesWFApproval</Name>
+			<ElementName>OHMSSalesWFApproval</ElementName>
+		</AxWorkflowElementReference>
+	</SupportedElements>
+</AxWorkflowTemplate>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxWorkflowApproval xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="Microsoft.Dynamics.AX.Metadata.V2">
+	<Name>OHMSSalesWFApproval</Name>
+	<CanceledEventHandler>OHMSSalesWFApprovalEventHandler</CanceledEventHandler>
+	<DelegateMenuItem>OHMSSalesWFApprovalDelegateMenuItem</DelegateMenuItem>
+	<Document>OHMSSalesWFTypeDocument</Document>
+	<DocumentMenuItem>SalesTableDetails</DocumentMenuItem>
+	<DocumentPreviewFieldGroup>OHMSWorkflow</DocumentPreviewFieldGroup>
+	<HelpText>Approval step for sales order workflow.</HelpText>
+	<Label>Sales order approval</Label>
+	<ResubmitMenuItem>OHMSSalesWFApprovalResubmitMenuItem</ResubmitMenuItem>
+	<StartedEventHandler>OHMSSalesWFApprovalEventHandler</StartedEventHandler>
+	<WorkItemsCreatedEventHandler>OHMSSalesWFApprovalEventHandler</WorkItemsCreatedEventHandler>
+	<Approve>
+		<Name xmlns="">Approve</Name>
+		<ActionMenuItem xmlns="">OHMSSalesWFApprovalApprove</ActionMenuItem>
+		<EventHandler xmlns="">OHMSSalesWFApprovalEventHandler</EventHandler>
+	</Approve>
+	<Deny>
+		<Name xmlns="">Deny</Name>
+		<Type xmlns="">Deny</Type>
+	</Deny>
+	<Reject>
+		<Name xmlns="">Reject</Name>
+		<ActionMenuItem xmlns="">OHMSSalesWFApprovalReject</ActionMenuItem>
+		<EventHandler xmlns="">OHMSSalesWFApprovalEventHandler</EventHandler>
+		<Type xmlns="">Return</Type>
+	</Reject>
+	<RequestChange>
+		<Name xmlns="">RequestChange</Name>
+		<ActionMenuItem xmlns="">OHMSSalesWFApprovalRequestChange</ActionMenuItem>
+		<EventHandler xmlns="">OHMSSalesWFApprovalEventHandler</EventHandler>
+		<Type xmlns="">RequestChange</Type>
+	</RequestChange>
+</AxWorkflowApproval>

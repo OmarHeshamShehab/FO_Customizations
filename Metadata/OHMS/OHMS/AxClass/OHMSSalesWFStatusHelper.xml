@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>OHMSSalesWFStatusHelper</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Helper for updating the workflow status field (OHMSSalesWFStatus) on
+/// SalesTable records. Centralizes status writes so the submit manager and
+/// the workflow event handlers all update the status the same way.
+/// </summary>
+public class OHMSSalesWFStatusHelper
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>updateWorkflowStatus</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Sets the workflow status on a single SalesTable record, identified by RecId.
+    /// </summary>
+    /// <param name = "_recId">RecId of the SalesTable record to update.</param>
+    /// <param name = "_status">Workflow status value to write to the record.</param>
+    public static void updateWorkflowStatus(RefRecId _recId, OHMSSalesWFStatus _status)
+    {
+        SalesTable salesTable;
+
+        ttsbegin;
+
+        select forupdate salesTable
+            where salesTable.RecId == _recId;
+
+        if (salesTable.RecId != 0)
+        {
+            salesTable.OHMSSalesWFStatus = _status;
+            salesTable.update();
+        }
+
+        ttscommit;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

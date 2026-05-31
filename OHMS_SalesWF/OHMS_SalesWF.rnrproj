@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <BuildTasksDirectory Condition=" '$(BuildTasksDirectory)' == ''">$(MSBuildProgramFiles32)\MSBuild\Microsoft\Dynamics\AX</BuildTasksDirectory>
+    <Model>OHMS</Model>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <OutputPath>bin</OutputPath>
+    <SchemaVersion>2.0</SchemaVersion>
+    <GenerateCrossReferences>True</GenerateCrossReferences>
+    <RunAppCheckerRules>False</RunAppCheckerRules>
+    <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
+    <DeployOnline>False</DeployOnline>
+    <ProjectGuid>{27c3f74a-252d-47d6-8dfc-d24589a2a48d}</ProjectGuid>
+    <Name>OHMS_SalesWF</Name>
+    <RootNamespace>OHMS_SalesWF</RootNamespace>
+    <StartupType>Class</StartupType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <Configuration>Debug</Configuration>
+    <DBSyncInBuild>True</DBSyncInBuild>
+    <GenerateFormAdaptors>False</GenerateFormAdaptors>
+    <Company>
+    </Company>
+    <Partition>initial</Partition>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DataEntityExpandParentChildRelations>False</DataEntityExpandParentChildRelations>
+    <DataEntityUseLabelTextAsFieldName>False</DataEntityUseLabelTextAsFieldName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Action Menu Items\" />
+    <Folder Include="Base Enums\" />
+    <Folder Include="Classes\" />
+    <Folder Include="Simple Queries\" />
+    <Folder Include="Table Extensions\" />
+    <Folder Include="Workflow Approvals\" />
+    <Folder Include="Workflow Categories\" />
+    <Folder Include="Workflow Types\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AxClass\OHMSSalesTableWorkflowEventHandler">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesTableWorkflowEventHandler</Name>
+      <Link>Classes\OHMSSalesTableWorkflowEventHandler</Link>
+    </Content>
+    <Content Include="AxClass\OHMSSalesWFApprovalEventHandler">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFApprovalEventHandler</Name>
+      <Link>Classes\OHMSSalesWFApprovalEventHandler</Link>
+    </Content>
+    <Content Include="AxClass\OHMSSalesWFApprovalResubmitActionMgr">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFApprovalResubmitActionMgr</Name>
+      <Link>Classes\OHMSSalesWFApprovalResubmitActionMgr</Link>
+    </Content>
+    <Content Include="AxClass\OHMSSalesWFStatusHelper">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFStatusHelper</Name>
+      <Link>Classes\OHMSSalesWFStatusHelper</Link>
+    </Content>
+    <Content Include="AxClass\OHMSSalesWFTypeDocument">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFTypeDocument</Name>
+      <Link>Classes\OHMSSalesWFTypeDocument</Link>
+    </Content>
+    <Content Include="AxClass\OHMSSalesWFTypeEventHandler">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFTypeEventHandler</Name>
+      <Link>Classes\OHMSSalesWFTypeEventHandler</Link>
+    </Content>
+    <Content Include="AxClass\OHMSSalesWFTypeSubmitManager">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFTypeSubmitManager</Name>
+      <Link>Classes\OHMSSalesWFTypeSubmitManager</Link>
+    </Content>
+    <Content Include="AxEnum\OHMSSalesWFStatus">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFStatus</Name>
+      <Link>Base Enums\OHMSSalesWFStatus</Link>
+    </Content>
+    <Content Include="AxMenuItemAction\OHMSSalesWFApprovalApprove">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFApprovalApprove</Name>
+      <Link>Action Menu Items\OHMSSalesWFApprovalApprove</Link>
+    </Content>
+    <Content Include="AxMenuItemAction\OHMSSalesWFApprovalDelegateMenuItem">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFApprovalDelegateMenuItem</Name>
+      <Link>Action Menu Items\OHMSSalesWFApprovalDelegateMenuItem</Link>
+    </Content>
+    <Content Include="AxMenuItemAction\OHMSSalesWFApprovalReject">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFApprovalReject</Name>
+      <Link>Action Menu Items\OHMSSalesWFApprovalReject</Link>
+    </Content>
+    <Content Include="AxMenuItemAction\OHMSSalesWFApprovalRequestChange">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFApprovalRequestChange</Name>
+      <Link>Action Menu Items\OHMSSalesWFApprovalRequestChange</Link>
+    </Content>
+    <Content Include="AxMenuItemAction\OHMSSalesWFApprovalResubmitMenuItem">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFApprovalResubmitMenuItem</Name>
+      <Link>Action Menu Items\OHMSSalesWFApprovalResubmitMenuItem</Link>
+    </Content>
+    <Content Include="AxMenuItemAction\OHMSSalesWFTypeCancelMenuItem">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFTypeCancelMenuItem</Name>
+      <Link>Action Menu Items\OHMSSalesWFTypeCancelMenuItem</Link>
+    </Content>
+    <Content Include="AxMenuItemAction\OHMSSalesWFTypeSubmitMenuItem">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFTypeSubmitMenuItem</Name>
+      <Link>Action Menu Items\OHMSSalesWFTypeSubmitMenuItem</Link>
+    </Content>
+    <Content Include="AxQuery\OHMSSalesWFQuery">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFQuery</Name>
+      <Link>Simple Queries\OHMSSalesWFQuery</Link>
+    </Content>
+    <Content Include="AxTableExtension\SalesTable.OHMS">
+      <SubType>Content</SubType>
+      <Name>SalesTable.OHMS</Name>
+      <Link>Table Extensions\SalesTable.OHMS</Link>
+    </Content>
+    <Content Include="AxWorkflowApproval\OHMSSalesWFApproval">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFApproval</Name>
+      <Link>Workflow Approvals\OHMSSalesWFApproval</Link>
+    </Content>
+    <Content Include="AxWorkflowCategory\OHMSSalesWFCategory">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFCategory</Name>
+      <Link>Workflow Categories\OHMSSalesWFCategory</Link>
+    </Content>
+    <Content Include="AxWorkflowTemplate\OHMSSalesWFType">
+      <SubType>Content</SubType>
+      <Name>OHMSSalesWFType</Name>
+      <Link>Workflow Types\OHMSSalesWFType</Link>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="$(BuildTasksDirectory)\Microsoft.Dynamics.Framework.Tools.BuildTasks.17.0.targets" />
+</Project>

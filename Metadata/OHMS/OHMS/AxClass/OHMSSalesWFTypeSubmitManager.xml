@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>OHMSSalesWFTypeSubmitManager</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// The OHMSSalesWFTypeSubmitManager menu item action event handler.
+/// Activates the sales order workflow (OHMSSalesWFType) when the user clicks
+/// Submit on the Sales order details form, and stamps the record's workflow status.
+/// </summary>
+public class OHMSSalesWFTypeSubmitManager
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Entry point called by the Submit action menu item on the form.
+    /// </summary>
+    /// <param name = "args">
+    /// The menu item arguments. <c>args.record()</c> is the active SalesTable
+    /// record; <c>args.caller()</c> is the calling form.
+    /// </param>
+    public static void main(Args args)
+    {
+        // The sales order being submitted (active record from the calling form).
+        SalesTable              salesTable = args.record();
+
+        // User comment captured from the submit dialog, passed into the workflow.
+        WorkflowComment         note = "";
+
+        // Standard dialog that prompts the user for a submission comment.
+        WorkflowSubmitDialog    workflowSubmitDialog;
+
+        // Correlation ID returned by the activated workflow instance.
+        WorkflowCorrelationId   workflowCorrelationId;
+
+        // The workflow type to activate, resolved by its element name.
+        WorkflowTypeName        workflowTypeName = workflowTypeStr(OHMSSalesWFType);
+
+        // Build and show the submit-to-workflow dialog using the workflow
+        // configuration that is active for this record.
+        workflowSubmitDialog = WorkflowSubmitDialog::construct(args.caller().getActiveWorkflowConfiguration());
+        workflowSubmitDialog.run();
+
+        // Proceed only if the user confirmed the dialog (clicked OK/Submit).
+        if (workflowSubmitDialog.parmIsClosedOK())
+        {
+            // Capture the comment the user entered.
+            note = workflowSubmitDialog.parmWorkflowComment();
+
+            try
+            {
+                ttsbegin;
+
+                // Start the workflow instance for this sales order.
+                // NoYes::No => not activated as a sub-workflow.
+                workflowCorrelationId = Workflow::activateFromWorkflowType(
+                    workflowTypeName,
+                    salesTable.RecId,
+                    note,
+                    NoYes::No);
+
+                // Reflect the submission on the record's workflow status field.
+                salesTable.OHMSSalesWFStatus = OHMSSalesWFStatus::Submit;
+                salesTable.update();
+
+                ttscommit;
+
+                info("Sales order submitted to workflow.");
+            }
+            catch (Exception::Error)
+            {
+                // Activation or update failed; transaction is rolled back.
+                error("Workflow could not be submitted.");
+            }
+        }
+
+        // Refresh the workflow message bar / button state on the calling form.
+        args.caller().updateWorkflowControls();
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
