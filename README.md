@@ -17,6 +17,7 @@ A curated collection of real-world customizations, tutorials, and best practices
   - [🚗 ConVehicleManagement](#convehiclemanagement)
   - [📋 Reports (SSRS Custom Report)](#reports-ssrs-custom-report)
   - [📑 CustomerAccountStamentReport (Extended SSRS Report)](#customeraccountstamentreport-extended-ssrs-report)
+  - [🏦 CustAgingWithBank (Customer Aging with Bank)](#custagingwithbank-customer-aging-with-bank)
   - [🏢 Halwani](#halwani)
   - [🗂️ Metadata](#metadata)
   - [🛒 Commerce_CustomerListExtension](#commerce_customerlistextension)
@@ -56,6 +57,7 @@ All solutions follow Microsoft extensibility guidelines to ensure upgrade safety
 - 🚗 **ConVehicleManagement** — Vehicle tracking and maintenance scheduling
 - 📋 **Reports** — Custom SSRS reporting solution
 - 📑 **CustomerAccountStamentReport** — Extension of the standard Customer Account Statement SSRS report (adds customer group name column)
+- 🏦 **CustAgingWithBank** — Customer Aging with Bank: interactive ECharts visual form plus SSRS report combining aging buckets, credit exposure, DSO, and live bank balances (SAR)
 - 🏢 **Halwani** — Client-specific customizations
 - 🗂️ **Metadata** — Data model and UI extensions
 - 🛒 **Commerce_CustomerListExtension** — Customer entity extension
@@ -500,6 +502,53 @@ Extension of the standard **Customer Account Statement** SSRS report. Adds a new
 3. 🚢 Deploy reports
 4. 🖨️ Configure Print Management → Customer account statement → Original → set Report format to `MaxCustAccountStatementExt.Report`
 5. 🧪 Run from **Accounts receivable → Inquiries and reports → Customers → Customer account statement** (test dates `1/1/2016` to `2/2/2016` on USMF)
+
+---
+
+<a id="custagingwithbank-customer-aging-with-bank"></a>
+### 🏦 CustAgingWithBank (Customer Aging with Bank)
+
+> 📁 `CustAgingWithBank/` — [📖 Full Documentation](CustAgingWithBank/README.md)
+
+A custom **Accounts Receivable** solution that combines **customer aging analysis**, **credit exposure**, and **live bank balances** on a single screen. The same pre-processed dataset is surfaced two ways: an interactive **ECharts visual form** (collapsible aging tree, bank donut/bars, management overview) and a classic **SSRS precision report** for printing and distribution.
+
+#### 🧩 D365 AOT Components
+
+| 📦 Component | 🗂️ Type | 📝 Purpose |
+|---|---|---|
+| `BCRCustAgingVisualForm` | Form | Interactive visual form — parameters: Date, DSO Number of Days, Select Customers |
+| `BCRCustAgingVisualEngine` | X++ Class | Server-side engine — fills the temp table (`populate`) and serializes it to JSON (`getDataJson`) |
+| `BCRCustAgingVisualControl` | X++ Class | `FormTemplateControl` hosting the HTML/JS visual; exposes the dataset as a JSON property |
+| `BCRCustAgingVisualControlBuild` | X++ Class | Design-time companion class for the control |
+| `BCRCustomerAgingwithBankDP` | X++ Class | SSRS Report Data Provider (`SRSReportDataProviderPreProcessTempDB`) — builds aging buckets, credit figures, bank balances |
+| `BCRCustomerAgingwithBankContract` | X++ Class | Data contract — carries the as-of `FromDate` |
+| `BCRCustomerAgingwithBankTmp` | Table (TempDB) | Shared pre-processed dataset (32 fields: aging, credit, bank, dimensions, DSO) |
+| `BCRCustomerAgingwithBankQuery` | Query | `CustTable` with an `AccountNum` range (customer selection) |
+| `BCRCustomerAgingwithBankReport` | SSRS Report | Precision design (`DataSet1`) |
+| `CustTable.Report_Finance` | Table Extension | Adds `BCRCreditInsuranceValue`, `BCRPromissoryNoteValue`, `BCRPromissoryNoteType_Custom` |
+| `BCRCustAgingVisual` / `…JS` / `…CSS` / `BCRCustAgingEcharts` | AOT Resources | HTML host, control JavaScript, stylesheet, and bundled Apache ECharts library |
+| `BCRCustAgingVisualForm` | Display Menu Item | Opens the visual form |
+| `BCRCustomerAgingwithBank` | Output Menu Item | Runs the SSRS report (`PrecisionDesign1`) |
+| `AccountsReceivable.Report_Finance` | Menu Extension | Adds the form under *Inquiries and reports* |
+| `OHMSCustAgingVisualView` / `Maintain` / `Inquirer` | Security Privilege / Duty / Role | Grants access to the form and the SSRS report |
+
+#### 🌟 Key Highlights
+
+- 🖥️ **Two delivery paths, one dataset** — the visual engine and the SSRS RDP fill the same temp-table structure (`BCRCustomerAgingwithBankTmp`)
+- 🌳 **Collapsible aging tree** — Classification → Country → Channel → Invoice Account → customer rows, bucketed Not Due / 30 / 60 / 90 / 180+
+- 🏦 **Live bank balances in SAR** — converted with `ExchangeRateHelper` at the as-of date, with per-bank bars and a currency-distribution donut
+- 📉 **DSO indicator** — `DSO = Total / (InvSum × dsoNumber)`, divide-by-zero guarded, displayed to 7 decimals so small fractions stay visible
+- 🛡️ **Credit exposure** — credit limit / utilised / available, open sales orders, credit-insurance and promissory-note cover
+- 🎨 **Inline styling by design** — F&O namespaces external CSS at runtime, so the control renders with inline styles (charts via bundled ECharts)
+- 🔐 **Ships with security** — role → duty → privilege chain (`OHMSCustAgingVisualInquirer`) covering both entry points
+
+#### ⚡ Quick Start
+
+1. 🔨 Build the **OHMS** model
+2. 🗄️ Synchronize database (TempDB temp table + `CustTable` extension fields)
+3. 🚢 Deploy the SSRS report `BCRCustomerAgingwithBankReport`
+4. 🔐 Assign the `OHMSCustAgingVisualInquirer` role
+5. 🧪 Open from **Accounts receivable → Inquiries and reports → Customer Aging with Bank**, set the Date / DSO, optionally **Select Customers**, then **Apply**
 
 ---
 
