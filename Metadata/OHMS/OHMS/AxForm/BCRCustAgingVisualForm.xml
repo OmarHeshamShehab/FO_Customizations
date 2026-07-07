@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxForm xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="Microsoft.Dynamics.AX.Metadata.V6">
+	<Name>BCRCustAgingVisualForm</Name>
+	<SourceCode>
+		<Methods xmlns="">
+			<Method>
+				<Name>classDeclaration</Name>
+				<Source><![CDATA[
+[Form]
+public class BCRCustAgingVisualForm extends FormRun
+{
+    Query vQuery;
+}
+]]></Source>
+			</Method>
+			<Method>
+				<Name>init</Name>
+				<Source><![CDATA[
+    public void init()
+    {
+        super();
+        vQuery = new Query(queryStr(BCRCustomerAgingwithBankQuery));
+        if (!FromDate.dateValue())
+        {
+            FromDate.dateValue(DateTimeUtil::getToday(DateTimeUtil::getUserPreferredTimeZone()));
+        }
+        // NEW: default DSO Number to 90 (editable by user)
+        if (!DsoNumber.value())
+        {
+            DsoNumber.value(90);
+        }
+        this.applyAndLoad();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>buildContract</Name>
+				<Source><![CDATA[
+    private BCRCustomerAgingwithBankContract buildContract()
+    {
+        BCRCustomerAgingwithBankContract c = new BCRCustomerAgingwithBankContract();
+        c.ParmFromDate(FromDate.dateValue() ? FromDate.dateValue() : DateTimeUtil::getToday(DateTimeUtil::getUserPreferredTimeZone()));
+        return c;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>applyAndLoad</Name>
+				<Source><![CDATA[
+    public void applyAndLoad()
+    {
+        // NEW: pass DSO Number (fallback 90) to the engine
+        int dsoDays = int642int(DsoNumber.value());
+        AgingVisual.loadData(this.buildContract(), vQuery, dsoDays ? dsoDays : 90);
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+		<DataSources xmlns="" />
+		<DataControls xmlns="">
+			<Control>
+				<Name>SelectCustomers</Name>
+				<Type>CommandButton</Type>
+				<Methods>
+					<Method>
+						<Name>clicked</Name>
+						<Source><![CDATA[
+        public void clicked()
+        {
+            super();
+            QueryRun qr = new QueryRun(vQuery);
+            if (qr.prompt())
+            {
+                vQuery = qr.query();
+            }
+        }
+
+]]></Source>
+					</Method>
+				</Methods>
+			</Control>
+			<Control>
+				<Name>Apply</Name>
+				<Type>Button</Type>
+				<Methods>
+					<Method>
+						<Name>clicked</Name>
+						<Source><![CDATA[
+        public void clicked()
+        {
+            super();
+            element.applyAndLoad();
+        }
+
+]]></Source>
+					</Method>
+				</Methods>
+			</Control>
+		</DataControls>
+		<Members xmlns="" />
+	</SourceCode>
+	<DataSources />
+	<Design>
+		<Caption xmlns="">@OHMSAging:CustomerAgingWithBank</Caption>
+		<Pattern xmlns="">Custom</Pattern>
+		<Controls xmlns="">
+			<AxFormControl xmlns=""
+				i:type="AxFormGroupControl">
+				<Name>ParamsGroup</Name>
+				<Type>Group</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+						i:type="AxFormDateControl">
+						<Name>FromDate</Name>
+						<AutoDeclaration>Yes</AutoDeclaration>
+						<Type>Date</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Label>@OHMSAging:Date</Label>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormInt64Control">
+						<Name>DsoNumber</Name>
+						<AutoDeclaration>Yes</AutoDeclaration>
+						<Type>Int64</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Label>DSO Number of Days</Label>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormCommandButtonControl">
+						<Name>SelectCustomers</Name>
+						<AutoDeclaration>Yes</AutoDeclaration>
+						<Type>CommandButton</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Text>@OHMSAging:SelectCustomers</Text>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormButtonControl">
+						<Name>Apply</Name>
+						<AutoDeclaration>Yes</AutoDeclaration>
+						<Type>Button</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Text>@OHMSAging:Apply</Text>
+					</AxFormControl>
+				</Controls>
+				<ArrangeMethod>HorizontalLeft</ArrangeMethod>
+				<Caption>@OHMSAging:Parameters</Caption>
+			</AxFormControl>
+			<AxFormControl xmlns=""
+				i:type="AxFormGroupControl">
+				<Name>VisualGroup</Name>
+				<HeightMode>Auto</HeightMode>
+				<Type>Group</Type>
+				<WidthMode>Auto</WidthMode>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl>
+						<Name>AgingVisual</Name>
+						<AutoDeclaration>Yes</AutoDeclaration>
+						<FormControlExtension>
+							<Name>BCRCustAgingVisualControl</Name>
+							<ExtensionComponents />
+							<ExtensionProperties />
+						</FormControlExtension>
+					</AxFormControl>
+				</Controls>
+			</AxFormControl>
+		</Controls>
+	</Design>
+	<Parts />
+</AxForm>

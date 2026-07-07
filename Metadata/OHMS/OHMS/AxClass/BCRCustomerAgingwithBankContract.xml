@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>BCRCustomerAgingwithBankContract</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Data contract for the "Customer Aging with Bank" report. Carries the as-of date
+/// used by the data provider to build the aging buckets and bank balances.
+/// </summary>
+[DataContractAttribute]
+class BCRCustomerAgingwithBankContract
+{
+    TransDate   FromDate;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>ParmFromDate</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Gets or sets the as-of date for the aging calculation.
+    /// </summary>
+    /// <param name="_FromDate">The as-of date to set; defaults to the current value.</param>
+    /// <returns>The current as-of date.</returns>
+    [DataMemberAttribute('From date'),
+       SysOperationLabelAttribute(literalStr("Date")),
+       SysOperationDisplayOrderAttribute('1')]
+    public TransDate ParmFromDate(TransDate _FromDate = FromDate)
+    {
+        FromDate = _FromDate;
+        return FromDate;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

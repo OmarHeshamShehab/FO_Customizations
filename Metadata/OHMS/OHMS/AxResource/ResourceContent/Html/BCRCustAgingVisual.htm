@@ -1,0 +1,26 @@
+<div id="BCRCustAgingVisual" class="bcrcav"
+     data-dyn-bind="sizing: $dyn.layout.sizing($data), visible: $data.Visible">
+    <section class="bcrcav-bank">
+        <div class="bcrcav-bank-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+            <div class="bcrcav-title" style="font:600 18px Segoe UI;color:#1B1B1B;margin:14px 0 6px;padding-bottom:4px;border-bottom:2px solid #1F8A70;">Bank Balances</div>
+            <div class="bcrcav-runinfo"></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap;">
+            <div class="bcrcav-bank-table" style="flex:1 1 560px;min-width:0;"></div>
+            <div class="bcrcav-bank-chart" style="flex:1 1 560px;min-width:0;"></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap;margin-top:8px;">
+            <div class="bcrcav-curtotals" style="flex:0 0 auto;"></div>
+            <div class="bcrcav-cur-chart" style="flex:1 1 auto;"></div>
+        </div>
+        <div class="bcrcav-grand"></div>
+    </section>
+    <div class="bcrcav-head">
+        <div class="bcrcav-title" style="font:600 18px Segoe UI;color:#1B1B1B;margin:22px 0 6px;padding-bottom:4px;border-bottom:2px solid #3A6EA5;">Customer Aging</div>
+    </div>
+    <div class="bcrcav-tree"></div>
+    <div class="bcrcav-empty" hidden>No data for the selected date and customers.</div>
+    <div style="height:32px;"></div>
+</div>
+<script src="/resources/scripts/BCRCustAgingVisualJS.js?v=2"></script>
+<link href="/resources/styles/BCRCustAgingVisualCSS.css?v=2" rel="stylesheet" type="text/css" />

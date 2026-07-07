@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>BCRCustAgingVisualEngine</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+//==============================================================================
+// CLASS: BCRCustAgingVisualEngine
+//------------------------------------------------------------------------------
+// HANDOVER SUMMARY (read before changing anything)
+//
+// PURPOSE
+//   Server-side data provider for the "Customer Aging with Bank" visual form
+//   (BCRCustAgingVisualForm). It fills a temp table (BCRCustomerAgingwithBankTmp)
+//   and serializes it to JSON, which the JavaScript control (BCRCustAgingVisual.js)
+//   renders as a collapsible tree, bank section, currency charts and a
+//   management overview.
+//
+// TWO PUBLIC METHODS
+//   populate()    - runs the aging + bank queries, fills tabletmp.
+//   getDataJson() - reads tabletmp back, returns the JSON string for the control.
+//
+// FORM PARAMETERS (3)
+//   1. Date         -> _contract.ParmFromDate()  (the "as-of" date).
+//   2. DSO Number   -> _dsoNumber                (fixed to 30/60/90/180; default 90).
+//   3. Customer     -> query range on CustTable.AccountNum (optional; blank = all).
+//
+// DSO FORMULA (current, validated)
+//   DSO = Total / (InvSum * dsoNumber)
+//     Total   = Balance_due + OpenSO      (the "Total of column" value)
+//     InvSum  = sum of CustInvoiceJour.INVOICEAMOUNT for invoices whose INVOICEDATE
+//               is in [as-of date - dsoNumber days .. as-of date], grouped by
+//               ORDERACCOUNT and joined to CustTable.AccountNum.
+//     Divide-by-zero guarded: returns 0 when InvSum = 0.
+//   NOTE: this makes DSO a small fraction for most customers; it is displayed to
+//   7 decimals (see r2s7) so tiny values remain visible instead of rounding to 0.
+//
+// KNOWN CAVEAT (date literal) - not fixed here, flagged for whoever takes over:
+//   dateStringFrom is built with date2str in DD/MM/YYYY and inlined into the SQL.
+//   It parses correctly only on a SQL session whose language is dmy. On an mdy
+//   session the same string flips month/day and corrupts BOTH the DSO window and
+//   every aging bucket. If this ever needs hardening, emit 'YYYYMMDD' instead,
+//   which SQL Server reads unambiguously under any DATEFORMAT.
+//
+// PRECISION HELPERS
+//   r2s(real)  - formats a real to 2 decimals for JSON (money values).
+//   r2s7(real) - formats a real to 7 decimals for JSON (DSO only).
+//   Both strip spaces and force '.' as the decimal separator so the JSON is valid
+//   regardless of the server's regional number format.
+//==============================================================================
+/// <summary>
+/// Server-side data provider for the "Customer Aging with Bank" visual. Builds the
+/// aging and bank dataset into a temp table and serializes it to the JSON payload
+/// consumed by the client-side control. See the handover header above for the DSO
+/// formula, form parameters and known date-locale caveat.
+/// </summary>
+class BCRCustAgingVisualEngine
+{
+    BCRCustomerAgingwithBankTmp         tabletmp;
+    DueDate                             _FromDate, NextDate, StartDate;
+    str                                 objCustAccount;
+    CustGroupId                         objCustGroupId;
+    CustTable                           objCustTable;
+    CustTrans                           objCustTrans;
+    CustTransOpen                       objcustTransOpen;
+    BankAccountTable                    bankAccountTable;
+    BankAccountTrans                    bankAccountTrans;
+    ExchangeRateHelper                  exchHelper;
+    str                                 customerSelectionText;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>getDimFromStorage</Name>
+				<Source><![CDATA[
+    // getDimFromStorage: reads one financial-dimension display value (e.g. Country,
+    // Channel) from a customer's DefaultDimension storage, matched by attribute RecId.
+    // Returns '' when that attribute is not set on the customer.
+    private DimensionValue getDimFromStorage(DimensionAttributeValueSetStorage _storage, RecId _attrRecId)
+    {
+        int i;
+        for (i = 1; i <= _storage.elements(); i++)
+        {
+            if (_storage.getAttributeByIndex(i) == _attrRecId)
+            {
+                return _storage.getDisplayValueByIndex(i);
+            }
+        }
+        return '';
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>populate</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Runs the aging SQL (customer rows) and the bank selects, and inserts every row
+    /// into the temp table via a <c>RecordInsertList</c>. The customer filter and the
+    /// DSO look-back window/multiplier are derived from the supplied query and DSO number.
+    /// </summary>
+    /// <param name="_contract">Report contract carrying the as-of date (ParmFromDate).</param>
+    /// <param name="_query">The form's CustTable query; its AccountNum range is the customer filter.</param>
+    /// <param name="_dsoNumber">DSO Number of Days from the form (default 90 if 0/blank).</param>
+    public void populate(BCRCustomerAgingwithBankContract _contract, Query _query, int _dsoNumber)
+    {
+        // DSO Number from form; default 90 if not entered. Used both as the look-back window
+        // (days before the as-of date) and as the multiplier in the DSO formula.
+        int dsoNumber = _dsoNumber > 0 ? _dsoNumber : 90;
+        RecordInsertList recordInsertList;
+        recordInsertList = new RecordInsertList(tabletmp.TableId, true, true, true, false, true, tabletmp);
+
+        _FromDate = _contract.ParmFromDate();
+        // as-of date rendered as DD/MM/YYYY for inlining into the SQL literal.
+        // See the class-header caveat: this is locale-sensitive on the SQL side.
+        str dateStringFrom = date2str(_FromDate, 321, DateDay::Digits2, DateSeparator::Slash,
+                                                      DateMonth::Digits2, DateSeparator::Slash,
+                                                      DateYear::Digits4, DateFlags::None);
+
+        str accountnum = '';
+        str inList     = '';
+        str custDisplayList = '';
+        int custCount = 0;
+
+        // Read the customer AccountNum range from the form query and turn the selected
+        // accounts into an "in (...)" SQL fragment plus a human-readable selection label.
+        QueryBuildDataSource qbds = _query.dataSourceTable(tableNum(CustTable));
+        if (qbds)
+        {
+            QueryBuildRange qbr = qbds.findRange(fieldNum(CustTable, AccountNum));
+            if (qbr && qbr.value())
+            {
+                CustTable ct;
+                QueryRun rangeRun = new QueryRun(_query);
+                while (rangeRun.next())
+                {
+                    ct = rangeRun.get(tableNum(CustTable));
+                    inList += (inList ? ',' : '') + strFmt("'%1'", ct.AccountNum);
+                    custDisplayList += (custDisplayList ? ', ' : '') + ct.AccountNum;
+                    custCount++;
+                }
+            }
+        }
+        if (inList)
+        {
+            accountnum = strFmt(literalStr(" and CUSTTABLE.accountnum in (%1) "), inList);
+        }
+
+        // Text shown top-right of the report ("Customers selected (n): ..." or "All customers").
+        if (custCount > 0)
+        {
+            customerSelectionText = strFmt(literalStr("Customers selected (%1): %2"), custCount, custDisplayList);
+        }
+        else
+        {
+            customerSelectionText = literalStr("All customers selected");
+        }
+
+        // Pre-build a map of AccountNum -> [Country, Channel] from default dimensions,
+        // so the Country/Channel tree levels can be filled without extra SQL joins.
+        DimensionAttribute countryAttr = DimensionAttribute::findByName('Country');
+        DimensionAttribute channelAttr = DimensionAttribute::findByName('Channel');
+
+        Map         dimMap = new Map(Types::String, Types::Container);
+        CustTable   custLoop;
+        while select AccountNum, DefaultDimension from custLoop
+        {
+            if (custLoop.DefaultDimension)
+            {
+                DimensionAttributeValueSetStorage storage =
+                    DimensionAttributeValueSetStorage::find(custLoop.DefaultDimension);
+
+                dimMap.insert(custLoop.AccountNum,
+                    [this.getDimFromStorage(storage, countryAttr.RecId),
+                     this.getDimFromStorage(storage, channelAttr.RecId)]);
+            }
+        }
+
+        Connection Con = new Connection();
+        Statement Stmt = Con.createStatement();
+        // DSO formula notes:
+        //   denominator = sum of CustInvoiceJour.InvoiceAmount for invoices whose INVOICEDATE falls in the
+        //                 window [as-of date - dsoNumber days  ..  as-of date], per customer (OrderAccount = AccountNum).
+        //   DSO = Total column / (that sum * dsoNumber). Guarded against divide-by-zero (returns 0).
+        //   %4 is reused twice: once for the look-back window, once as the multiplier.
+        str sql = strFmt(@"select CUSTTABLE.accountnum,
+                        ISNULL(ct.Not_Due,0)        as 'Not_Due',
+                        ISNULL(ct.D30,0)            as '30_D',
+                        ISNULL(ct.D60,0)            as '60_D',
+                        ISNULL(ct.D90,0)            as '90_D',
+                        ISNULL(ct.D180,0)           as '180_DAndOver',
+                        ISNULL(ct.Balance_due,0)    as 'Balance_due',
+                        DirPartyTable.NAME,
+                        CUSTTABLE.SalesDistrictId,
+                        CUSTTABLE.CUSTGROUP,
+                        CUSTTABLE.CreditMax          as 'Credit_limit',
+                        CustTable.PaymTermId,
+                        (CUSTTABLE.CreditMax - ISNULL(ct.Balance_due,0)) as 'Credit_limit_remaining',
+                        (CUSTTABLE.CreditMax - (CUSTTABLE.CreditMax - ISNULL(ct.Balance_due,0))) as 'Credit_limit_Utilized',
+                        ISNULL(sl.OpenSO,0)          as 'Open_sales_order',
+                        (ISNULL(ct.Balance_due,0) + sl.OpenSO) as 'Total of column',
+                        BCRCreditInsuranceValue, BCRPromissoryNoteValue, BCRPromissoryNoteType_Custom,
+                        CUSTTABLE.CustClassificationId,
+                        -- DSO = Total / (period-invoice-sum * DSO Number (%4)). 0 when no invoices in period.
+                        case when ISNULL(cij.InvSum,0) = 0 then 0
+                             else (ISNULL(ct.Balance_due,0) + ISNULL(sl.OpenSO,0)) / (cij.InvSum * %4) end as 'DSO',
+                        CUSTTABLE.INVOICEACCOUNT as 'InvoiceAccount'   -- column 22
+                        from CUSTTABLE
+                        inner join DirPartyTable
+                            on CUSTTABLE.Party = DirPartyTable.RECID
+                        left join (
+                            select CustTrans.ACCOUNTNUM,
+                                sum(case when CustTrans.DUEDATE > '%1'
+                                         then custTransOpen.AMOUNTCUR else 0 end) as Not_Due,
+                                sum(case when CustTrans.DUEDATE <= DATEADD(day, 1, '%1')
+                                          and CustTrans.DUEDATE >= DATEADD(day, -30, '%1')
+                                         then custTransOpen.AMOUNTCUR else 0 end) as D30,
+                                sum(case when CustTrans.DUEDATE < DATEADD(day, -31, '%1')
+                                          and CustTrans.DUEDATE > DATEADD(day, -90, '%1')
+                                         then custTransOpen.AMOUNTCUR else 0 end) as D60,
+                                sum(case when CustTrans.DUEDATE <= DATEADD(day, -91, '%1')
+                                          and CustTrans.DUEDATE >= DATEADD(day, -180, '%1')
+                                         then custTransOpen.AMOUNTCUR else 0 end) as D90,
+                                sum(case when CustTrans.DUEDATE <= DATEADD(day, -180, '%1')
+                                         then custTransOpen.AMOUNTCUR else 0 end) as D180,
+                                sum(custTransOpen.AMOUNTCUR) as Balance_due
+                            from CustTrans
+                            inner join custTransOpen on custTransOpen.RefRecId = CustTrans.RecId
+                            where CustTrans.DATAAREAID = '%3'
+                            group by CustTrans.ACCOUNTNUM
+                        ) ct on ct.ACCOUNTNUM = CUSTTABLE.ACCOUNTNUM
+                        left join (
+                            select CUSTACCOUNT, sum(LineAmount) as OpenSO
+                            from Salesline
+                            where (SalesStatus = 1 or SalesStatus = 2)
+                            group by CUSTACCOUNT
+                        ) sl on sl.CUSTACCOUNT = CUSTTABLE.ACCOUNTNUM
+                        -- DSO denominator. Invoiced amount in the [date - %4 days .. date] window, per order account.
+                        left join (
+                            select CustInvoiceJour.ORDERACCOUNT,
+                                   sum(CustInvoiceJour.INVOICEAMOUNT) as InvSum
+                            from CustInvoiceJour
+                            where CustInvoiceJour.DATAAREAID = '%3'
+                              and CustInvoiceJour.INVOICEDATE <= '%1'
+                              and CustInvoiceJour.INVOICEDATE >= DATEADD(day, -%4, '%1')
+                            group by CustInvoiceJour.ORDERACCOUNT
+                        ) cij on cij.ORDERACCOUNT = CUSTTABLE.ACCOUNTNUM
+                        where CUSTTABLE.DATAAREAID = '%3'
+
+                        %2
+
+                        ", dateStringFrom, accountnum, curExt(), dsoNumber);
+        ResultSet result = Stmt.executeQuery(sql);
+
+        // Map each SQL result column (1-based) into the temp-table fields.
+        // Column order MUST match the SELECT list above - do not reorder one without the other.
+        container dimCon;
+        while (result.next())
+        {
+            tabletmp.clear();
+            tabletmp.CustAccount                 = result.getString(1);
+            tabletmp.BalanceNotDue               = result.getReal(2);
+            tabletmp.BCR30_D                      = result.getReal(3);
+            tabletmp.BCR60_D                      = result.getReal(4);
+            tabletmp.BCR90_D                      = result.getReal(5);
+            tabletmp.BCR180_DAndOver              = result.getReal(6);
+            tabletmp.BalanceDue                   = result.getReal(7);
+            tabletmp.CustName                     = result.getString(8);
+            tabletmp.SalesDistrictId              = result.getString(9);
+            tabletmp.CustGroup                    = result.getString(10);
+            tabletmp.Creditlimit                  = result.getReal(11);
+            tabletmp.PaymTermId                   = result.getString(12);
+            tabletmp.CreditlimitAvailable         = result.getReal(13);
+            tabletmp.CreditlimitUtilized          = result.getReal(14);
+            tabletmp.OpenSalesOrder               = result.getReal(15);
+            tabletmp.Total                        = result.getReal(16);
+            tabletmp.BCRCreditInsuranceValue      = result.getReal(17);
+            tabletmp.BCRPromissoryNoteValue       = result.getReal(18);
+            tabletmp.BCRPromissoryNoteType_Custom = result.getReal(19);
+            tabletmp.CustClassificationId         = result.getString(20);
+            tabletmp.BCRDSO                        = result.getReal(21);   // DSO value (col 21)
+            tabletmp.InvoiceAccount                = result.getString(22);   // Invoice Account (col 22)
+
+            // Fill Country/Channel from the pre-built dimension map.
+            if (dimMap.exists(tabletmp.CustAccount))
+            {
+                dimCon = dimMap.lookup(tabletmp.CustAccount);
+                tabletmp.Country = conPeek(dimCon, 1);
+                tabletmp.Channel = conPeek(dimCon, 2);
+            }
+
+            recordInsertList.add(tabletmp);
+        }
+
+        // ----- Bank section -----
+        // One temp row per bank account (balance as of _FromDate), plus per-currency
+        // subtotals and a grand SAR total. currencyTotals accumulates balance by currency.
+        Map     currencyTotals = new Map(Types::String, Types::Real);
+        real    totalSarAsOfToday;
+        MapEnumerator me;
+
+        while select bankAccountTable
+              where bankAccountTable.Name != ''
+        {
+            tabletmp.clear();
+            tabletmp.BankName      = bankAccountTable.Name;
+            tabletmp.BankAccountId = bankAccountTable.AccountId;
+
+            // Bank balance up to and including the as-of date, in currency and in SAR.
+            select sum(AmountCur), sum(AmountMST) from bankAccountTrans
+                where bankAccountTrans.AccountId  == bankAccountTable.AccountID
+                   && bankAccountTrans.TransDate  <= _FromDate;
+
+            tabletmp.Balance      = bankAccountTrans.AmountCur;
+            tabletmp.ValueInSAR   = bankAccountTrans.AmountMST;
+            tabletmp.CurrencyCode = bankAccountTable.CurrencyCode;
+            exchHelper = ExchangeRateHelper::newExchangeDate(Ledger::current(), bankAccountTable.CurrencyCode, _FromDate);
+            tabletmp.TodaysEXTRate = exchHelper.displayStoredExchangeRate(exchHelper.getExchangeRate1());
+
+            real curVal = currencyTotals.exists(bankAccountTable.CurrencyCode) ? currencyTotals.lookup(bankAccountTable.CurrencyCode) : 0;
+            currencyTotals.insert(bankAccountTable.CurrencyCode, curVal + tabletmp.Balance);
+            totalSarAsOfToday += tabletmp.ValueInSAR;
+
+            recordInsertList.add(tabletmp);
+        }
+
+        // Per-currency subtotal rows (identified later by having no bank/customer key).
+        me = currencyTotals.getEnumerator();
+        while (me.moveNext())
+        {
+            tabletmp.clear();
+            tabletmp.CurrencyCode       = me.currentKey();
+            tabletmp.TotalCurrencyValue = me.currentValue();
+            recordInsertList.add(tabletmp);
+        }
+
+        // Single grand-total (SAR) row.
+        tabletmp.clear();
+        tabletmp.TotalSarValue = totalSarAsOfToday;
+        recordInsertList.add(tabletmp);
+        recordInsertList.insertDatabase();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>esc</Name>
+				<Source><![CDATA[
+    // esc: JSON-escapes a string (backslash and double-quote) so it can be embedded
+    // safely inside the hand-built JSON in getDataJson.
+    private str esc(str _s)
+    {
+        str r = strReplace(_s, '\\', '\\\\');
+        r = strReplace(r, '"', '\\"');
+        return r;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>r2s</Name>
+				<Source><![CDATA[
+    // r2s: real -> JSON number string at 2 decimals (money). Strips spaces and forces
+    // '.' as the decimal separator so output is valid JSON regardless of server locale.
+    private str r2s(real _r)
+    {
+        str s = num2str(_r, 0, 2, 1, 0);
+        s = strReplace(s, ' ', '');
+        s = strReplace(s, ',', '.');
+        return s;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>r2s7</Name>
+				<Source><![CDATA[
+    // r2s7: real -> JSON number string at 7 decimals. Used ONLY for the DSO value,
+    // whose result is a small fraction under the current formula and would round to 0
+    // at 2 decimals. The JS side (fmt for DSO) must format to the same 7 decimals.
+    private str r2s7(real _r)
+    {
+        str s = num2str(_r, 0, 7, 1, 0);
+        s = strReplace(s, ' ', '');
+        s = strReplace(s, ',', '.');
+        return s;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getDataJson</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Reads the temp table back and returns the full JSON payload consumed by the JS
+    /// control: customers[], banks[], currencyTotals[], grand SAR total, as-of date and
+    /// the customer-selection label. Temp rows are told apart by which key fields are set
+    /// (CustAccount / BankName / neither).
+    /// </summary>
+    /// <returns>The serialized aging/bank dataset as a JSON string.</returns>
+    public str getDataJson()
+    {
+        // ----- Customer rows (CustAccount != '') -----
+        BCRCustomerAgingwithBankTmp r;
+        r.linkPhysicalTableInstance(tabletmp);
+        List custRows = new List(Types::String);
+        while select CustAccount, CustName, CustGroup, PaymTermId, Total, Country, Channel, CustClassificationId, BCRDSO, InvoiceAccount,
+                BalanceNotDue, BCR30_D, BCR60_D, BCR90_D, BCR180_DAndOver, BalanceDue
+            from r
+            where r.CustAccount != ''
+        {
+            str row = '{"classification":"' + this.esc(r.CustClassificationId) + '",'
+                    + '"country":"'    + this.esc(r.Country)        + '",'
+                    + '"channel":"'     + this.esc(r.Channel)        + '",'
+                    + '"custAccount":"' + this.esc(r.CustAccount)    + '",'
+                    + '"invoiceAccount":"' + this.esc(r.InvoiceAccount) + '",'   // Invoice Account
+                    + '"custName":"'    + this.esc(r.CustName)       + '",'
+                    + '"custGroup":"'   + this.esc(r.CustGroup)      + '",'
+                    + '"terms":"'       + this.esc(r.PaymTermId)     + '",'
+                    + '"dso":'          + this.r2s7(r.BCRDSO)        + ','   // DSO value (7 dp)
+                    + '"total":'        + this.r2s(r.Total)          + ','
+                    + '"balanceDue":'   + this.r2s(r.BalanceDue)     + ','
+                    + '"notDue":'       + this.r2s(r.BalanceNotDue)  + ','
+                    + '"d30":'          + this.r2s(r.BCR30_D)        + ','
+                    + '"d60":'          + this.r2s(r.BCR60_D)        + ','
+                    + '"d90":'          + this.r2s(r.BCR90_D)        + ','
+                    + '"d180":'         + this.r2s(r.BCR180_DAndOver)+ '}';
+            custRows.addEnd(row);
+        }
+        // ----- Bank rows (BankName != '') -----
+        BCRCustomerAgingwithBankTmp b;
+        b.linkPhysicalTableInstance(tabletmp);
+        List banks = new List(Types::String);
+        while select BankName, BankAccountId, Balance, ValueInSAR, CurrencyCode, TodaysEXTRate from b
+            where b.BankName != ''
+        {
+            str bk = '{"bank":"'      + this.esc(b.BankName)      + '",'
+                   + '"accountId":"'  + this.esc(b.BankAccountId) + '",'
+                   + '"balance":'     + this.r2s(b.Balance)       + ','
+                   + '"valueSar":'    + this.r2s(b.ValueInSAR)    + ','
+                   + '"currency":"'   + this.esc(b.CurrencyCode)  + '",'
+                   + '"rate":'        + this.r2s(b.TodaysEXTRate) + '}';
+            banks.addEnd(bk);
+        }
+        // ----- Per-currency subtotal rows (no bank, no customer, currency set) -----
+        BCRCustomerAgingwithBankTmp c;
+        c.linkPhysicalTableInstance(tabletmp);
+        List currencies = new List(Types::String);
+        while select CurrencyCode, TotalCurrencyValue from c
+            where c.BankName == '' && c.CustAccount == '' && c.CurrencyCode != ''
+        {
+            currencies.addEnd('{"currency":"' + this.esc(c.CurrencyCode) + '","total":' + this.r2s(c.TotalCurrencyValue) + '}');
+        }
+        // ----- Grand-total SAR row -----
+        BCRCustomerAgingwithBankTmp t;
+        t.linkPhysicalTableInstance(tabletmp);
+        select firstonly TotalSarValue from t where t.TotalSarValue != 0;
+        real grandSar = t.TotalSarValue;
+
+        // Join the three row lists into JSON arrays.
+        ListEnumerator le;
+        str custArr = '';
+        le = custRows.getEnumerator();
+        while (le.moveNext())
+        {
+            custArr += (custArr ? ',' : '') + le.current();
+        }
+        str bankArr = '';
+        le = banks.getEnumerator();
+        while (le.moveNext())
+        {
+            bankArr += (bankArr ? ',' : '') + le.current();
+        }
+        str curArr = '';
+        le = currencies.getEnumerator();
+        while (le.moveNext())
+        {
+            curArr += (curArr ? ',' : '') + le.current();
+        }
+        // as-of date shown in the JS run-info banner, as M/D/YYYY.
+        str asOf = strFmt('%1/%2/%3', mthOfYr(_FromDate), dayOfMth(_FromDate), year(_FromDate));
+        return '{"customers":[' + custArr + '],"banks":[' + bankArr + '],"currencyTotals":[' + curArr + '],"grandTotalSar":' + this.r2s(grandSar)
+             + ',"asOfDate":"' + this.esc(asOf) + '"'
+             + ',"customerSelection":"' + this.esc(customerSelectionText) + '"}';
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>BCRCustAgingVisualControl</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Form template control that hosts the "Customer Aging with Bank" HTML visual
+/// (BCRCustAgingVisual). Bridges the D365 form runtime and the client-side
+/// JavaScript control by exposing the aging dataset as a serialized JSON property.
+/// </summary>
+[FormControlAttribute('BCRCustAgingVisual', '/resources/html/BCRCustAgingVisual', classStr(BCRCustAgingVisualControlBuild))]
+public class BCRCustAgingVisualControl extends FormTemplateControl
+{
+    FormProperty dataProperty;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>new</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Initializes a new instance of the <c>BCRCustAgingVisualControl</c> class and
+    /// registers the aging data property used to bind values to the HTML control.
+    /// </summary>
+    /// <param name="_build">The form build control that describes this control.</param>
+    /// <param name="_formRun">The form run that owns this control.</param>
+    protected void new(FormBuildControl _build, FormRun _formRun)
+    {
+        super(_build, _formRun);
+        this.setTemplateId('BCRCustAgingVisual');
+        this.setResourceBundleName('/resources/html/BCRCustAgingVisual');
+        dataProperty = this.addProperty(methodStr(BCRCustAgingVisualControl, parmAgingData), Types::String);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmAgingData</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Gets or sets the serialized aging dataset (JSON) bound to the HTML visual.
+    /// </summary>
+    /// <param name="_value">The JSON payload to bind; defaults to the current property value.</param>
+    /// <returns>The current serialized aging dataset.</returns>
+    [FormPropertyAttribute(FormPropertyKind::Value, 'AgingData', true)]
+    public str parmAgingData(str _value = dataProperty.parmValue())
+    {
+        if (!prmIsDefault(_value))
+        {
+            dataProperty.setValueOrBinding(_value);
+        }
+        return dataProperty.parmValue();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>loadData</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Builds the aging dataset from the supplied contract and query and pushes the
+    /// resulting JSON to the HTML control for rendering.
+    /// </summary>
+    /// <param name="_contract">The report contract carrying the user's selections.</param>
+    /// <param name="_query">The query describing the customer selection.</param>
+    /// <param name="_dsoNumber">The number of days used for the DSO calculation.</param>
+    public void loadData(BCRCustomerAgingwithBankContract _contract, Query _query, int _dsoNumber)
+    {
+        BCRCustAgingVisualEngine engine = new BCRCustAgingVisualEngine();
+        engine.populate(_contract, _query, _dsoNumber);
+        this.parmAgingData(engine.getDataJson());
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

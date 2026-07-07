@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>BCRCustomerAgingwithBankDP</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Report data provider for the "Customer Aging with Bank" SSRS report. Builds the
+/// aging buckets, credit figures and bank balances into a pre-processed temp table
+/// consumed by the report design.
+/// </summary>
+[SrsReportParameterAttribute(classstr(BCRCustomerAgingwithBankContract)),
+SRSReportQueryAttribute(queryStr(BCRCustomerAgingwithBankQuery))]
+class BCRCustomerAgingwithBankDP extends SRSReportDataProviderPreProcessTempDB
+{
+    BCRCustomerAgingwithBankTmp        tabletmp;
+    BCRCustomerAgingwithBankContract   Contract;
+    DueDate                       _FromDate,NextDate,StartDate;
+    str                             objCustAccount;
+    CustGroupId                     objCustGroupId;
+    CustTable                       objCustTable;
+    CustTrans                       objCustTrans;
+    CustTransOpen                   objcustTransOpen;
+    MainAccount                     mainAccount;
+    CustLedgerAccounts              custLedgerAccounts;
+    GeneralJournalEntry generalJournalEntry;
+    GeneralJournalAccountEntry          generalJournalAccountEntry;
+    DimensionAttributeValueCombination  DimensionAttributeValueCombination;
+    BankAccountTable    bankAccountTable;
+    BankAccountTrans    bankAccountTrans;
+    ExchangeRateHelper  exchHelper;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>GetData</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Returns the populated temp-table dataset to the SSRS runtime.
+    /// </summary>
+    /// <returns>The aging/bank temp-table buffer.</returns>
+    [SrsReportDataSetAttribute('BCRCustomerAgingwithBankTmp')]
+    public BCRCustomerAgingwithBankTmp GetData()
+    {
+        select tabletmp;
+        return tabletmp;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getDimFromStorage</Name>
+				<Source><![CDATA[
+    private DimensionValue getDimFromStorage(DimensionAttributeValueSetStorage _storage, RecId _attrRecId)
+    {
+        int i;
+        for (i = 1; i <= _storage.elements(); i++)
+        {
+            if (_storage.getAttributeByIndex(i) == _attrRecId)
+            {
+                return _storage.getDisplayValueByIndex(i);
+            }
+        }
+        return '';
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>processReport</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Builds the report dataset: runs the aging SQL (customer rows) and the bank
+    /// selects, and inserts every row into the temp table via a <c>RecordInsertList</c>.
+    /// </summary>
+    public void processReport()
+    {
+        RecordInsertList                recordInsertList;
+        recordInsertList = new RecordInsertList(tabletmp.TableId, true, true, true, false, true, tabletmp);
+        Contract = this.parmDataContract();
+        _FromDate = Contract.ParmFromDate();
+        str dateStringFrom = date2str(_FromDate, 321, DateDay::Digits2, DateSeparator::Slash,
+                                                                DateMonth::Digits2, DateSeparator::Slash,
+                                                                DateYear::Digits4, DateFlags::None);
+
+        str accountnum = '';
+        str inList     = '';
+
+        QueryBuildDataSource qbds = this.parmQuery().dataSourceTable(tableNum(CustTable));
+        if (qbds)
+        {
+            QueryBuildRange qbr = qbds.findRange(fieldNum(CustTable, AccountNum));
+            if (qbr && qbr.value())
+            {
+                CustTable ct;
+                QueryRun rangeRun = new QueryRun(this.parmQuery());
+                while (rangeRun.next())
+                {
+                    ct = rangeRun.get(tableNum(CustTable));
+                    //BP Deviation Documented: SQL value fragment, not a user-facing label.
+                    inList += (inList ? ',' : '') + strFmt("'%1'", ct.AccountNum);
+                }
+            }
+        }
+        if (inList)
+        {
+            //BP Deviation Documented: SQL predicate fragment, not a user-facing label.
+            accountnum = strFmt(literalStr(" and CUSTTABLE.accountnum in (%1) "), inList);
+        }
+
+        DimensionAttribute countryAttr = DimensionAttribute::findByName('Country');
+        DimensionAttribute channelAttr = DimensionAttribute::findByName('Channel');
+
+        Map         dimMap = new Map(Types::String, Types::Container);
+        CustTable   custLoop;
+        while select AccountNum, DefaultDimension from custLoop
+        {
+            if (custLoop.DefaultDimension)
+            {
+                DimensionAttributeValueSetStorage storage =
+                    DimensionAttributeValueSetStorage::find(custLoop.DefaultDimension);
+
+                dimMap.insert(custLoop.AccountNum,
+                    [this.getDimFromStorage(storage, countryAttr.RecId),
+                     this.getDimFromStorage(storage, channelAttr.RecId)]);
+            }
+        }
+
+        Connection Con = new Connection();
+        Statement Stmt = Con.createStatement();
+        str sql = strFmt(@"select CUSTTABLE.accountnum,
+                        ISNULL(ct.Not_Due,0)        as 'Not_Due',
+                        ISNULL(ct.D30,0)            as '30_D',
+                        ISNULL(ct.D60,0)            as '60_D',
+                        ISNULL(ct.D90,0)            as '90_D',
+                        ISNULL(ct.D180,0)           as '180_DAndOver',
+                        ISNULL(ct.Balance_due,0)    as 'Balance_due',
+                        DirPartyTable.NAME,
+                        CUSTTABLE.SalesDistrictId,
+                        CUSTTABLE.CUSTGROUP,
+                        CUSTTABLE.CreditMax          as 'Credit_limit',
+                        CustTable.PaymTermId,
+                        (CUSTTABLE.CreditMax - ISNULL(ct.Balance_due,0)) as 'Credit_limit_remaining',
+                        (CUSTTABLE.CreditMax - (CUSTTABLE.CreditMax - ISNULL(ct.Balance_due,0))) as 'Credit_limit_Utilized',
+                        ISNULL(sl.OpenSO,0)          as 'Open_sales_order',
+                        (ISNULL(ct.Balance_due,0) + ISNULL(sl.OpenSO,0)) as 'Total of column',
+                        BCRCreditInsuranceValue, BCRPromissoryNoteValue, BCRPromissoryNoteType_Custom
+                        from CUSTTABLE
+                        inner join DirPartyTable
+                            on CUSTTABLE.Party = DirPartyTable.RECID
+                        left join (
+                            select CustTrans.ACCOUNTNUM,
+                                sum(case when CustTrans.DUEDATE > '%1'
+                                         then custTransOpen.AMOUNTCUR else 0 end) as Not_Due,
+                                sum(case when CustTrans.DUEDATE <= DATEADD(day, 1, '%1')
+                                          and CustTrans.DUEDATE >= DATEADD(day, -30, '%1')
+                                         then custTransOpen.AMOUNTCUR else 0 end) as D30,
+                                sum(case when CustTrans.DUEDATE < DATEADD(day, -31, '%1')
+                                          and CustTrans.DUEDATE > DATEADD(day, -90, '%1')
+                                         then custTransOpen.AMOUNTCUR else 0 end) as D60,
+                                sum(case when CustTrans.DUEDATE <= DATEADD(day, -91, '%1')
+                                          and CustTrans.DUEDATE >= DATEADD(day, -180, '%1')
+                                         then custTransOpen.AMOUNTCUR else 0 end) as D90,
+                                sum(case when CustTrans.DUEDATE <= DATEADD(day, -180, '%1')
+                                         then custTransOpen.AMOUNTCUR else 0 end) as D180,
+                                sum(custTransOpen.AMOUNTCUR) as Balance_due
+                            from CustTrans
+                            inner join custTransOpen on custTransOpen.RefRecId = CustTrans.RecId
+                            where CustTrans.DATAAREAID = '%3'
+                            group by CustTrans.ACCOUNTNUM
+                        ) ct on ct.ACCOUNTNUM = CUSTTABLE.ACCOUNTNUM
+                        left join (
+                            select CUSTACCOUNT, sum(LineAmount) as OpenSO
+                            from Salesline
+                            where (SalesStatus = 1 or SalesStatus = 2)
+                            group by CUSTACCOUNT
+                        ) sl on sl.CUSTACCOUNT = CUSTTABLE.ACCOUNTNUM
+                        where CUSTTABLE.DATAAREAID = '%3'
+
+                        %2
+
+                        ", dateStringFrom, accountnum, curExt());
+        //BP Deviation Documented: report requires a dynamic multi-join aggregate query that cannot be expressed with the X++ query framework.
+        ResultSet result =Stmt.executeQuery(sql);
+
+        container dimCon;
+        while(result.next())
+        {
+            tabletmp.clear();
+            tabletmp.CustAccount=result.getString(1);
+            tabletmp.BalanceNotDue=result.getReal(2);
+            tabletmp.BCR30_D=result.getReal(3);
+            tabletmp.BCR60_D=result.getReal(4);
+            tabletmp.BCR90_D=result.getReal(5);
+            tabletmp.BCR180_DAndOver=result.getReal(6);
+            tabletmp.BalanceDue=result.getReal(7);
+            tabletmp.CustName=result.getString(8);
+            tabletmp.SalesDistrictId=result.getString(9);
+            tabletmp.CustGroup=result.getString(10);
+            tabletmp.Creditlimit=result.getReal(11);
+            tabletmp.PaymTermId=result.getString(12);
+            tabletmp.CreditlimitAvailable=result.getReal(13);
+            tabletmp.CreditlimitUtilized=result.getReal(14);
+            tabletmp.OpenSalesOrder=result.getReal(15);
+            tabletmp.Total=result.getReal(16);
+            tabletmp.BCRCreditInsuranceValue=result.getReal(17);
+            tabletmp.BCRPromissoryNoteValue=result.getReal(18);
+            tabletmp.BCRPromissoryNoteType_Custom=result.getReal(19);
+
+            if (dimMap.exists(tabletmp.CustAccount))
+            {
+                dimCon = dimMap.lookup(tabletmp.CustAccount);
+                tabletmp.Country = conPeek(dimCon, 1);
+                tabletmp.Channel = conPeek(dimCon, 2);
+            }
+
+            recordInsertList.add(tabletmp);
+        }
+
+        Map     currencyTotals = new Map(Types::String, Types::Real);
+        real    totalSarAsOfToday;
+        MapEnumerator me;
+
+        while select bankAccountTable
+              where bankAccountTable.Name != ''
+        {
+            tabletmp.clear();
+            tabletmp.BankName      = bankAccountTable.Name;
+            tabletmp.BankAccountId = bankAccountTable.AccountId;
+
+            select sum(AmountCur),sum(AmountMST) from bankAccountTrans
+       where bankAccountTrans.AccountId  == bankAccountTable.AccountID
+       && bankAccountTrans.TransDate  <= _FromDate;
+            //&& bankAccountTrans.TransDate  <= today();
+            tabletmp.Balance      = bankAccountTrans.AmountCur;   // Value In Currency
+            tabletmp.ValueInSAR   = bankAccountTrans.AmountMST;   // Value In SAR
+            tabletmp.CurrencyCode = bankAccountTable.CurrencyCode;
+            exchHelper = ExchangeRateHelper::newExchangeDate(Ledger::current(), bankAccountTable.CurrencyCode, _FromDate);
+            tabletmp.TodaysEXTRate = exchHelper.displayStoredExchangeRate(exchHelper.getExchangeRate1());
+
+            real curVal = currencyTotals.exists(bankAccountTable.CurrencyCode) ? currencyTotals.lookup(bankAccountTable.CurrencyCode): 0;
+            currencyTotals.insert(bankAccountTable.CurrencyCode, curVal + tabletmp.Balance);
+            totalSarAsOfToday += tabletmp.ValueInSAR;
+
+            recordInsertList.add(tabletmp);
+        }
+
+        me = currencyTotals.getEnumerator();
+        while (me.moveNext())
+        {
+            tabletmp.clear();
+            tabletmp.CurrencyCode       = me.currentKey();
+            tabletmp.TotalCurrencyValue = me.currentValue();
+            recordInsertList.add(tabletmp);
+        }
+
+        tabletmp.clear();
+        tabletmp.TotalSarValue = totalSarAsOfToday;
+        recordInsertList.add(tabletmp);
+        recordInsertList.insertDatabase();
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxLabelFile xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>OHMSAging_en-US</Name>
+	<LabelContentFileName>OHMSAging.en-US.label.txt</LabelContentFileName>
+	<LabelFileId>OHMSAging</LabelFileId>
+	<RelativeUriInModelStore>Report_Finance\Report_Finance\AxLabelFile\LabelResources\en-US\OHMSAging.en-US.label.txt</RelativeUriInModelStore>
+</AxLabelFile>

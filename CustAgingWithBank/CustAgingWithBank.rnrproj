@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <BuildTasksDirectory Condition=" '$(BuildTasksDirectory)' == ''">$(MSBuildProgramFiles32)\MSBuild\Microsoft\Dynamics\AX</BuildTasksDirectory>
+    <Model>OHMS</Model>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <OutputPath>bin</OutputPath>
+    <SchemaVersion>2.0</SchemaVersion>
+    <GenerateCrossReferences>True</GenerateCrossReferences>
+    <RunAppCheckerRules>False</RunAppCheckerRules>
+    <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
+    <DeployOnline>False</DeployOnline>
+    <ProjectGuid>{8c5a3bc9-8aa2-4d3d-9d68-f08401c16cee}</ProjectGuid>
+    <Name>CustAgingWithBank</Name>
+    <RootNamespace>CustAgingWithBank</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <Configuration>Debug</Configuration>
+    <DBSyncInBuild>True</DBSyncInBuild>
+    <GenerateFormAdaptors>False</GenerateFormAdaptors>
+    <Company>
+    </Company>
+    <Partition>initial</Partition>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DataEntityExpandParentChildRelations>False</DataEntityExpandParentChildRelations>
+    <DataEntityUseLabelTextAsFieldName>False</DataEntityUseLabelTextAsFieldName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Classes\" />
+    <Folder Include="Display Menu Items\" />
+    <Folder Include="Forms\" />
+    <Folder Include="Label Files\" />
+    <Folder Include="Menu Extensions\" />
+    <Folder Include="Output Menu Items\" />
+    <Folder Include="Reports\" />
+    <Folder Include="Resources\" />
+    <Folder Include="Security Duties\" />
+    <Folder Include="Security Privileges\" />
+    <Folder Include="Security Roles\" />
+    <Folder Include="Simple Queries\" />
+    <Folder Include="Table Extensions\" />
+    <Folder Include="Tables\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AxClass\BCRCustAgingVisualControl">
+      <SubType>Content</SubType>
+      <Name>BCRCustAgingVisualControl</Name>
+      <Link>Classes\BCRCustAgingVisualControl</Link>
+    </Content>
+    <Content Include="AxClass\BCRCustAgingVisualControlBuild">
+      <SubType>Content</SubType>
+      <Name>BCRCustAgingVisualControlBuild</Name>
+      <Link>Classes\BCRCustAgingVisualControlBuild</Link>
+    </Content>
+    <Content Include="AxClass\BCRCustAgingVisualEngine">
+      <SubType>Content</SubType>
+      <Name>BCRCustAgingVisualEngine</Name>
+      <Link>Classes\BCRCustAgingVisualEngine</Link>
+    </Content>
+    <Content Include="AxClass\BCRCustomerAgingwithBankContract">
+      <SubType>Content</SubType>
+      <Name>BCRCustomerAgingwithBankContract</Name>
+      <Link>Classes\BCRCustomerAgingwithBankContract</Link>
+    </Content>
+    <Content Include="AxClass\BCRCustomerAgingwithBankDP">
+      <SubType>Content</SubType>
+      <Name>BCRCustomerAgingwithBankDP</Name>
+      <Link>Classes\BCRCustomerAgingwithBankDP</Link>
+    </Content>
+    <Content Include="AxForm\BCRCustAgingVisualForm">
+      <SubType>Content</SubType>
+      <Name>BCRCustAgingVisualForm</Name>
+      <Link>Forms\BCRCustAgingVisualForm</Link>
+    </Content>
+    <Content Include="AxLabelFile\OHMSAging_en-US">
+      <SubType>Content</SubType>
+      <Name>OHMSAging_en-US</Name>
+      <Link>Label Files\OHMSAging_en-US</Link>
+    </Content>
+    <Content Include="AxMenuExtension\AccountsReceivable.Report_Finance">
+      <SubType>Content</SubType>
+      <Name>AccountsReceivable.Report_Finance</Name>
+      <Link>Menu Extensions\AccountsReceivable.Report_Finance</Link>
+    </Content>
+    <Content Include="AxMenuItemDisplay\BCRCustAgingVisualForm">
+      <SubType>Content</SubType>
+      <Name>BCRCustAgingVisualForm</Name>
+      <Link>Display Menu Items\BCRCustAgingVisualForm</Link>
+    </Content>
+    <Content Include="AxMenuItemOutput\BCRCustomerAgingwithBank">
+      <SubType>Content</SubType>
+      <Name>BCRCustomerAgingwithBank</Name>
+      <Link>Output Menu Items\BCRCustomerAgingwithBank</Link>
+    </Content>
+    <Content Include="AxQuery\BCRCustomerAgingwithBankQuery">
+      <SubType>Content</SubType>
+      <Name>BCRCustomerAgingwithBankQuery</Name>
+      <Link>Simple Queries\BCRCustomerAgingwithBankQuery</Link>
+    </Content>
+    <Content Include="AxReport\BCRCustomerAgingwithBankReport">
+      <SubType>Content</SubType>
+      <Name>BCRCustomerAgingwithBankReport</Name>
+      <Link>Reports\BCRCustomerAgingwithBankReport</Link>
+    </Content>
+    <Content Include="AxResource\BCRCustAgingEcharts">
+      <SubType>Content</SubType>
+      <Name>BCRCustAgingEcharts</Name>
+      <Link>Resources\BCRCustAgingEcharts</Link>
+    </Content>
+    <Content Include="AxResource\BCRCustAgingVisual">
+      <SubType>Content</SubType>
+      <Name>BCRCustAgingVisual</Name>
+      <Link>Resources\BCRCustAgingVisual</Link>
+    </Content>
+    <Content Include="AxResource\BCRCustAgingVisualCSS">
+      <SubType>Content</SubType>
+      <Name>BCRCustAgingVisualCSS</Name>
+      <Link>Resources\BCRCustAgingVisualCSS</Link>
+    </Content>
+    <Content Include="AxResource\BCRCustAgingVisualJS">
+      <SubType>Content</SubType>
+      <Name>BCRCustAgingVisualJS</Name>
+      <Link>Resources\BCRCustAgingVisualJS</Link>
+    </Content>
+    <Content Include="AxSecurityDuty\OHMSCustAgingVisualMaintain">
+      <SubType>Content</SubType>
+      <Name>OHMSCustAgingVisualMaintain</Name>
+      <Link>Security Duties\OHMSCustAgingVisualMaintain</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\OHMSCustAgingVisualView">
+      <SubType>Content</SubType>
+      <Name>OHMSCustAgingVisualView</Name>
+      <Link>Security Privileges\OHMSCustAgingVisualView</Link>
+    </Content>
+    <Content Include="AxSecurityRole\OHMSCustAgingVisualInquirer">
+      <SubType>Content</SubType>
+      <Name>OHMSCustAgingVisualInquirer</Name>
+      <Link>Security Roles\OHMSCustAgingVisualInquirer</Link>
+    </Content>
+    <Content Include="AxTableExtension\CustTable.Report_Finance">
+      <SubType>Content</SubType>
+      <Name>CustTable.Report_Finance</Name>
+      <Link>Table Extensions\CustTable.Report_Finance</Link>
+    </Content>
+    <Content Include="AxTable\BCRCustomerAgingwithBankTmp">
+      <SubType>Content</SubType>
+      <Name>BCRCustomerAgingwithBankTmp</Name>
+      <Link>Tables\BCRCustomerAgingwithBankTmp</Link>
+    </Content>
+    <Content Include="BCRCustAgingEcharts.js">
+      <SubType>Content</SubType>
+      <Name>BCRCustAgingEcharts.js</Name>
+      <DependentUpon>AxResource\BCRCustAgingEcharts</DependentUpon>
+    </Content>
+    <Content Include="BCRCustAgingVisual.htm">
+      <SubType>Content</SubType>
+      <Name>BCRCustAgingVisual.htm</Name>
+      <DependentUpon>AxResource\BCRCustAgingVisual</DependentUpon>
+    </Content>
+    <Content Include="BCRCustAgingVisualCSS.css">
+      <SubType>Content</SubType>
+      <Name>BCRCustAgingVisualCSS.css</Name>
+      <DependentUpon>AxResource\BCRCustAgingVisualCSS</DependentUpon>
+    </Content>
+    <Content Include="BCRCustAgingVisualJS.js">
+      <SubType>Content</SubType>
+      <Name>BCRCustAgingVisualJS.js</Name>
+      <DependentUpon>AxResource\BCRCustAgingVisualJS</DependentUpon>
+    </Content>
+    <Content Include="OHMSAging.en-US.label.txt">
+      <SubType>Content</SubType>
+      <Name>OHMSAging.en-US.label.txt</Name>
+      <DependentUpon>AxLabelFile\OHMSAging_en-US</DependentUpon>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="$(BuildTasksDirectory)\Microsoft.Dynamics.Framework.Tools.BuildTasks.17.0.targets" />
+</Project>

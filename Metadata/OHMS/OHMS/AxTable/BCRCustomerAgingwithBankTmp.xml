@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxTable xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>BCRCustomerAgingwithBankTmp</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class BCRCustomerAgingwithBankTmp extends common
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>shouldThrowExceptionOnZeroDelete</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Determines if concurrent deletes should throw exception.
+    /// </summary>
+    /// <returns>true, if exception should be thrown; otherwise, false.</returns>
+    public boolean shouldThrowExceptionOnZeroDelete()
+    {
+        return true;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+	<Label>@OHMSAging:TableCustomerAging</Label>
+	<SubscriberAccessLevel>
+		<Read>Allow</Read>
+	</SubscriberAccessLevel>
+	<TableType>TempDB</TableType>
+	<DeleteActions />
+	<FieldGroups>
+		<AxTableFieldGroup>
+			<Name>AutoReport</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoLookup</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoIdentification</Name>
+			<AutoPopulate>Yes</AutoPopulate>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoSummary</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoBrowse</Name>
+			<Fields />
+		</AxTableFieldGroup>
+	</FieldGroups>
+	<Fields>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>CustAccount</Name>
+			<ExtendedDataType>CustAccount</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>@OHMSAging:CustAccount</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>CustName</Name>
+			<ExtendedDataType>CustName</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>@OHMSAging:CustName</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>CustGroup</Name>
+			<ExtendedDataType>CustGroupId</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>@OHMSAging:CustGroup</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>SalesDistrictId</Name>
+			<ExtendedDataType>smmSalesDistrictId</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>@OHMSAging:SalesDistrictId</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>PaymTermId</Name>
+			<ExtendedDataType>CustPaymTermId</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>@OHMSAging:PaymTermId</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>Creditlimit</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:Creditlimit</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>CreditlimitUtilized</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:CreditlimitUtilized</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>CreditlimitAvailable</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:CreditlimitAvailable</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>BCRCreditInsuranceValue</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:CreditInsuranceValue</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>BCRPromissoryNoteValue</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:PromissoryNoteValue</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>BCRPromissoryNoteType_Custom</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:PromissoryNoteType</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>OpenSalesOrder</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:OpenSalesOrder</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>Total</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:Total</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>BalanceDue</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:BalanceDue</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>BalanceNotDue</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:BalanceNotDue</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>BCR30_D</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:Days30</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>BCR60_D</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:Days60</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>BCR90_D</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:Days90</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>BCR180_DAndOver</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:Days180</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>BankName</Name>
+			<ExtendedDataType>Name</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>@SYS92116</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>Balance</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>@SYS22796</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>Country</Name>
+			<ExtendedDataType>Name</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>@OHMSAging:Country</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>Channel</Name>
+			<ExtendedDataType>Name</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>@OHMSAging:Channel</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>CurrencyCode</Name>
+			<AssetClassification>Customer Content</AssetClassification>
+			<ExtendedDataType>CurrencyCode</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Mandatory>Yes</Mandatory>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>ValueInSAR</Name>
+			<AssetClassification>Customer Content</AssetClassification>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<HelpText>@GLS221287</HelpText>
+			<Label>@OHMSAging:ValueInSAR</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>TodaysEXTRate</Name>
+			<AssetClassification>System Metadata</AssetClassification>
+			<ExtendedDataType>CurrencyExchangeRate</ExtendedDataType>
+			<Mandatory>Yes</Mandatory>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>BankAccountId</Name>
+			<AllowEdit>No</AllowEdit>
+			<AllowEditOnCreate>No</AllowEditOnCreate>
+			<AssetClassification>Customer Content</AssetClassification>
+			<ExtendedDataType>CompanyBankAccountId</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Mandatory>Yes</Mandatory>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>TotalCurrencyValue</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:TotalCurrencyValue</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>TotalSarValue</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:TotalSarValue</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>CustClassificationId</Name>
+			<AssetClassification>Customer Content</AssetClassification>
+			<ExtendedDataType>CustClassificationId</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>@OHMSAging:CustClassificationId</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldReal">
+			<Name>BCRDSO</Name>
+			<ExtendedDataType>AmountCur</ExtendedDataType>
+			<Label>@OHMSAging:DSO</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>InvoiceAccount</Name>
+			<ExtendedDataType>CustInvoiceAccount</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>@OHMSAging:InvoiceAccount</Label>
+		</AxTableField>
+	</Fields>
+	<FullTextIndexes />
+	<Indexes />
+	<Mappings />
+	<Relations />
+	<StateMachines />
+</AxTable>

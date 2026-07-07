@@ -1,0 +1,43 @@
+/* All selectors namespaced under #BCRCustAgingVisual to avoid clashing with the F&O client. */
+/* NOTE: the .htm and the JS set most styling inline; only the rules below still apply.
+   Elements like bank-chart, grand, curtotals, titles are styled inline and were removed here. */
+#BCRCustAgingVisual.bcrcav {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    color: #1B1B1B;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 4px 2px;
+    box-sizing: border-box;
+}
+
+#BCRCustAgingVisual .bcrcav-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+#BCRCustAgingVisual .bcrcav-bank {
+    border-top: 1px solid #E6E9ED;
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#BCRCustAgingVisual .bcrcav-empty {
+    padding: 24px;
+    text-align: center;
+    color: #7A7A7A;
+    border: 1px dashed #D7DCE1;
+    border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #BCRCustAgingVisual * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
