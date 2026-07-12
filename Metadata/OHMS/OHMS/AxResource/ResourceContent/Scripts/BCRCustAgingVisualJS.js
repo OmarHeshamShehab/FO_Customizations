@@ -13,12 +13,18 @@
 //     4. Management overview (KPIs, bars, watchlist)         -> renderMgmt
 //
 // DATA CONTRACT (must match the engine's JSON exactly)
-//   d.customers[]      : {classification,country,channel,invoiceAccount,custAccount,
-//                         custName,custGroup,terms,dso,total,balanceDue,
+//   d.customers[]      : {classification,country,channel,invoiceAccount,invoiceAccountName,
+//                         custAccount,custName,custGroup,terms,dso,total,balanceDue,
 //                         notDue,d30,d60,d90,d180}
 //   d.banks[]          : {bank,accountId,balance,valueSar,currency,rate}
 //   d.currencyTotals[] : {currency,total}
 //   d.grandTotalSar, d.asOfDate, d.customerSelection
+//
+// CLIENT-SIDE CUSTOMER TOGGLE
+//   A checkbox above the tree (showCustomer, default OFF) shows/hides the
+//   Customer Account + Customer Name columns in BOTH the aging tree and the
+//   management watchlist. Purely client-side: the engine always sends the
+//   customer fields, so toggling never re-runs the query.
 //
 // TREE HIERARCHY (4 collapsible levels, then customer leaf rows)
 //   Classification -> Country -> Channel -> Invoice Account -> customer rows.
@@ -26,11 +32,7 @@
 //   openInvoiceAcct and reset on every data reload (renderAll).
 //
 // NUMBER FORMATTING
-//   fmt2 -> 2 decimals for all money/amount values.
-//   fmt7 -> 7 decimals, used ONLY for the DSO value. DSO is a small fraction
-//           under the current formula, so 2 dp would round it to 0. The X++ side
-//           (r2s7) must emit the same 7 decimals or the value is truncated before
-//           it ever reaches here.
+//   fmt2 -> 2 decimals for all money/amount values and DSO.
 //
 // STYLING NOTE
 //   F&O namespaces external CSS class names at runtime, so ALL styling here is
@@ -79,9 +81,6 @@
 
         // Money/amount formatter: 2 decimals.
         var fmt2 = function (n) { return (n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
-        // DSO formatter: 7 decimals. DSO is a small fraction under the current formula,
-        // so fewer decimals would round it to 0. MUST match the engine's r2s7 precision.
-        var fmt7 = function (n) { return (n || 0).toLocaleString(undefined, { minimumFractionDigits: 7, maximumFractionDigits: 7 }); };
 
         // ---------- Run-info (top-right): as-of date + customer selection ----------
         function renderRunInfo(d) {
@@ -281,13 +280,14 @@
         // 4 collapsible levels + leaf rows. Open/closed state per level below;
         // all four are reset in renderAll() whenever new data arrives.
         var customers = [];
+        var showCustomer = false;  // Client-side toggle: show/hide Customer Account + Customer Name. Default OFF (hidden).
         var openClass = {};     // classification -> bool
         var openCountry = {};   // classification|country -> bool
         var openChannel = {};   // classification|country|channel -> bool
         var openInvoiceAcct = {}; // classification|country|channel|invoiceAccount -> bool
 
-        var COLS = ['Classification', 'Country', 'Channel', 'Invoice Account', 'Cust Account', 'Cust Name', 'Cust Group', 'DSO', 'Terms of payment',
-            'Total', 'Balance Due', 'Balance Not Due', '30 D', '60 D', '90 D', '180 DAnd Over'];
+        // Column list is rebuilt in render() because the two customer columns are optional.
+        var COLS = [];
 
         function uniqueOrdered(arr, keyFn) {
             var seen = {}, out = [];
@@ -313,10 +313,6 @@
         function numCell(val) {
             return '<td style="padding:4px 8px;text-align:right;font:12px Segoe UI;font-variant-numeric:tabular-nums;border-bottom:1px solid #eef0f2">' + fmt2(val) + '</td>';
         }
-        // DSO cell: same styling as numCell, but 7 decimals (uses fmt7).
-        function dsoCell(val) {
-            return '<td style="padding:4px 8px;text-align:right;font:12px Segoe UI;font-variant-numeric:tabular-nums;border-bottom:1px solid #eef0f2">' + fmt7(val) + '</td>';
-        }
         function txtCell(val, extra) {
             return '<td style="padding:4px 8px;font:12px Segoe UI;border-bottom:1px solid #eef0f2;' + (extra || '') + '">' + (val || '') + '</td>';
         }
@@ -330,9 +326,9 @@
             return s;
         }
 
-        // ---------- Group subtotals (Total .. 180 DAnd Over) ----------
+        // ---------- Group subtotals (Total .. 180 DAnd Over, plus DSO) ----------
         function sumGroup(rows) {
-            var s = { total: 0, balanceDue: 0, notDue: 0, d30: 0, d60: 0, d90: 0, d180: 0 };
+            var s = { total: 0, balanceDue: 0, notDue: 0, d30: 0, d60: 0, d90: 0, d180: 0, dso: 0 };
             rows.forEach(function (r) {
                 s.total += (+r.total || 0);
                 s.balanceDue += (+r.balanceDue || 0);
@@ -341,6 +337,7 @@
                 s.d60 += (+r.d60 || 0);
                 s.d90 += (+r.d90 || 0);
                 s.d180 += (+r.d180 || 0);
+                s.dso += (+r.dso || 0);
             });
             return s;
         }
@@ -363,6 +360,23 @@
             if (emptyEl) emptyEl.hidden = has;
             if (!has) { treeEl.innerHTML = ''; return; }
 
+            // Client-side toggle: show/hide Customer Account + Customer Name (no SQL reload).
+            var toggleBar = '<div style="margin:4px 0 8px 0;font:12px Segoe UI;color:#1B1B1B;">' +
+                '<label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;">' +
+                '<input type="checkbox" class="bcrcav-showcust"' + (showCustomer ? ' checked' : '') + ' style="cursor:pointer;">' +
+                'Show Customer Account &amp; Customer Name</label></div>';
+
+            // Rebuild columns each render: the two customer columns are optional (showCustomer).
+            COLS = ['Classification', 'Country', 'Channel', 'Invoice Account', 'Invoice Account Name'];
+            if (showCustomer) { COLS.push('Customer Account', 'Customer Name'); }
+            COLS = COLS.concat(['Customer Group', 'DSO', 'Terms of payment',
+                'Total', 'Balance Due', 'Balance Not Due', '30 D', '60 D', '90 D', '180 DAnd Over']);
+
+            // Column-count helpers for the group header rows.
+            var custCols = showCustomer ? 2 : 0;
+            var leftCount = 8 + custCols;   // non-sum columns
+            var dsoIdx = leftCount - 1;  // DSO position within the left columns
+
             var html = '<table style="border-collapse:collapse;width:100%;min-width:1180px">' +
                 '<thead>' + headerRow() + '</thead><tbody>';
 
@@ -377,7 +391,7 @@
 
                 html += '<tr data-class="' + classification + '" style="background:#C9D9EC">' +
                     toggleCell(clOpen, '<b>' + classification + '</b>', 4) +
-                    blankCells(8) + sumCells(gs) + '</tr>';
+                    blankCells(leftCount - 1) + sumCells(gs) + '</tr>';
                 if (!clOpen) { return; }
 
                 var countries = uniqueOrdered(inClass, function (r) { return r.country || '(blank)'; });
@@ -385,10 +399,12 @@
                     var coKey = classification + '|' + country;
                     var coOpen = !!openCountry[coKey];
                     var inCountry = inClass.filter(function (r) { return (r.country || '(blank)') === country; });
+                    var coSum = sumGroup(inCountry);
                     html += '<tr data-country="' + coKey + '" style="background:#DCE7F2">' +
                         '<td style="border-bottom:1px solid #eef0f2"></td>' +
                         toggleCell(coOpen, '<b>' + country + '</b>', 16) +
-                        blankCells(7) + sumCells(sumGroup(inCountry)) + '</tr>';
+                        blankCells(dsoIdx - 3) + sumCell(coSum.dso) + blankCells(1) +
+                        sumCells(coSum) + '</tr>';
                     if (!coOpen) { return; }
 
                     var channels = uniqueOrdered(inCountry, function (r) { return r.channel || '(blank)'; });
@@ -397,12 +413,14 @@
                         var chOpen = !!openChannel[chKey];
                         var rows = inCountry.filter(function (r) { return (r.channel || '(blank)') === channel; });
                         // Hide the channel entirely if all amount columns are zero
-                        if (isZeroGroup(sumGroup(rows))) { return; }
+                        var chSum = sumGroup(rows);
+                        if (isZeroGroup(chSum)) { return; }
                         html += '<tr data-channel="' + chKey + '" style="background:#EAF0F6">' +
                             '<td style="border-bottom:1px solid #eef0f2"></td>' +
                             '<td style="border-bottom:1px solid #eef0f2"></td>' +
                             toggleCell(chOpen, channel, 28) +
-                            blankCells(6) + sumCells(sumGroup(rows)) + '</tr>';
+                            blankCells(dsoIdx - 4) + sumCell(chSum.dso) + blankCells(1) +
+                            sumCells(chSum) + '</tr>';
                         if (!chOpen) { return; }
 
                         // Invoice Account level (4th collapsible level), bg #F2F5F9, 40px indent.
@@ -412,16 +430,18 @@
                             var invOpen = !!openInvoiceAcct[invKey];
                             var invRows = rows.filter(function (r) { return (r.invoiceAccount || '(blank)') === invAcct; });
                             // Hide the invoice account entirely if all amount columns are zero
-                            if (isZeroGroup(sumGroup(invRows))) { return; }
+                            var invSum = sumGroup(invRows);
+                            if (isZeroGroup(invSum)) { return; }
                             html += '<tr data-invoice="' + invKey + '" style="background:#F2F5F9">' +
                                 '<td style="border-bottom:1px solid #eef0f2"></td>' +
                                 '<td style="border-bottom:1px solid #eef0f2"></td>' +
                                 '<td style="border-bottom:1px solid #eef0f2"></td>' +
                                 toggleCell(invOpen, invAcct, 40) +
-                                blankCells(5) + sumCells(sumGroup(invRows)) + '</tr>';
+                                blankCells(dsoIdx - 5) + sumCell(invSum.dso) + blankCells(1) +
+                                sumCells(invSum) + '</tr>';
                             if (!invOpen) { return; }
 
-                            // Customer leaf rows. DSO uses dsoCell (7 dp); money uses numCell (2 dp).
+                            // Customer leaf rows. Customer Account + Customer Name shown only when the toggle is ON.
                             invRows.forEach(function (r) {
                                 if ((+r.total || 0) === 0) { return; }   // hide customers with zero Total; group header stays
                                 html += '<tr>' +
@@ -429,10 +449,10 @@
                                     '<td style="border-bottom:1px solid #eef0f2"></td>' +
                                     '<td style="border-bottom:1px solid #eef0f2"></td>' +
                                     '<td style="border-bottom:1px solid #eef0f2"></td>' +
-                                    txtCell(r.custAccount) +
-                                    txtCell(r.custName) +
+                                    txtCell(r.invoiceAccountName) +
+                                    (showCustomer ? (txtCell(r.custAccount) + txtCell(r.custName)) : '') +
                                     txtCell(r.custGroup) +
-                                    dsoCell(r.dso) +              /* DSO value (7 dp) */
+                                    numCell(r.dso) +              /* DSO value (2 dp) */
                                     txtCell(r.terms) +
                                     numCell(r.total) +
                                     numCell(r.balanceDue) +
@@ -449,8 +469,18 @@
             });
 
             html += '</tbody></table>';
-            treeEl.innerHTML = html;
+            treeEl.innerHTML = toggleBar + html;
             treeEl.style.cssText = 'overflow-x:auto;margin-top:8px';
+
+            // Checkbox toggles the two customer columns (tree + watchlist) and re-renders (client-side only).
+            var showCustCb = treeEl.querySelector('.bcrcav-showcust');
+            if (showCustCb) {
+                showCustCb.addEventListener('change', function () {
+                    showCustomer = showCustCb.checked;
+                    render();
+                    renderMgmt(lastData);
+                });
+            }
 
             // One delegated toggle handler per level. stopPropagation on the deeper
             // levels so a click doesn't also toggle the parent row.
@@ -710,10 +740,13 @@
                 '</div>';
 
             // ----- Top risk watchlist (sortable; worst accounts by selected column) -----
+            // Customer + Customer Account columns follow the same showCustomer toggle as the tree.
             var watchAll = rows.filter(function (r) { return clamp0(r.d180) > 0; });
             var sk = mgmtWatchSort.key, sdir = mgmtWatchSort.dir === 'asc' ? 1 : -1;
             function sortVal(r) {
                 if (sk === 'name') { return (r.custName || r.custAccount || '').toLowerCase(); }
+                if (sk === 'invoiceAccount') { return (r.invoiceAccount || '').toLowerCase(); }
+                if (sk === 'invoiceAccountName') { return (r.invoiceAccountName || '').toLowerCase(); }
                 if (sk === 'country') { return (r.country || '').toLowerCase(); }
                 return +r[sk] || 0;
             }
@@ -741,9 +774,10 @@
                 var thN = 'text-align:right;' + thBase;
                 var wHead = '<tr>' +
                     '<th style="' + thL + 'border-top-left-radius:6px;">#</th>' +
-                    '<th data-sort="name" style="' + thL + '">Customer' + arrow('name') + '</th>' +
-                    '<th data-sort="custAccount" style="' + thL + '">Cust Acct' + arrow('custAccount') + '</th>' +
-                    '<th data-sort="invoiceAccount" style="' + thL + '">Invoice Acct' + arrow('invoiceAccount') + '</th>' +
+                    (showCustomer ? '<th data-sort="name" style="' + thL + '">Customer' + arrow('name') + '</th>' : '') +
+                    (showCustomer ? '<th data-sort="custAccount" style="' + thL + '">Customer Account' + arrow('custAccount') + '</th>' : '') +
+                    '<th data-sort="invoiceAccount" style="' + thL + '">Invoice Account' + arrow('invoiceAccount') + '</th>' +
+                    '<th data-sort="invoiceAccountName" style="' + thL + '">Invoice Account Name' + arrow('invoiceAccountName') + '</th>' +
                     '<th data-sort="country" style="' + thL + '">Country' + arrow('country') + '</th>' +
                     '<th data-sort="d180" style="' + thN + '">180+' + arrow('d180') + '</th>' +
                     '<th data-sort="balanceDue" style="' + thN + '">Balance Due' + arrow('balanceDue') + '</th>' +
@@ -756,17 +790,18 @@
                     var name = r.custName || r.custAccount || '(blank)';
                     var dCol = dsoColor(r.dso);
                     var zebra = (i % 2 === 1) ? 'background:#F7F9FB;' : '';
-                    // DSO shown as a colored pill (7 dp, uses fmt7).
+                    // DSO shown as a colored pill (2 dp, uses fmt2).
                     var dsoPill = '<span style="display:inline-block;min-width:46px;text-align:right;padding:2px 8px;border-radius:10px;' +
-                        'background:' + dCol + '1A;color:' + dCol + ';font-weight:600;font-variant-numeric:tabular-nums;">' + fmt7(r.dso) + '</span>';
+                        'background:' + dCol + '1A;color:' + dCol + ';font-weight:600;font-variant-numeric:tabular-nums;">' + fmt2(r.dso) + '</span>';
                     var rankBg = i < 3 ? '#A62B2B' : (i < 6 ? '#E0871E' : '#9AA6B2');
                     var rank = '<span style="display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;' +
                         'background:' + rankBg + ';color:#fff;font:600 11px Segoe UI;">' + (i + 1) + '</span>';
                     return '<tr class="bcrcav-wrow" style="' + zebra + '">' +
                         '<td style="' + tdL + '">' + rank + '</td>' +
-                        '<td style="' + tdL + 'font-weight:600;color:#1B1B1B;">' + name + '</td>' +
-                        '<td style="' + tdL + 'color:#4A4A4A;">' + (r.custAccount || '') + '</td>' +
+                        (showCustomer ? '<td style="' + tdL + 'font-weight:600;color:#1B1B1B;">' + name + '</td>' : '') +
+                        (showCustomer ? '<td style="' + tdL + 'color:#4A4A4A;">' + (r.custAccount || '') + '</td>' : '') +
                         '<td style="' + tdL + 'color:#4A4A4A;">' + (r.invoiceAccount || '') + '</td>' +
+                        '<td style="' + tdL + 'color:#4A4A4A;">' + (r.invoiceAccountName || '') + '</td>' +
                         '<td style="' + tdL + '">' + (r.country || '') + '</td>' +
                         '<td style="' + tdN + heat180(r.d180) + 'border-radius:4px;">' + fmt2(r.d180) + '</td>' +
                         '<td style="' + tdN + '">' + fmt2(r.balanceDue) + '</td>' +
@@ -777,8 +812,11 @@
             } else {
                 watchHtml = '<div style="font:12px Segoe UI;color:#6A737D;">No balances past 180 days.</div>';
             }
+            var watchTitle = showCustomer
+                ? 'Top Risk \u2014 Invoice Accounts By 180+ Balance With Customer Details Included'
+                : 'Top Risk \u2014 Invoice Accounts By 180+ Balance';
             html += '<div style="' + S_BLOCK + '">' +
-                '<div style="' + S_BTITLE + '">Top risk \u2014 customers by 180+ balance</div>' +
+                '<div style="' + S_BTITLE + '">' + watchTitle + '</div>' +
                 '<div style="' + S_BSUB + '">The accounts to chase first \u2014 click a column to re-sort. DSO is colour-coded: green \u2264 30, amber \u2264 60, red over 60 or abnormal.</div>' +
                 watchHtml +
                 '</div>';
@@ -849,7 +887,7 @@
                         mgmtWatchSort.dir = (mgmtWatchSort.dir === 'asc') ? 'desc' : 'asc';
                     } else {
                         mgmtWatchSort.key = k;
-                        mgmtWatchSort.dir = (k === 'name' || k === 'country') ? 'asc' : 'desc';
+                        mgmtWatchSort.dir = (k === 'name' || k === 'country' || k === 'invoiceAccount' || k === 'invoiceAccountName') ? 'asc' : 'desc';
                     }
                     renderMgmt(d);   // re-render with same data
                 });
@@ -859,6 +897,7 @@
         // renderAll: entry point per data load. Resets all expand/collapse state and
         // redraws every section. Called from the AgingData observer below.
         function renderAll(d) {
+            lastData = d;
             customers = d.customers || [];
             openClass = {};
             openCountry = {};
@@ -872,6 +911,9 @@
             render();
             renderMgmt(d);
         }
+        // Last parsed data payload, kept so the customer toggle can re-render the
+        // management watchlist without a new data load.
+        var lastData = null;
         // AgingData is the bound JSON string from the X++ engine. Parse and render on change.
         $dyn.observe(self.AgingData, function (json) {
             if (!json) { return; }

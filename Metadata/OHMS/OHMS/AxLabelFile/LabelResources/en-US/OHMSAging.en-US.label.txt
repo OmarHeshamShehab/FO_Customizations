@@ -36,3 +36,5 @@ CustomerAgingWithBank=Customer Aging with Bank
 Date=Date
 SelectCustomers=Select Customers
 Apply=Apply
+AllCustomersSelected=All customers selected
+CustomersSelectedList=Customers selected (%1): %2

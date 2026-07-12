@@ -2680,7 +2680,7 @@
         <ConnectString />
         <IntegratedSecurity>true</IntegratedSecurity>
       </ConnectionProperties>
-      <rd:DataSourceID>8f06dc75-8636-40c0-a6d2-8782ea9e1c43</rd:DataSourceID>
+      <rd:DataSourceID>43cc3242-fcee-4117-8b40-1618883e72d5</rd:DataSourceID>
     </DataSource>
   </DataSources>
   <DataSets>

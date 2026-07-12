@@ -21,18 +21,18 @@
 //
 // FORM PARAMETERS (3)
 //   1. Date         -> _contract.ParmFromDate()  (the "as-of" date).
-//   2. DSO Number   -> _dsoNumber                (fixed to 30/60/90/180; default 90).
+//   2. DSO Number   -> _dsoNumber                (default 90).
 //   3. Customer     -> query range on CustTable.AccountNum (optional; blank = all).
+//   NOTE: show/hide of Customer Account + Customer Name is handled client-side by
+//   the JS control; the engine always emits those fields.
 //
 // DSO FORMULA (current, validated)
-//   DSO = Total / (InvSum * dsoNumber)
-//     Total   = Balance_due + OpenSO      (the "Total of column" value)
-//     InvSum  = sum of CustInvoiceJour.INVOICEAMOUNT for invoices whose INVOICEDATE
-//               is in [as-of date - dsoNumber days .. as-of date], grouped by
-//               ORDERACCOUNT and joined to CustTable.AccountNum.
+//   DSO = (Balance_due / InvSum) * dsoNumber
+//     Balance_due = sum of CustTransOpen.AMOUNTCUR (the "Balance Due" value)
+//     InvSum      = sum of CustInvoiceJour.INVOICEAMOUNT for invoices whose INVOICEDATE
+//                   is in [as-of date - dsoNumber days .. as-of date], grouped by
+//                   ORDERACCOUNT and joined to CustTable.AccountNum.
 //     Divide-by-zero guarded: returns 0 when InvSum = 0.
-//   NOTE: this makes DSO a small fraction for most customers; it is displayed to
-//   7 decimals (see r2s7) so tiny values remain visible instead of rounding to 0.
 //
 // KNOWN CAVEAT (date literal) - not fixed here, flagged for whoever takes over:
 //   dateStringFrom is built with date2str in DD/MM/YYYY and inlined into the SQL.
@@ -42,16 +42,13 @@
 //   which SQL Server reads unambiguously under any DATEFORMAT.
 //
 // PRECISION HELPERS
-//   r2s(real)  - formats a real to 2 decimals for JSON (money values).
-//   r2s7(real) - formats a real to 7 decimals for JSON (DSO only).
-//   Both strip spaces and force '.' as the decimal separator so the JSON is valid
+//   r2s(real)  - formats a real to 2 decimals for JSON (money values and DSO).
+//   Strips spaces and forces '.' as the decimal separator so the JSON is valid
 //   regardless of the server's regional number format.
 //==============================================================================
 /// <summary>
-/// Server-side data provider for the "Customer Aging with Bank" visual. Builds the
-/// aging and bank dataset into a temp table and serializes it to the JSON payload
-/// consumed by the client-side control. See the handover header above for the DSO
-/// formula, form parameters and known date-locale caveat.
+/// Server-side data provider for the "Customer Aging with Bank" visual. Fills a
+/// temp table and serializes it to the JSON consumed by the JavaScript control.
 /// </summary>
 class BCRCustAgingVisualEngine
 {
@@ -95,13 +92,11 @@ class BCRCustAgingVisualEngine
 				<Name>populate</Name>
 				<Source><![CDATA[
     /// <summary>
-    /// Runs the aging SQL (customer rows) and the bank selects, and inserts every row
-    /// into the temp table via a <c>RecordInsertList</c>. The customer filter and the
-    /// DSO look-back window/multiplier are derived from the supplied query and DSO number.
+    /// Runs the aging and bank queries and fills the temp table.
     /// </summary>
-    /// <param name="_contract">Report contract carrying the as-of date (ParmFromDate).</param>
-    /// <param name="_query">The form's CustTable query; its AccountNum range is the customer filter.</param>
-    /// <param name="_dsoNumber">DSO Number of Days from the form (default 90 if 0/blank).</param>
+    /// <param name = "_contract">Data contract carrying the as-of date.</param>
+    /// <param name = "_query">Customer query; its AccountNum range is the customer filter.</param>
+    /// <param name = "_dsoNumber">DSO Number of Days from the form (default 90 if 0/blank).</param>
     public void populate(BCRCustomerAgingwithBankContract _contract, Query _query, int _dsoNumber)
     {
         // DSO Number from form; default 90 if not entered. Used both as the look-back window
@@ -143,18 +138,13 @@ class BCRCustAgingVisualEngine
         }
         if (inList)
         {
-            accountnum = strFmt(literalStr(" and CUSTTABLE.accountnum in (%1) "), inList);
+            accountnum = strFmt(" and CUSTTABLE.accountnum in (%1) ", inList);
         }
 
         // Text shown top-right of the report ("Customers selected (n): ..." or "All customers").
-        if (custCount > 0)
-        {
-            customerSelectionText = strFmt(literalStr("Customers selected (%1): %2"), custCount, custDisplayList);
-        }
-        else
-        {
-            customerSelectionText = literalStr("All customers selected");
-        }
+        customerSelectionText = custCount > 0
+            ? strFmt("@OHMSAging:CustomersSelectedList", custCount, custDisplayList)
+            : "@OHMSAging:AllCustomersSelected";
 
         // Pre-build a map of AccountNum -> [Country, Channel] from default dimensions,
         // so the Country/Channel tree levels can be filled without extra SQL joins.
@@ -181,7 +171,7 @@ class BCRCustAgingVisualEngine
         // DSO formula notes:
         //   denominator = sum of CustInvoiceJour.InvoiceAmount for invoices whose INVOICEDATE falls in the
         //                 window [as-of date - dsoNumber days  ..  as-of date], per customer (OrderAccount = AccountNum).
-        //   DSO = Total column / (that sum * dsoNumber). Guarded against divide-by-zero (returns 0).
+        //   DSO = (Balance Due / that sum) * dsoNumber. Guarded against divide-by-zero (returns 0).
         //   %4 is reused twice: once for the look-back window, once as the multiplier.
         str sql = strFmt(@"select CUSTTABLE.accountnum,
                         ISNULL(ct.Not_Due,0)        as 'Not_Due',
@@ -201,9 +191,9 @@ class BCRCustAgingVisualEngine
                         (ISNULL(ct.Balance_due,0) + sl.OpenSO) as 'Total of column',
                         BCRCreditInsuranceValue, BCRPromissoryNoteValue, BCRPromissoryNoteType_Custom,
                         CUSTTABLE.CustClassificationId,
-                        -- DSO = Total / (period-invoice-sum * DSO Number (%4)). 0 when no invoices in period.
+                        -- DSO = (Balance Due / period-invoice-sum) * DSO Number (%4). 0 when no invoices in period.
                         case when ISNULL(cij.InvSum,0) = 0 then 0
-                             else (ISNULL(ct.Balance_due,0) + ISNULL(sl.OpenSO,0)) / (cij.InvSum * %4) end as 'DSO',
+                             else (ISNULL(ct.Balance_due,0) / cij.InvSum) * %4 end as 'DSO',
                         CUSTTABLE.INVOICEACCOUNT as 'InvoiceAccount'   -- column 22
                         from CUSTTABLE
                         inner join DirPartyTable
@@ -360,8 +350,8 @@ class BCRCustAgingVisualEngine
 			<Method>
 				<Name>r2s</Name>
 				<Source><![CDATA[
-    // r2s: real -> JSON number string at 2 decimals (money). Strips spaces and forces
-    // '.' as the decimal separator so output is valid JSON regardless of server locale.
+    // r2s: real -> JSON number string at 2 decimals (money and DSO). Strips spaces and
+    // forces '.' as the decimal separator so output is valid JSON regardless of server locale.
     private str r2s(real _r)
     {
         str s = num2str(_r, 0, 2, 1, 0);
@@ -373,31 +363,12 @@ class BCRCustAgingVisualEngine
 ]]></Source>
 			</Method>
 			<Method>
-				<Name>r2s7</Name>
-				<Source><![CDATA[
-    // r2s7: real -> JSON number string at 7 decimals. Used ONLY for the DSO value,
-    // whose result is a small fraction under the current formula and would round to 0
-    // at 2 decimals. The JS side (fmt for DSO) must format to the same 7 decimals.
-    private str r2s7(real _r)
-    {
-        str s = num2str(_r, 0, 7, 1, 0);
-        s = strReplace(s, ' ', '');
-        s = strReplace(s, ',', '.');
-        return s;
-    }
-
-]]></Source>
-			</Method>
-			<Method>
 				<Name>getDataJson</Name>
 				<Source><![CDATA[
     /// <summary>
-    /// Reads the temp table back and returns the full JSON payload consumed by the JS
-    /// control: customers[], banks[], currencyTotals[], grand SAR total, as-of date and
-    /// the customer-selection label. Temp rows are told apart by which key fields are set
-    /// (CustAccount / BankName / neither).
+    /// Reads the temp table back and returns the full JSON payload for the JS control.
     /// </summary>
-    /// <returns>The serialized aging/bank dataset as a JSON string.</returns>
+    /// <returns>JSON string with customers, banks, currency totals, grand total and metadata.</returns>
     public str getDataJson()
     {
         // ----- Customer rows (CustAccount != '') -----
@@ -409,15 +380,20 @@ class BCRCustAgingVisualEngine
             from r
             where r.CustAccount != ''
         {
+            // Invoice Account Name: name of the invoice account (resolved from CustTable).
+            // Blank when the customer has no invoice account set.
+            str invoiceAccountName = r.InvoiceAccount ? CustTable::find(r.InvoiceAccount).name() : '';
+
             str row = '{"classification":"' + this.esc(r.CustClassificationId) + '",'
                     + '"country":"'    + this.esc(r.Country)        + '",'
                     + '"channel":"'     + this.esc(r.Channel)        + '",'
+                    + '"invoiceAccount":"' + this.esc(r.InvoiceAccount) + '",'          // Invoice Account
+                    + '"invoiceAccountName":"' + this.esc(invoiceAccountName) + '",'    // Invoice Account Name
                     + '"custAccount":"' + this.esc(r.CustAccount)    + '",'
-                    + '"invoiceAccount":"' + this.esc(r.InvoiceAccount) + '",'   // Invoice Account
                     + '"custName":"'    + this.esc(r.CustName)       + '",'
                     + '"custGroup":"'   + this.esc(r.CustGroup)      + '",'
                     + '"terms":"'       + this.esc(r.PaymTermId)     + '",'
-                    + '"dso":'          + this.r2s7(r.BCRDSO)        + ','   // DSO value (7 dp)
+                    + '"dso":'          + this.r2s(r.BCRDSO)         + ','   // DSO value (2 dp)
                     + '"total":'        + this.r2s(r.Total)          + ','
                     + '"balanceDue":'   + this.r2s(r.BalanceDue)     + ','
                     + '"notDue":'       + this.r2s(r.BalanceNotDue)  + ','
