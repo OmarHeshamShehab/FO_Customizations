@@ -129,7 +129,10 @@ class BCRCustomerAgingwithBankDP extends SRSReportDataProviderPreProcessTempDB
 
         Connection Con = new Connection();
         Statement Stmt = Con.createStatement();
-        str sql = strFmt(@"select CUSTTABLE.accountnum,
+        // Aging + credit query. Scalars are @params (see SqlParams map below); the
+        // customer IN-list is concatenated as a validated single-quoted fragment.
+        //BP Deviation Documented: report requires a dynamic multi-join aggregate query that cannot be expressed with the X++ query framework.
+        str sql = @"select CUSTTABLE.accountnum,
                         ISNULL(ct.Not_Due,0)        as 'Not_Due',
                         ISNULL(ct.D30,0)            as '30_D',
                         ISNULL(ct.D60,0)            as '60_D',
@@ -151,23 +154,23 @@ class BCRCustomerAgingwithBankDP extends SRSReportDataProviderPreProcessTempDB
                             on CUSTTABLE.Party = DirPartyTable.RECID
                         left join (
                             select CustTrans.ACCOUNTNUM,
-                                sum(case when CustTrans.DUEDATE > '%1'
+                                sum(case when CustTrans.DUEDATE > @FromDate
                                          then custTransOpen.AMOUNTCUR else 0 end) as Not_Due,
-                                sum(case when CustTrans.DUEDATE <= DATEADD(day, 1, '%1')
-                                          and CustTrans.DUEDATE >= DATEADD(day, -30, '%1')
+                                sum(case when CustTrans.DUEDATE <= DATEADD(day, 1, @FromDate)
+                                          and CustTrans.DUEDATE >= DATEADD(day, -30, @FromDate)
                                          then custTransOpen.AMOUNTCUR else 0 end) as D30,
-                                sum(case when CustTrans.DUEDATE < DATEADD(day, -31, '%1')
-                                          and CustTrans.DUEDATE > DATEADD(day, -90, '%1')
+                                sum(case when CustTrans.DUEDATE < DATEADD(day, -31, @FromDate)
+                                          and CustTrans.DUEDATE > DATEADD(day, -90, @FromDate)
                                          then custTransOpen.AMOUNTCUR else 0 end) as D60,
-                                sum(case when CustTrans.DUEDATE <= DATEADD(day, -91, '%1')
-                                          and CustTrans.DUEDATE >= DATEADD(day, -180, '%1')
+                                sum(case when CustTrans.DUEDATE <= DATEADD(day, -91, @FromDate)
+                                          and CustTrans.DUEDATE >= DATEADD(day, -180, @FromDate)
                                          then custTransOpen.AMOUNTCUR else 0 end) as D90,
-                                sum(case when CustTrans.DUEDATE <= DATEADD(day, -180, '%1')
+                                sum(case when CustTrans.DUEDATE <= DATEADD(day, -180, @FromDate)
                                          then custTransOpen.AMOUNTCUR else 0 end) as D180,
                                 sum(custTransOpen.AMOUNTCUR) as Balance_due
                             from CustTrans
                             inner join custTransOpen on custTransOpen.RefRecId = CustTrans.RecId
-                            where CustTrans.DATAAREAID = '%3'
+                            where CustTrans.DATAAREAID = @DataArea
                             group by CustTrans.ACCOUNTNUM
                         ) ct on ct.ACCOUNTNUM = CUSTTABLE.ACCOUNTNUM
                         left join (
@@ -176,13 +179,18 @@ class BCRCustomerAgingwithBankDP extends SRSReportDataProviderPreProcessTempDB
                             where (SalesStatus = 1 or SalesStatus = 2)
                             group by CUSTACCOUNT
                         ) sl on sl.CUSTACCOUNT = CUSTTABLE.ACCOUNTNUM
-                        where CUSTTABLE.DATAAREAID = '%3'
+                        where CUSTTABLE.DATAAREAID = @DataArea
 
-                        %2
+                        " + accountnum + @"
 
-                        ", dateStringFrom, accountnum, curExt());
-        //BP Deviation Documented: report requires a dynamic multi-join aggregate query that cannot be expressed with the X++ query framework.
-        ResultSet result =Stmt.executeQuery(sql);
+                        ";
+
+        // Scalar parameters for the query. The IN-list above is not a scalar and is not
+        // passed here (variable-length list -> concatenated fragment).
+        Map paramMap = SqlParams::create();
+        paramMap.add('FromDate', dateStringFrom);
+        paramMap.add('DataArea', curExt());
+        ResultSet result = Stmt.executeQueryWithParameters(sql, paramMap);
 
         container dimCon;
         while(result.next())

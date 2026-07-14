@@ -34,12 +34,19 @@
 //                   ORDERACCOUNT and joined to CustTable.AccountNum.
 //     Divide-by-zero guarded: returns 0 when InvSum = 0.
 //
+// SQL PARAMETERS
+//   The aging query is run with executeQueryWithParameters. Scalars are passed via
+//   a SqlParams map (not inlined): @FromDate (as-of date string), @DataArea
+//   (dataareaid), @DsoNumber (DSO window + multiplier). The customer IN-list is the
+//   one part that cannot be a scalar parameter (variable-length list), so it stays
+//   built as a validated, single-quoted SQL fragment and concatenated in.
+//
 // KNOWN CAVEAT (date literal) - not fixed here, flagged for whoever takes over:
-//   dateStringFrom is built with date2str in DD/MM/YYYY and inlined into the SQL.
-//   It parses correctly only on a SQL session whose language is dmy. On an mdy
-//   session the same string flips month/day and corrupts BOTH the DSO window and
-//   every aging bucket. If this ever needs hardening, emit 'YYYYMMDD' instead,
-//   which SQL Server reads unambiguously under any DATEFORMAT.
+//   @FromDate carries dateStringFrom, built with date2str in DD/MM/YYYY. It is still
+//   passed as a string, so it parses correctly only on a SQL session whose language
+//   is dmy. On an mdy session the same string flips month/day and corrupts BOTH the
+//   DSO window and every aging bucket. If this ever needs hardening, emit 'YYYYMMDD'
+//   instead, which SQL Server reads unambiguously under any DATEFORMAT.
 //
 // PRECISION HELPERS
 //   r2s(real)  - formats a real to 2 decimals for JSON (money values and DSO).
@@ -106,7 +113,7 @@ class BCRCustAgingVisualEngine
         recordInsertList = new RecordInsertList(tabletmp.TableId, true, true, true, false, true, tabletmp);
 
         _FromDate = _contract.ParmFromDate();
-        // as-of date rendered as DD/MM/YYYY for inlining into the SQL literal.
+        // as-of date rendered as DD/MM/YYYY, passed to SQL as the @FromDate string param.
         // See the class-header caveat: this is locale-sensitive on the SQL side.
         str dateStringFrom = date2str(_FromDate, 321, DateDay::Digits2, DateSeparator::Slash,
                                                       DateMonth::Digits2, DateSeparator::Slash,
@@ -169,12 +176,12 @@ class BCRCustAgingVisualEngine
 
         Connection Con = new Connection();
         Statement Stmt = Con.createStatement();
-        // DSO formula notes:
-        //   denominator = sum of CustInvoiceJour.InvoiceAmount for invoices whose INVOICEDATE falls in the
-        //                 window [as-of date - dsoNumber days  ..  as-of date], per customer (OrderAccount = AccountNum).
-        //   DSO = (Balance Due / that sum) * dsoNumber. Guarded against divide-by-zero (returns 0).
-        //   %4 is reused twice: once for the look-back window, once as the multiplier.
-        str sql = strFmt(@"select CUSTTABLE.accountnum,
+        // Aging + credit + DSO query. Scalars are @params (see SqlParams map below); the
+        // customer IN-list is concatenated as a validated single-quoted fragment.
+        //   @DsoNumber is used twice: as the DSO look-back window and as the multiplier.
+        //   DSO = (Balance Due / period-invoice-sum) * @DsoNumber. Guarded against divide-by-zero.
+        //BP Deviation Documented: report requires a dynamic multi-join aggregate query that cannot be expressed with the X++ query framework.
+        str sql = @"select CUSTTABLE.accountnum,
                         ISNULL(ct.Not_Due,0)        as 'Not_Due',
                         ISNULL(ct.D30,0)            as '30_D',
                         ISNULL(ct.D60,0)            as '60_D',
@@ -192,32 +199,32 @@ class BCRCustAgingVisualEngine
                         (ISNULL(ct.Balance_due,0) + sl.OpenSO) as 'Total of column',
                         BCRCreditInsuranceValue, BCRPromissoryNoteValue, BCRPromissoryNoteType_Custom,
                         CUSTTABLE.CustClassificationId,
-                        -- DSO = (Balance Due / period-invoice-sum) * DSO Number (%4). 0 when no invoices in period.
+                        -- DSO = (Balance Due / period-invoice-sum) * DSO Number. 0 when no invoices in period.
                         case when ISNULL(cij.InvSum,0) = 0 then 0
-                             else (ISNULL(ct.Balance_due,0) / cij.InvSum) * %4 end as 'DSO',
+                             else (ISNULL(ct.Balance_due,0) / cij.InvSum) * @DsoNumber end as 'DSO',
                         CUSTTABLE.INVOICEACCOUNT as 'InvoiceAccount'   -- column 22
                         from CUSTTABLE
                         inner join DirPartyTable
                             on CUSTTABLE.Party = DirPartyTable.RECID
                         left join (
                             select CustTrans.ACCOUNTNUM,
-                                sum(case when CustTrans.DUEDATE > '%1'
+                                sum(case when CustTrans.DUEDATE > @FromDate
                                          then custTransOpen.AMOUNTCUR else 0 end) as Not_Due,
-                                sum(case when CustTrans.DUEDATE <= DATEADD(day, 1, '%1')
-                                          and CustTrans.DUEDATE >= DATEADD(day, -30, '%1')
+                                sum(case when CustTrans.DUEDATE <= DATEADD(day, 1, @FromDate)
+                                          and CustTrans.DUEDATE >= DATEADD(day, -30, @FromDate)
                                          then custTransOpen.AMOUNTCUR else 0 end) as D30,
-                                sum(case when CustTrans.DUEDATE < DATEADD(day, -31, '%1')
-                                          and CustTrans.DUEDATE > DATEADD(day, -90, '%1')
+                                sum(case when CustTrans.DUEDATE < DATEADD(day, -31, @FromDate)
+                                          and CustTrans.DUEDATE > DATEADD(day, -90, @FromDate)
                                          then custTransOpen.AMOUNTCUR else 0 end) as D60,
-                                sum(case when CustTrans.DUEDATE <= DATEADD(day, -91, '%1')
-                                          and CustTrans.DUEDATE >= DATEADD(day, -180, '%1')
+                                sum(case when CustTrans.DUEDATE <= DATEADD(day, -91, @FromDate)
+                                          and CustTrans.DUEDATE >= DATEADD(day, -180, @FromDate)
                                          then custTransOpen.AMOUNTCUR else 0 end) as D90,
-                                sum(case when CustTrans.DUEDATE <= DATEADD(day, -180, '%1')
+                                sum(case when CustTrans.DUEDATE <= DATEADD(day, -180, @FromDate)
                                          then custTransOpen.AMOUNTCUR else 0 end) as D180,
                                 sum(custTransOpen.AMOUNTCUR) as Balance_due
                             from CustTrans
                             inner join custTransOpen on custTransOpen.RefRecId = CustTrans.RecId
-                            where CustTrans.DATAAREAID = '%3'
+                            where CustTrans.DATAAREAID = @DataArea
                             group by CustTrans.ACCOUNTNUM
                         ) ct on ct.ACCOUNTNUM = CUSTTABLE.ACCOUNTNUM
                         left join (
@@ -226,22 +233,29 @@ class BCRCustAgingVisualEngine
                             where (SalesStatus = 1 or SalesStatus = 2)
                             group by CUSTACCOUNT
                         ) sl on sl.CUSTACCOUNT = CUSTTABLE.ACCOUNTNUM
-                        -- DSO denominator. Invoiced amount in the [date - %4 days .. date] window, per order account.
+                        -- DSO denominator. Invoiced amount in the [date - @DsoNumber days .. date] window, per order account.
                         left join (
                             select CustInvoiceJour.ORDERACCOUNT,
                                    sum(CustInvoiceJour.INVOICEAMOUNT) as InvSum
                             from CustInvoiceJour
-                            where CustInvoiceJour.DATAAREAID = '%3'
-                              and CustInvoiceJour.INVOICEDATE <= '%1'
-                              and CustInvoiceJour.INVOICEDATE >= DATEADD(day, -%4, '%1')
+                            where CustInvoiceJour.DATAAREAID = @DataArea
+                              and CustInvoiceJour.INVOICEDATE <= @FromDate
+                              and CustInvoiceJour.INVOICEDATE >= DATEADD(day, -@DsoNumber, @FromDate)
                             group by CustInvoiceJour.ORDERACCOUNT
                         ) cij on cij.ORDERACCOUNT = CUSTTABLE.ACCOUNTNUM
-                        where CUSTTABLE.DATAAREAID = '%3'
+                        where CUSTTABLE.DATAAREAID = @DataArea
 
-                        %2
+                        " + accountnum + @"
 
-                        ", dateStringFrom, accountnum, curExt(), dsoNumber);
-        ResultSet result = Stmt.executeQuery(sql);
+                        ";
+
+        // Scalar parameters for the query. The IN-list above is not a scalar and is not
+        // passed here (variable-length list -> concatenated fragment).
+        Map paramMap = SqlParams::create();
+        paramMap.add('FromDate',  dateStringFrom);
+        paramMap.add('DataArea',  curExt());
+        paramMap.add('DsoNumber', dsoNumber);
+        ResultSet result = Stmt.executeQueryWithParameters(sql, paramMap);
 
         // Map each SQL result column (1-based) into the temp-table fields.
         // Column order MUST match the SELECT list above - do not reorder one without the other.
