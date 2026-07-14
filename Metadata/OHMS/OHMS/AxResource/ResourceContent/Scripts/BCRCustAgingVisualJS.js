@@ -364,17 +364,17 @@
             var toggleBar = '<div style="margin:4px 0 8px 0;font:12px Segoe UI;color:#1B1B1B;">' +
                 '<label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;">' +
                 '<input type="checkbox" class="bcrcav-showcust"' + (showCustomer ? ' checked' : '') + ' style="cursor:pointer;">' +
-                'Show Customer Account &amp; Customer Name</label></div>';
+                'Show Customer Details</label></div>';
 
             // Rebuild columns each render: the two customer columns are optional (showCustomer).
-            COLS = ['Classification', 'Country', 'Channel', 'Invoice Account', 'Invoice Account Name'];
-            if (showCustomer) { COLS.push('Customer Account', 'Customer Name'); }
-            COLS = COLS.concat(['Customer Group', 'DSO', 'Terms of payment',
+            COLS = ['Classification', 'Country', 'Channel', 'Invoice Account'];
+            if (showCustomer) { COLS.push('Customer Account', 'Customer Name', 'Customer Group'); }
+            COLS = COLS.concat(['DSO', 'Terms of payment',
                 'Total', 'Balance Due', 'Balance Not Due', '30 D', '60 D', '90 D', '180 DAnd Over']);
 
             // Column-count helpers for the group header rows.
-            var custCols = showCustomer ? 2 : 0;
-            var leftCount = 8 + custCols;   // non-sum columns
+            var custCols = showCustomer ? 3 : 0;   // Customer Account + Customer Name + Customer Group
+            var leftCount = 6 + custCols;   // non-sum columns
             var dsoIdx = leftCount - 1;  // DSO position within the left columns
 
             var html = '<table style="border-collapse:collapse;width:100%;min-width:1180px">' +
@@ -432,16 +432,17 @@
                             // Hide the invoice account entirely if all amount columns are zero
                             var invSum = sumGroup(invRows);
                             if (isZeroGroup(invSum)) { return; }
+                            var invName = invRows.length ? invRows[0].invoiceAccountName : '';
                             html += '<tr data-invoice="' + invKey + '" style="background:#F2F5F9">' +
                                 '<td style="border-bottom:1px solid #eef0f2"></td>' +
                                 '<td style="border-bottom:1px solid #eef0f2"></td>' +
                                 '<td style="border-bottom:1px solid #eef0f2"></td>' +
-                                toggleCell(invOpen, invAcct, 40) +
+                                toggleCell(invOpen, invAcct + (invName ? ' / ' + invName : ''), 40) +
                                 blankCells(dsoIdx - 5) + sumCell(invSum.dso) + blankCells(1) +
                                 sumCells(invSum) + '</tr>';
                             if (!invOpen) { return; }
 
-                            // Customer leaf rows. Customer Account + Customer Name shown only when the toggle is ON.
+                            // Customer leaf rows. Customer Account + Customer Name + Customer Group shown only when the toggle is ON.
                             invRows.forEach(function (r) {
                                 if ((+r.total || 0) === 0) { return; }   // hide customers with zero Total; group header stays
                                 html += '<tr>' +
@@ -449,9 +450,7 @@
                                     '<td style="border-bottom:1px solid #eef0f2"></td>' +
                                     '<td style="border-bottom:1px solid #eef0f2"></td>' +
                                     '<td style="border-bottom:1px solid #eef0f2"></td>' +
-                                    txtCell(r.invoiceAccountName) +
-                                    (showCustomer ? (txtCell(r.custAccount) + txtCell(r.custName)) : '') +
-                                    txtCell(r.custGroup) +
+                                    (showCustomer ? (txtCell(r.custAccount) + txtCell(r.custName) + txtCell(r.custGroup)) : '') +
                                     numCell(r.dso) +              /* DSO value (2 dp) */
                                     txtCell(r.terms) +
                                     numCell(r.total) +

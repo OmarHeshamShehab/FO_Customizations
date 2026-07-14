@@ -98,7 +98,8 @@ class BCRCustomerAgingwithBankDP extends SRSReportDataProviderPreProcessTempDB
                 {
                     ct = rangeRun.get(tableNum(CustTable));
                     //BP Deviation Documented: SQL value fragment, not a user-facing label.
-                    inList += (inList ? ',' : '') + strFmt("'%1'", ct.AccountNum);
+                    str sq = num2char(39);   // single quote (ASCII 39)
+                    inList += (inList ? ',' : '') + sq + ct.AccountNum + sq;
                 }
             }
         }

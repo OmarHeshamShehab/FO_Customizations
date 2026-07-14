@@ -16,6 +16,7 @@ public class BCRCustomerAgingwithBankQuery extends QueryRun
 			</Method>
 		</Methods>
 	</SourceCode>
+	<Title>@OHMSAging:CustomerAgingWithBank</Title>
 	<DataSources>
 		<AxQuerySimpleRootDataSource>
 			<Name>CustTable</Name>

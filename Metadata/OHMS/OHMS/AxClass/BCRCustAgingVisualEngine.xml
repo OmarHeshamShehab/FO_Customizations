@@ -130,7 +130,8 @@ class BCRCustAgingVisualEngine
                 while (rangeRun.next())
                 {
                     ct = rangeRun.get(tableNum(CustTable));
-                    inList += (inList ? ',' : '') + strFmt("'%1'", ct.AccountNum);
+                    str q = num2char(39);   // single quote
+                    inList += (inList ? ',' : '') + q + ct.AccountNum + q;
                     custDisplayList += (custDisplayList ? ', ' : '') + ct.AccountNum;
                     custCount++;
                 }
@@ -138,7 +139,7 @@ class BCRCustAgingVisualEngine
         }
         if (inList)
         {
-            accountnum = strFmt(" and CUSTTABLE.accountnum in (%1) ", inList);
+            accountnum = strFmt(literalStr(" and CUSTTABLE.accountnum in (%1) "), inList);
         }
 
         // Text shown top-right of the report ("Customers selected (n): ..." or "All customers").
