@@ -57,12 +57,10 @@ class RunBaseDemo extends RunBaseBatch
     {
         IncrementalTable _incrementaltable;
         int x = 1;
-
-        // Start transaction
-        ttsbegin;
-
         try
         {
+            // Start transaction
+            ttsbegin;
             // Select all records for update
             while select forUpdate * from _incrementaltable
             {

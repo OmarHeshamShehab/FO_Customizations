@@ -152,9 +152,9 @@ final class OHMSSalesOrderUploader
 
             rowCount = (worksheet.Dimension.End.Row - worksheet.Dimension.Start.Row) + 1;
 
-            ttsBegin;
             try
             {
+                ttsBegin;
                 for (row = 2; row <= rowCount; row++)
                 {
                     CustAccount excelAccount           = strLRTrim(any2Str(range.get_Item(row, 1).value));
@@ -288,7 +288,6 @@ final class OHMSSalesOrderUploader
             }
             catch (Exception::Error)
             {
-                ttsAbort;
                 throw error(strFmt("Upload failed. Last processed row: %1", row));
             }
         }

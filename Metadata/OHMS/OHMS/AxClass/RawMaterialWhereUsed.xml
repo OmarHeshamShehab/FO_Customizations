@@ -60,12 +60,10 @@ class RawMaterialWhereUsed extends RunBaseBatch
         Description NumL;
         RawMaterialsTable RawMaterialsTable;
         int         Lines = 0;
-
-        // Start transaction
-        ttsbegin;
-
         try
         {
+            // Start transaction
+            ttsbegin;
             // Delete existing records in RawMaterialsTable
             delete_from RawMaterialsTable;
             
@@ -77,7 +75,6 @@ class RawMaterialWhereUsed extends RunBaseBatch
                 order by bom.ItemId
             where bom.BOMId == bomtable.BOMId
             {
-                ttsbegin;
                 Lines++;
     
                 // Populate RawMaterialsTable fields with BOM data
@@ -97,7 +94,6 @@ class RawMaterialWhereUsed extends RunBaseBatch
     
                 // Insert the record into RawMaterialsTable
                 RawMaterialsTable.insert();
-                ttscommit;
             }
 
             // Commit the transaction

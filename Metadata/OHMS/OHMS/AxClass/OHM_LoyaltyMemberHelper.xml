@@ -185,7 +185,6 @@ public class OHM_LoyaltyMemberHelper
         // returned an empty buffer — i.e. no such member exists.
         if (!member.RecId)
         {
-            ttsabort; // release the transaction before throwing
             throw error(strFmt("Loyalty member %1 was not found.", _memberId));
         }
 
@@ -193,7 +192,6 @@ public class OHM_LoyaltyMemberHelper
         // balance below zero.
         if (member.PointsBalance + _points < 0)
         {
-            ttsabort;
             throw error("Resulting points balance cannot be negative.");
         }
 
