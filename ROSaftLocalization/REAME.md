@@ -2,7 +2,7 @@
 
 > **What is this, in plain English:**
 > A Romanian SAF-T (D406) declaration — implemented as a custom localization package
-> on top of the standard **Electronic Reporting (ER)** engine in D365 F&O. 
+> on top of the standard **Electronic Reporting (ER)** engine in D365 F&O.
 > To understand the problem end to end, the **entire architecture of such a package
 > was rebuilt in miniature** on a local 10.0.48 VHD (Contoso USMF):
 > the Microsoft SAF-T base configurations were imported, a custom format was derived
@@ -12,6 +12,42 @@
 > "Generate declaration" menu item does.
 > Along the way, three real production-class ER failures were hit and resolved.
 > This document is the full record: setup, code, tests, and a troubleshooting playbook.
+
+---
+
+## 💡 What is Electronic Reporting (ER)? — in plain English
+
+**Electronic Reporting (ER)** is the built-in engine in D365 F&O for producing (and
+importing) **regulatory and business documents** — tax declarations, audit files,
+payment files, e-invoices — in whatever format an authority demands (XML, TEXT,
+JSON, Excel, Word, PDF).
+
+**The problem it solves:** every country's tax authority wants company data in its
+own specific file structure, and those requirements change every year. Hard-coding
+each format in X++ would mean a code change, build, and deployment for every
+regulatory tweak, in every country. ER replaces that with **configuration instead
+of code**: formats are designed in a visual designer, versioned, and imported —
+no compiler, no downtime.
+
+**How it's structured — three layers:**
+
+1. **Data model** — an abstract, country-neutral description of the business data
+   (e.g. "Standard Audit File (SAF-T)": company info, ledger entries, tax
+   transactions). It knows nothing about F&O tables or file formats.
+2. **Model mapping** — the bridge: binds each model element to real F&O data
+   sources (tables, views, calculations). This is where the data actually comes from.
+3. **Format** — the output definition: the exact file structure (XML elements,
+   text lines, Excel cells), with each leaf bound to a model element.
+
+At run time, ER walks the format, pulls data through the mapping into the model,
+and writes the file. One model can feed many country formats; one format can be
+**derived** from another and inherit its updates.
+
+**Why it matters for this case:** localization vendors build country packages
+(like Romania's D406) as formats **derived from** Microsoft's base model. When a
+Microsoft upgrade ships a new base version, every derived format must be
+**rebased** and re-certified — and that dependency chain is exactly where
+post-upgrade failures are born.
 
 ---
 
@@ -424,4 +460,3 @@ internal final class SAFTRoGenerateController extends SysOperationServiceControl
    ANAF code mappings, submission logs) require deployment.
 6. Ask for a screen-share: run the SAF-T generation **interactively** and capture
    the real error; check ER jobs for the failed batch run.
-```
