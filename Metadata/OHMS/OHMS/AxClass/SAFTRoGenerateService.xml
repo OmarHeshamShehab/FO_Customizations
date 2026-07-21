@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SAFTRoGenerateService</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+using Microsoft.Dynamics365.LocalizationFramework;
+
+/// <summary>
+/// Service that generates the RO SAF-T file through the Electronic reporting framework.
+/// The ER format mapping to run is read from the <c>ROSaftParameters</c> table.
+/// </summary>
+internal final class SAFTRoGenerateService extends SysOperationServiceBase
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>generate</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Generates the SAF-T file by running the configured ER format mapping.
+    /// </summary>
+    /// <param name = "_contract">The dialog contract with the reporting period.</param>
+    public void generate(SAFTRoGenerateContract _contract)
+    {
+        ERFormatMappingId formatMappingId = ROSaftParameters::find().ERFormatMappingRecId;
+
+        if (!formatMappingId)
+        {
+            throw error("@ROSaft:ROSaftParametersNotSetup");
+        }
+
+        ERIFormatMappingRun formatMappingRun =
+            ERObjectsFactory::createFormatMappingRunByFormatMappingId(
+                formatMappingId, 'SAFT_RO.xml');
+
+        if (formatMappingRun.parmShowPromptDialog(true))
+        {
+            formatMappingRun.run();
+        }
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

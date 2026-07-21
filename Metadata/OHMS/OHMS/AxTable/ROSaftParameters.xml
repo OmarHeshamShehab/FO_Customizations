@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxTable xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>ROSaftParameters</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class ROSaftParameters extends common
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>shouldThrowExceptionOnZeroDelete</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Determines if concurrent deletes should throw exception.
+    /// </summary>
+    /// <returns>true, if exception should be thrown; otherwise, false.</returns>
+    public boolean shouldThrowExceptionOnZeroDelete()
+    {
+        return true;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>find</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Finds the singleton parameters record (Key = 0) for the current company.
+    /// Creates the record on first access if it does not exist yet.
+    /// </summary>
+    /// <param name = "_forUpdate">true, if the record must be selected for update; otherwise, false.</param>
+    /// <returns>The <c>ROSaftParameters</c> record of the current company.</returns>
+    public static ROSaftParameters find(boolean _forUpdate = false)
+    {
+        ROSaftParameters parameters;
+
+        parameters.selectForUpdate(_forUpdate);
+        select firstonly parameters
+            index KeyIdx
+            where parameters.Key == 0;
+
+        if (!parameters && !parameters.isTmp())
+        {
+            Company::createParameter(parameters);
+        }
+
+        return parameters;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>update</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Updates the parameters record and flushes the table cache,
+    /// so other sessions do not read stale parameter values from the Found cache.
+    /// </summary>
+    public void update()
+    {
+        super();
+        flush ROSaftParameters;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>delete</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Prevents deletion of the parameters record.
+    /// Parameter tables must always keep their singleton record.
+    /// </summary>
+    public void delete()
+    {
+        throw error("@SYS23721");
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>displayERFormatMappingName</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Displays the name of the selected ER format mapping.
+    /// </summary>
+    /// <returns>The name of the referenced ER format mapping.</returns>
+    [SysClientCacheDataMethod(true)]
+    public display Name displayERFormatMappingName()
+    {
+        ERFormatMappingTable mapping;
+
+        select firstonly Name from mapping
+            where mapping.RecId == this.ERFormatMappingRecId;
+
+        return mapping.Name;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>displayERFormatMappingDescription</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Displays the description of the selected ER format mapping.
+    /// </summary>
+    /// <returns>The description of the referenced ER format mapping.</returns>
+    [SysClientCacheDataMethod(true)]
+    public display Description displayERFormatMappingDescription()
+    {
+        ERFormatMappingTable mapping;
+
+        select firstonly Description from mapping
+            where mapping.RecId == this.ERFormatMappingRecId;
+
+        return mapping.Description;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+	<DeveloperDocumentation>@ROSaft:ROSaftParametersDevDoc</DeveloperDocumentation>
+	<Label>@ROSaft:ROSaftParameters</Label>
+	<SubscriberAccessLevel>
+		<Read>Allow</Read>
+	</SubscriberAccessLevel>
+	<TableGroup>Parameter</TableGroup>
+	<AllowRowVersionChangeTracking>Yes</AllowRowVersionChangeTracking>
+	<CacheLookup>Found</CacheLookup>
+	<ClusteredIndex>KeyIdx</ClusteredIndex>
+	<PrimaryIndex>KeyIdx</PrimaryIndex>
+	<ReplacementKey>KeyIdx</ReplacementKey>
+	<DeleteActions />
+	<FieldGroups>
+		<AxTableFieldGroup>
+			<Name>AutoReport</Name>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>ERFormatMappingRecId</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoLookup</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoIdentification</Name>
+			<AutoPopulate>Yes</AutoPopulate>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>Key</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoSummary</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoBrowse</Name>
+			<Fields />
+		</AxTableFieldGroup>
+	</FieldGroups>
+	<Fields>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt">
+			<Name>Key</Name>
+			<AllowEdit>No</AllowEdit>
+			<AllowEditOnCreate>No</AllowEditOnCreate>
+			<ExtendedDataType>ParametersKey</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Label>@ROSaft:Key</Label>
+			<Visible>No</Visible>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt64">
+			<Name>ERFormatMappingRecId</Name>
+			<ExtendedDataType>ROSaftERFormatMappingRecId</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+		</AxTableField>
+	</Fields>
+	<FullTextIndexes />
+	<Indexes>
+		<AxTableIndex>
+			<Name>KeyIdx</Name>
+			<AlternateKey>Yes</AlternateKey>
+			<Fields>
+				<AxTableIndexField>
+					<DataField>Key</DataField>
+				</AxTableIndexField>
+			</Fields>
+		</AxTableIndex>
+	</Indexes>
+	<Mappings />
+	<Relations />
+	<StateMachines />
+</AxTable>

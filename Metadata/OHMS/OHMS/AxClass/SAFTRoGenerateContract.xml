@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SAFTRoGenerateContract</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Data contract for the RO SAF-T generation dialog.
+/// Holds the reporting period entered by the user.
+/// </summary>
+[DataContract]
+internal final class SAFTRoGenerateContract
+{
+    private FromDate fromDate;
+    private ToDate   toDate;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>parmFromDate</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Gets or sets the start date of the reporting period.
+    /// </summary>
+    /// <param name = "_fromDate">The start date.</param>
+    /// <returns>The start date of the reporting period.</returns>
+    [DataMember, SysOperationLabel(literalStr("@ROSaft:FromDate")), SysOperationDisplayOrder('1')]
+    public FromDate parmFromDate(FromDate _fromDate = fromDate)
+    {
+        fromDate = _fromDate;
+        return fromDate;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmToDate</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Gets or sets the end date of the reporting period.
+    /// </summary>
+    /// <param name = "_toDate">The end date.</param>
+    /// <returns>The end date of the reporting period.</returns>
+    [DataMember, SysOperationLabel(literalStr("@ROSaft:ToDate")), SysOperationDisplayOrder('2')]
+    public ToDate parmToDate(ToDate _toDate = toDate)
+    {
+        toDate = _toDate;
+        return toDate;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

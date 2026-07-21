@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SAFTRoGenerateController</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Controller for the RO SAF-T generation process.
+/// Entry point of the <c>ROSaftGenerate</c> action menu item.
+/// </summary>
+internal final class SAFTRoGenerateController extends SysOperationServiceController
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>construct</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Instantiates the controller bound to the generation service.
+    /// </summary>
+    /// <returns>The controller instance.</returns>
+    public static SAFTRoGenerateController construct()
+    {
+        SAFTRoGenerateController controller = new SAFTRoGenerateController(
+            classStr(SAFTRoGenerateService),
+            methodStr(SAFTRoGenerateService, generate),
+            SysOperationExecutionMode::Synchronous);
+
+        controller.parmDialogCaption("@ROSaft:GenerateDialogCaption");
+        return controller;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Runs the RO SAF-T generation from the menu item.
+    /// </summary>
+    /// <param name = "_args">The menu item arguments.</param>
+    public static void main(Args _args)
+    {
+        SAFTRoGenerateController::construct().startOperation();
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

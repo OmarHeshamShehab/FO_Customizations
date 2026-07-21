@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <BuildTasksDirectory Condition=" '$(BuildTasksDirectory)' == ''">$(MSBuildProgramFiles32)\MSBuild\Microsoft\Dynamics\AX</BuildTasksDirectory>
+    <Model>OHMS</Model>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <OutputPath>bin</OutputPath>
+    <SchemaVersion>2.0</SchemaVersion>
+    <GenerateCrossReferences>True</GenerateCrossReferences>
+    <RunAppCheckerRules>False</RunAppCheckerRules>
+    <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
+    <DeployOnline>False</DeployOnline>
+    <ProjectGuid>{f0b7ec1d-4229-4b81-8e9b-e817e44a9b0a}</ProjectGuid>
+    <Name>ROSaftLocalization</Name>
+    <RootNamespace>ROSaftLocalization</RootNamespace>
+    <StartupType>Class</StartupType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <Configuration>Debug</Configuration>
+    <DBSyncInBuild>True</DBSyncInBuild>
+    <GenerateFormAdaptors>False</GenerateFormAdaptors>
+    <Company>
+    </Company>
+    <Partition>initial</Partition>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DataEntityExpandParentChildRelations>False</DataEntityExpandParentChildRelations>
+    <DataEntityUseLabelTextAsFieldName>False</DataEntityUseLabelTextAsFieldName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Action Menu Items\" />
+    <Folder Include="Classes\" />
+    <Folder Include="Display Menu Items\" />
+    <Folder Include="EDT Integer64s\" />
+    <Folder Include="Forms\" />
+    <Folder Include="Label Files\" />
+    <Folder Include="Menu Extensions\" />
+    <Folder Include="Security Duties\" />
+    <Folder Include="Security Privileges\" />
+    <Folder Include="Security Roles\" />
+    <Folder Include="Tables\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AxClass\SAFTRoGenerateContract">
+      <SubType>Content</SubType>
+      <Name>SAFTRoGenerateContract</Name>
+      <Link>Classes\SAFTRoGenerateContract</Link>
+    </Content>
+    <Content Include="AxClass\SAFTRoGenerateController">
+      <SubType>Content</SubType>
+      <Name>SAFTRoGenerateController</Name>
+      <Link>Classes\SAFTRoGenerateController</Link>
+    </Content>
+    <Content Include="AxClass\SAFTRoGenerateService">
+      <SubType>Content</SubType>
+      <Name>SAFTRoGenerateService</Name>
+      <Link>Classes\SAFTRoGenerateService</Link>
+    </Content>
+    <Content Include="AxEdt\ROSaftERFormatMappingRecId">
+      <SubType>Content</SubType>
+      <Name>ROSaftERFormatMappingRecId</Name>
+      <Link>EDT Integer64s\ROSaftERFormatMappingRecId</Link>
+    </Content>
+    <Content Include="AxForm\ROSaftParameters">
+      <SubType>Content</SubType>
+      <Name>ROSaftParameters</Name>
+      <Link>Forms\ROSaftParameters</Link>
+    </Content>
+    <Content Include="AxLabelFile\ROSaft_en-US">
+      <SubType>Content</SubType>
+      <Name>ROSaft_en-US</Name>
+      <Link>Label Files\ROSaft_en-US</Link>
+    </Content>
+    <Content Include="AxMenuExtension\GeneralLedger.OHMS">
+      <SubType>Content</SubType>
+      <Name>GeneralLedger.OHMS</Name>
+      <Link>Menu Extensions\GeneralLedger.OHMS</Link>
+    </Content>
+    <Content Include="AxMenuItemAction\ROSaftGenerate">
+      <SubType>Content</SubType>
+      <Name>ROSaftGenerate</Name>
+      <Link>Action Menu Items\ROSaftGenerate</Link>
+    </Content>
+    <Content Include="AxMenuItemDisplay\ROSaftParameters">
+      <SubType>Content</SubType>
+      <Name>ROSaftParameters</Name>
+      <Link>Display Menu Items\ROSaftParameters</Link>
+    </Content>
+    <Content Include="AxSecurityDuty\ROSaftMaintainDuty">
+      <SubType>Content</SubType>
+      <Name>ROSaftMaintainDuty</Name>
+      <Link>Security Duties\ROSaftMaintainDuty</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\ROSaftGenerateProcess">
+      <SubType>Content</SubType>
+      <Name>ROSaftGenerateProcess</Name>
+      <Link>Security Privileges\ROSaftGenerateProcess</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\ROSaftParametersMaintain">
+      <SubType>Content</SubType>
+      <Name>ROSaftParametersMaintain</Name>
+      <Link>Security Privileges\ROSaftParametersMaintain</Link>
+    </Content>
+    <Content Include="AxSecurityRole\ROSaftClerk">
+      <SubType>Content</SubType>
+      <Name>ROSaftClerk</Name>
+      <Link>Security Roles\ROSaftClerk</Link>
+    </Content>
+    <Content Include="AxTable\ROSaftParameters">
+      <SubType>Content</SubType>
+      <Name>ROSaftParameters</Name>
+      <Link>Tables\ROSaftParameters</Link>
+    </Content>
+    <Content Include="ROSaft.en-US.label.txt">
+      <SubType>Content</SubType>
+      <Name>ROSaft.en-US.label.txt</Name>
+      <DependentUpon>AxLabelFile\ROSaft_en-US</DependentUpon>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="$(BuildTasksDirectory)\Microsoft.Dynamics.Framework.Tools.BuildTasks.17.0.targets" />
+</Project>
