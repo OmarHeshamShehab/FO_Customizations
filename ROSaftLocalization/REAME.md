@@ -1,16 +1,17 @@
 # 🇷🇴 RO SAF-T (D406) — Electronic Reporting Test Package & Troubleshooting Guide
 
 > **What is this, in plain English:**
-> A customer's Romanian SAF-T (D406) declaration — built by an ISV as a custom package
-> on top of Microsoft's standard **Electronic Reporting (ER)** engine in D365 F&O —
+> A Romanian SAF-T (D406) declaration — implemented as a custom localization package
+> on top of the standard **Electronic Reporting (ER)** engine in D365 F&O —
 > started failing after a Microsoft platform upgrade, with no clear error logs.
-> To prepare for the troubleshooting call with the ISV, we rebuilt the **entire
-> architecture of such a package in miniature** on a local 10.0.48 VHD (Contoso USMF):
-> we imported Microsoft's SAF-T base configurations, derived our own custom format
-> from them (exactly what the ISV did for Romania), designed and mapped it, and wrapped
-> it in a small X++ package (parameters table, form, menu, security, SysOperation stack)
-> that invokes ER from code — the same way the ISV's "Generate declaration" menu item does.
-> Along the way we hit and fixed three real production-class ER failures.
+> To understand the problem end to end, the **entire architecture of such a package
+> was rebuilt in miniature** on a local 10.0.48 VHD (Contoso USMF):
+> the Microsoft SAF-T base configurations were imported, a custom format was derived
+> from them (the same technique used for country localizations), designed and mapped,
+> and wrapped in a small X++ package (parameters table, form, menu, security,
+> SysOperation stack) that invokes ER from code — the same way a real
+> "Generate declaration" menu item does.
+> Along the way, three real production-class ER failures were hit and resolved.
 > This document is the full record: setup, code, tests, and a troubleshooting playbook.
 
 ---
