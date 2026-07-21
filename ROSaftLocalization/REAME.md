@@ -2,8 +2,7 @@
 
 > **What is this, in plain English:**
 > A Romanian SAF-T (D406) declaration — implemented as a custom localization package
-> on top of the standard **Electronic Reporting (ER)** engine in D365 F&O —
-> started failing after a Microsoft platform upgrade, with no clear error logs.
+> on top of the standard **Electronic Reporting (ER)** engine in D365 F&O. 
 > To understand the problem end to end, the **entire architecture of such a package
 > was rebuilt in miniature** on a local 10.0.48 VHD (Contoso USMF):
 > the Microsoft SAF-T base configurations were imported, a custom format was derived
