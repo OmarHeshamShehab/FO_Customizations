@@ -425,6 +425,3 @@ internal final class SAFTRoGenerateController extends SysOperationServiceControl
 6. Ask for a screen-share: run the SAF-T generation **interactively** and capture
    the real error; check ER jobs for the failed batch run.
 ```
-
----
-
