@@ -26,6 +26,7 @@ A curated collection of real-world customizations, tutorials, and best practices
   - [✅ SalesOrderWorkflow (Custom Approval Workflow)](#salesorderworkflow-custom-approval-workflow)
   - [🔌 OHMS Service Integration](#ohms-service-integration)
   - [🎁 LoyaltyMemberIntegration (Custom OData Entity + Action)](#loyaltymemberintegration-custom-odata-entity--action)
+  - [🇷🇴 ROSaftLocalization (RO SAF-T / D406 — ER Integration)](#rosaftlocalization-ro-saf-t--d406--er-integration)
 - [📐 Development Guidelines](#development-guidelines)
 - [🧪 Testing & Verification](#testing--verification)
 - [🤝 Contributing](#contributing)
@@ -66,6 +67,7 @@ All solutions follow Microsoft extensibility guidelines to ensure upgrade safety
 - ✅ **SalesOrderWorkflow** — Custom header-level approval workflow on the Sales order (`SalesTable`), surfacing a Submit button with full approval lifecycle, no over-layering
 - 🔌 **OHMS Service Integration** — Custom integration service module
 - 🎁 **LoyaltyMemberIntegration** — Custom public OData entity with a bound action (`addPoints`) and an unmapped computed field; full create/read/update/invoke flow tested via Postman
+- 🇷🇴 **ROSaftLocalization** — Romanian SAF-T (D406) test package: custom ER format derived from Microsoft's SAF-T data model, wrapped in an X++ parameters/menu/security/SysOperation stack that invokes Electronic Reporting from code
 
 ---
 
@@ -78,6 +80,7 @@ All solutions follow Microsoft extensibility guidelines to ensure upgrade safety
 - 🤖 AI-powered natural language querying of live ERP data
 - 📊 AI-powered embedded revenue intelligence dashboards with Chart.js
 - 📋 Reporting, services, and automation examples
+- 🇷🇴 Electronic Reporting (ER) localization pattern — derived formats invoked from X++
 - 🏗️ Clean architecture and OHMS naming standards
 
 ---
@@ -918,6 +921,85 @@ POST /data/OHM_LoyaltyMembers(dataAreaId='USMF',MemberId='LM-0001')/Microsoft.Dy
 4. ➕ Call the **addPoints** action with `{ "pointsToAdd": 600 }` → tier becomes **Silver**; `{ "pointsToAdd": 900 }` → **Gold**
 5. 🔍 **GET** the single member and confirm `PointsToNextTier` recalculates on each read
 6. 🖥️ Open **Loyalty members** in F&O to see the row, customer link, and tier
+
+---
+
+<a id="rosaftlocalization-ro-saf-t--d406--er-integration"></a>
+### 🇷🇴 ROSaftLocalization (RO SAF-T / D406 — ER Integration)
+
+> 📁 `ROSaftLocalization/` — [📖 Full Documentation](ROSaftLocalization/README.md)
+
+A miniature **Romanian SAF-T (D406) localization package** built to replicate — and troubleshoot — how country localizations sit on top of the standard **Electronic Reporting (ER)** engine. A custom ER format (`SAF-T Format (RO test)`) is derived from Microsoft's Standard Audit File (SAF-T) data model, designed, mapped, and completed; a small X++ package then invokes it from code via `ERObjectsFactory` — the same architecture behind a real "Generate declaration" menu item. Built while diagnosing a production SAF-T failure after a Microsoft platform upgrade, and doubles as a hands-on ER troubleshooting playbook.
+
+#### 🏗️ Architecture
+
+```
+GL menu (RO SAF-T) ──► ROSaftGenerate ──► SAFTRoGenerateController ──► SAFTRoGenerateService
+                                                       │ reads mapping RecId
+                                                       ▼
+                                         ROSaftParameters (singleton table + form)
+                                                       │
+                                                       ▼ ERObjectsFactory::createFormatMappingRunByFormatMappingId
+                                    ER engine ──► SAF-T model mapping (Microsoft, base)
+                                              ──► SAF-T Format (RO test) [derived, Completed]
+                                                       │
+                                                       ▼
+                                                  SAFT_RO.xml
+```
+
+#### 🌟 Key Highlights
+
+- 🇷🇴 **Derived ER format** — `SAF-T Format (RO test)` created under an own configuration provider from Microsoft's SAF-T data model (root: Audit File), the exact technique used by real country localizations (Microsoft ships no native RO SAF-T format)
+- 🧾 **Parameter System Design Pattern** — singleton `ROSaftParameters` table (Key/KeyIdx, Found cache, find/update/delete overrides) storing the ER format mapping RecId
+- 🔍 **Custom `SysTableLookup`** on `ERFormatMappingTable` plus **display methods** showing mapping name/description next to the raw RecId
+- ⚙️ **SysOperation stack** — contract (From/To dates) → service → controller invoking ER via `ERObjectsFactory::createFormatMappingRunByFormatMappingId`
+- 🗂️ **Full ISV-style packaging** — own EDT (extends `RefRecId`), label file, GL submenu, privileges → duty → role, zero BP warnings
+- 🚨 **Three production-class ER failures hit and resolved** — ambiguous default model mapping, country/region mismatch on the legal entity, and Draft-vs-Completed runtime resolution
+- ✅ **End-to-end verified** — generates `SAFT_RO.xml` on 10.0.48 / USMF through the complete menu → code → ER pipeline
+
+#### 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| 📄 Reporting engine | Electronic Reporting (ER) — derived format on Microsoft's SAF-T model |
+| 🗄️ Data | `ROSaftParameters` (Parameter pattern), EDT `ROSaftERFormatMappingRecId` (extends `RefRecId`) |
+| 🧠 Logic | SysOperation (contract / service / controller), `ERObjectsFactory` API (`Microsoft.Dynamics365.LocalizationFramework`) |
+| 🖥️ UI | Form (Simple List) + custom lookup + display methods, GL submenu **RO SAF-T** |
+| 🔐 Security | Privileges → `ROSaftMaintainDuty` → `ROSaftClerk` role |
+
+#### 🧩 D365 AOT Components
+
+| 📦 Component | 🗂️ Type | 📝 Purpose |
+|---|---|---|
+| `ROSaftParameters` | Table | Singleton parameters (Parameter pattern) — stores the ER format mapping RecId; display methods for mapping name/description |
+| `ROSaftERFormatMappingRecId` | EDT (Int64) | Extends `RefRecId`, ReferenceTable = `ERFormatMappingTable` |
+| `ROSaftParameters` | Form | Simple List — setup form with custom `SysTableLookup` on ER format mappings |
+| `SAFTRoGenerateContract` | X++ Class | SysOperation data contract (reporting period) |
+| `SAFTRoGenerateService` | X++ Class | Reads parameters, invokes ER via `ERObjectsFactory::createFormatMappingRunByFormatMappingId` |
+| `SAFTRoGenerateController` | X++ Class | SysOperation controller — entry point of the action menu item |
+| `ROSaftParameters` / `ROSaftGenerate` | Display / Action Menu Items | Open setup form / run generation |
+| `GeneralLedger.OHMS` | Menu Extension | Submenu **RO SAF-T** hosting both menu items |
+| `ROSaftParametersMaintain` / `ROSaftGenerateProcess` | Security Privileges | Cover the two menu items |
+| `ROSaftMaintainDuty` / `ROSaftClerk` | Security Duty / Role | Duty → role chain |
+| `ROSaft` | Label File | All labels (en-US) |
+
+#### ⚠️ Key Technical Gotchas
+
+- 🚫 **Never author under the Microsoft provider** — register an own configuration provider and set it active before deriving; authoring as Microsoft collides with future Microsoft config updates
+- 🔀 **"More than one model mapping exists…"** — the default-mapping flag is **per data-model root**; set `Default for model mapping = Yes` on the config **named in the error**, not a look-alike
+- 🌍 **"Configuration doesn't support the country/region…"** — the selected config's ISO country codes exclude the legal entity's country; verify the right mapping is selected (display methods make this visible at a glance)
+- 📝 **"Expected format mapping has not been found"** — the runtime API resolves only **Completed** versions; the designer's Run works on Drafts and masks this. `Change status > Complete` before invoking from code
+- 🧩 **`RefRecId` EDT must be Int64** — creating the EDT from the *EDT Int* template throws "Data type mismatch" on Extends
+- 🔇 **Silent batch failures** — check **Org admin → ER → Electronic reporting jobs** and batch retry counts; re-run **interactively (Batch = No)** to surface the real error
+
+#### ⚡ Quick Start
+
+1. 📥 Download **GER Configurations – All** from LCS Shared asset library → extract flat to `C:\ERConfigs`
+2. 🗂️ Register a **File system** repository on the Microsoft provider tile → Open → import **SAF-T Financial data model mapping** (latest, pulls the model recursively)
+3. 🏷️ Create an own configuration provider → **Set active** → derive `SAF-T Format (RO test)` from the SAF-T model (root: Audit File) → design → bind → **Complete**
+4. 🔨 Build the **OHMS** model + **Synchronize database** (security is data — sync required)
+5. ⚙️ **General ledger → RO SAF-T → RO SAF-T parameters** → pick the mapping via lookup → Save
+6. 🧪 **General ledger → RO SAF-T → Generate SAF-T declaration (RO)** → OK → ER prompt → OK → `SAFT_RO.xml` downloads
 
 ---
 
