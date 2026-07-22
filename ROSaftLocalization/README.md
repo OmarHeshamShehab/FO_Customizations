@@ -1,4 +1,4 @@
-# 🇷🇴 RO SAF-T (D406) — Electronic Reporting Test Package & Troubleshooting Guide
+# RO SAF-T (D406) — Electronic Reporting Test Package & Troubleshooting Guide
 
 > **What is this, in plain English:**
 > A Romanian SAF-T (D406) declaration — implemented as a custom localization package
