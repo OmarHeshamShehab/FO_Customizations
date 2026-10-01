@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>OHMSPerfTest01QueryStore</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// OHMS performance analyzer. Batch history analysis plus optional Query Store probe.
+/// Output is shown in a centered dialog rather than the Infolog.
+/// </summary>
+class OHMSPerfTest01QueryStore
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Entry point.
+    /// </summary>
+    /// <param name = "_args">Runnable class arguments. Not used.</param>
+    [SuppressBPWarning('CARBPMethodNotReferenced', 'Entry point of a runnable class.')]
+    public static void main(Args _args)
+    {
+        str report;
+
+        report  = OHMSPerfTest01QueryStore::analyzeBatchHistory();
+        report += '\n';
+        report += OHMSPerfTest01QueryStore::probeQueryStore();
+
+        if (!report)
+        {
+            report = 'No output produced.';
+        }
+
+        Box::info(report, 'OHMS Performance Analyzer');
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>analyzeBatchHistory</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Aggregates batch job durations and flags regressions.
+    /// Uses only application tables, so it works on dev, sandbox and production.
+    /// </summary>
+    /// <returns>The formatted report text.</returns>
+    private static str analyzeBatchHistory()
+    {
+        BatchJobHistory bjh;
+        Map             stats = new Map(Types::String, Types::Container);
+        MapEnumerator   me;
+        utcdatetime     fromDate;
+        utcdatetime     splitDate;
+        utcdatetime     emptyDate = DateTimeUtil::minValue();
+        str             caption;
+        str             rpt;
+        container       c;
+        container       rows;
+        container       row;
+        container       best;
+        int             daysBack   = 90;
+        int             splitDays  = 30;
+        int             topN       = 12;
+        int64           maxSaneSec = 86400;   // 24h - longer spans are VM downtime artifacts
+        int             i, j, bestIdx;
+        int             cnt, recentCnt, olderCnt;
+        int64           durSecs, tot, recentTot, olderTot, minS, maxS;
+        real            recentAvg, olderAvg, avgAll;
+        int             totalRows, skipped;
+
+        fromDate  = DateTimeUtil::addDays(DateTimeUtil::utcNow(), -daysBack);
+        splitDate = DateTimeUtil::addDays(DateTimeUtil::utcNow(), -splitDays);
+
+        rpt = '===== BATCH JOB PERFORMANCE =====\n\n';
+
+        while select Caption, StartDateTime, EndDateTime from bjh
+            where bjh.StartDateTime >= fromDate
+        {
+            if (bjh.EndDateTime == emptyDate || bjh.StartDateTime == emptyDate)
+            {
+                continue;
+            }
+
+            durSecs = DateTimeUtil::getDifference(bjh.EndDateTime, bjh.StartDateTime);
+
+            if (durSecs < 0)
+            {
+                continue;
+            }
+
+            if (durSecs > maxSaneSec)
+            {
+                skipped++;
+                continue;
+            }
+
+            caption = bjh.Caption ? bjh.Caption : '(no caption)';
+            totalRows++;
+
+            if (stats.exists(caption))
+            {
+                c = stats.lookup(caption);
+            }
+            else
+            {
+                c = [0, 0, 999999999, 0, 0, 0, 0, 0];
+            }
+
+            cnt       = conPeek(c, 1) + 1;
+            tot       = conPeek(c, 2) + durSecs;
+            minS      = min(conPeek(c, 3), durSecs);
+            maxS      = max(conPeek(c, 4), durSecs);
+            recentCnt = conPeek(c, 5);
+            recentTot = conPeek(c, 6);
+            olderCnt  = conPeek(c, 7);
+            olderTot  = conPeek(c, 8);
+
+            if (bjh.StartDateTime >= splitDate)
+            {
+                recentCnt++;
+                recentTot += durSecs;
+            }
+            else
+            {
+                olderCnt++;
+                olderTot += durSecs;
+            }
+
+            stats.insert(caption,
+                [cnt, tot, minS, maxS, recentCnt, recentTot, olderCnt, olderTot]);
+        }
+
+        if (!totalRows)
+        {
+            return rpt + strFmt('No completed batch jobs in the last %1 days.\n', daysBack);
+        }
+
+        rpt += strFmt('Window        : last %1 days\n', daysBack);
+        rpt += strFmt('Executions    : %1\n', totalRows);
+        rpt += strFmt('Distinct jobs : %1\n', stats.elements());
+        rpt += strFmt('Excluded      : %1 runs over 24h (VM downtime artifacts)\n\n', skipped);
+
+        me = new MapEnumerator(stats);
+        while (me.moveNext())
+        {
+            c    = me.currentValue();
+            rows += [[conPeek(c, 2), me.currentKey(), conPeek(c, 1), conPeek(c, 3),
+                      conPeek(c, 4), conPeek(c, 5), conPeek(c, 6),
+                      conPeek(c, 7), conPeek(c, 8)]];
+        }
+
+        // Selection sort, descending by total seconds.
+        for (i = 1; i <= conLen(rows) && i <= topN; i++)
+        {
+            bestIdx = i;
+            best    = conPeek(rows, i);
+
+            for (j = i + 1; j <= conLen(rows); j++)
+            {
+                row = conPeek(rows, j);
+                if (conPeek(row, 1) > conPeek(best, 1))
+                {
+                    best    = row;
+                    bestIdx = j;
+                }
+            }
+
+            if (bestIdx != i)
+            {
+                row  = conPeek(rows, i);
+                rows = conPoke(rows, i, best);
+                rows = conPoke(rows, bestIdx, row);
+            }
+        }
+
+        rpt += '--- Top jobs by total runtime ---\n\n';
+
+        for (i = 1; i <= conLen(rows) && i <= topN; i++)
+        {
+            row       = conPeek(rows, i);
+            tot       = conPeek(row, 1);
+            caption   = conPeek(row, 2);
+            cnt       = conPeek(row, 3);
+            minS      = conPeek(row, 4);
+            maxS      = conPeek(row, 5);
+            recentCnt = conPeek(row, 6);
+            recentTot = conPeek(row, 7);
+            olderCnt  = conPeek(row, 8);
+            olderTot  = conPeek(row, 9);
+
+            avgAll = tot;
+            avgAll = avgAll / cnt;
+
+            rpt += strFmt('%1\n', subStr(caption, 1, 70));
+            rpt += strFmt('   runs %1 | total %2s | avg %3s | min %4s | max %5s\n',
+                        cnt,
+                        tot,
+                        num2str(avgAll, 0, 0, 1, 0),
+                        minS,
+                        maxS);
+
+            if (recentCnt > 0 && olderCnt > 0)
+            {
+                recentAvg = recentTot;
+                recentAvg = recentAvg / recentCnt;
+                olderAvg  = olderTot;
+                olderAvg  = olderAvg / olderCnt;
+
+                if (olderAvg > 0 && recentAvg > olderAvg * 1.5)
+                {
+                    rpt += strFmt('   >> REGRESSION: last %1d avg %2s vs prior avg %3s\n',
+                                splitDays,
+                                num2str(recentAvg, 0, 0, 1, 0),
+                                num2str(olderAvg,  0, 0, 1, 0));
+                }
+            }
+
+            rpt += '\n';
+        }
+
+        return rpt;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>probeQueryStore</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Checks whether the AOS SQL account can read Query Store.
+    /// Failure here is expected on some environments and is not fatal.
+    /// </summary>
+    /// <returns>The formatted report text.</returns>
+    private static str probeQueryStore()
+    {
+        Connection  conn;
+        Statement   stmt;
+        ResultSet   rs;
+        Map         params;
+        str         sqlState;
+        str         sqlTop;
+        str         rpt;
+        int         rowCount;
+        int         topRows = 10;
+
+        SqlStatementExecutePermission perm;
+
+        rpt = '===== QUERY STORE PROBE =====\n\n';
+
+        sqlState = 'SELECT actual_state_desc FROM sys.database_query_store_options';
+
+        perm = new SqlStatementExecutePermission(sqlState);
+        perm.assert();
+        try
+        {
+            conn   = new Connection();
+            stmt   = conn.createStatement();
+            params = SqlParams::create();
+            rs     = stmt.executeQueryWithParameters(sqlState, params);
+
+            if (rs.next())
+            {
+                rpt += strFmt('State : %1\n\n', rs.getString(1));
+            }
+            else
+            {
+                rpt += 'State : no row returned\n\n';
+            }
+        }
+        catch
+        {
+            CodeAccessPermission::revertAssert();
+            return rpt + 'Not readable - AOS account lacks VIEW DATABASE STATE.\n';
+        }
+        CodeAccessPermission::revertAssert();
+
+        sqlTop = 'SELECT TOP (@topRows) '
+               + 'CAST(rs.avg_duration/1000 AS INT) AS avg_ms, '
+               + 'CAST(rs.count_executions AS INT) AS execs, '
+               + 'qt.query_sql_text '
+               + 'FROM sys.query_store_runtime_stats rs '
+               + 'JOIN sys.query_store_plan p ON p.plan_id = rs.plan_id '
+               + 'JOIN sys.query_store_query q ON q.query_id = p.query_id '
+               + 'JOIN sys.query_store_query_text qt ON qt.query_text_id = q.query_text_id '
+               + 'ORDER BY rs.avg_duration DESC';
+
+        perm = new SqlStatementExecutePermission(sqlTop);
+        perm.assert();
+        try
+        {
+            conn   = new Connection();
+            stmt   = conn.createStatement();
+            params = SqlParams::create();
+            params.add('topRows', topRows);
+            rs     = stmt.executeQueryWithParameters(sqlTop, params);
+
+            rpt += '--- Slowest statements ---\n\n';
+
+            while (rs.next())
+            {
+                rowCount++;
+                rpt += strFmt('%1 ms | %2 execs\n', rs.getInt(1), rs.getInt(2));
+                rpt += strFmt('   %1\n\n', subStr(rs.getString(3), 1, 120));
+            }
+        }
+        catch
+        {
+            CodeAccessPermission::revertAssert();
+            return rpt + 'Query Store views not readable on this environment.\n';
+        }
+        CodeAccessPermission::revertAssert();
+
+        return rpt + strFmt('Rows returned: %1\n', rowCount);
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

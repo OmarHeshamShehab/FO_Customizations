@@ -1,0 +1,1125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>TableRelationExporter</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
+using Microsoft.Dynamics.AX.Metadata.MetaModel;
+
+/// <summary>
+/// Table relation exporter for Dynamics 365 Finance and Operations.
+///
+/// Exports table relations from the runtime data dictionary as:
+///   1. A colorful Excel workbook
+///        - Relations sheet: one row per relation field link, with table and relation properties
+///        - Summary sheet  : totals, table type breakdown and color legend
+///   2. An ERD diagram (interactive HTML page rendered with Cytoscape.js, opens in any browser)
+///
+/// Works on any environment: the runtime dictionary contains all standard and custom
+/// tables from every deployed model, including relations added by table extensions.
+///
+/// Table types:
+///   Regular  = physical SQL table (matches SQLDICTIONARY / sys.tables)
+///   Derived  = inherits from another table, data stored in the root table
+///   Map      = code template, no SQL storage
+///   TempDB / InMemory = temporary tables, no permanent SQL storage
+///   View     = view / data entity (only when "Include views" is Yes)
+/// </summary>
+class TableRelationExporter
+{
+    // Maximum number of tables in the ERD. Larger diagrams become unreadable or fail to render.
+    private const int MaxErdTables    = 300;
+
+    // Above this number of Excel rows, fixed column widths are used instead of AutoFit (performance).
+    private const int AutoFitRowLimit = 20000;
+
+    // Number of visible columns on the Relations sheet (A..R).
+    private const int ColumnCount     = 18;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    // =====================================================================
+    //  ENTRY POINT
+    // =====================================================================
+
+    /// <summary>
+    /// Shows the dialog, validates input, collects relation data once and runs the selected exports.
+    /// </summary>
+    public static void main(Args _args)
+    {
+        #AviFiles                                           // macro library with progress animations
+        Dialog               dlg;
+        DialogGroup          grpFilter, grpClassify, grpExport;
+        DialogField          fldExportAll, fldPrefixes, fldIncludeViews, fldCustomPrefixes, fldExcel, fldErd;
+        boolean              exportAllTables, includeViews, doExcel, doErd;
+        List                 filterPrefixes, customPrefixes;
+        List                 relationRows = new List(Types::Container);       // one container per Excel row
+        Map                  typeCounts   = new Map(Types::String, Types::Integer);   // table type -> count
+        container            stats;     // [tableCount, standardCount, customCount, systemCount, relationCount]
+        int                  tableCount, stepCount, stepNo;
+        int64                startTicks;
+        str                  filterText;
+        SysOperationProgress progress;
+
+        // ---------- 1. Dialog ----------
+        dlg = new Dialog('Table relation exporter');
+
+        // Which tables to export: all, or only names starting with one of the prefixes
+        grpFilter       = dlg.addGroup('Filter');
+        grpFilter.columns(1);
+        fldExportAll    = dlg.addField(extendedTypeStr(NoYesId), 'Export all tables',
+                            'Yes = ignore the prefixes and export every table.');
+        fldPrefixes     = dlg.addField(extendedTypeStr(Description255), 'Table name prefixes',
+                            'Comma-separated, used when "Export all tables" is No. Example: Cust,Vend');
+        fldIncludeViews = dlg.addField(extendedTypeStr(NoYesId), 'Include views / data entities',
+                            'No = only tables (faster, smaller file).');
+        fldExportAll.value(NoYes::No);
+        fldIncludeViews.value(NoYes::No);
+
+        // How to recognize custom tables (D365 has no reliable "custom" flag across environments)
+        grpClassify       = dlg.addGroup('Standard / custom classification');
+        grpClassify.columns(1);
+        fldCustomPrefixes = dlg.addField(extendedTypeStr(Description255), 'Custom table prefixes',
+                            'Comma-separated prefixes of your own tables. Example: ABC,XYZ. Empty = no classification.');
+
+        // Output options
+        grpExport = dlg.addGroup('Export options');
+        grpExport.columns(1);
+        fldExcel  = dlg.addField(extendedTypeStr(NoYesId), 'Export to Excel');
+        fldErd    = dlg.addField(extendedTypeStr(NoYesId), 'Export ERD diagram (HTML)');
+        fldExcel.value(NoYes::Yes);
+        fldErd.value(NoYes::Yes);
+
+        if (!dlg.run())
+        {
+            return;
+        }
+
+        // ---------- 2. Validate input ----------
+        exportAllTables = fldExportAll.value();
+        includeViews    = fldIncludeViews.value();
+        filterPrefixes  = exportAllTables ? new List(Types::String)
+                                          : TableRelationExporter::parsePrefixes(fldPrefixes.value());
+        customPrefixes  = TableRelationExporter::parsePrefixes(fldCustomPrefixes.value());
+        doExcel         = fldExcel.value();
+        doErd           = fldErd.value() && !exportAllTables;     // ERD never runs for all tables
+        filterText      = exportAllTables ? 'All tables' : strFmt('Prefixes: %1', fldPrefixes.value());
+
+        if (!exportAllTables && filterPrefixes.elements() == 0)
+        {
+            throw error('Enter at least one table name prefix, or set "Export all tables" to Yes.');
+        }
+
+        if (exportAllTables && fldErd.value())
+        {
+            warning('ERD is not generated for all tables (too large). Use table name prefixes for an ERD.');
+        }
+
+        // Stop before the (slow) table scan when nothing will be produced
+        if (!doExcel && !doErd)
+        {
+            warning('Nothing selected to export.');
+            return;
+        }
+
+        // Steps shown in progress and Infolog: collect + selected exports
+        stepCount = 1 + (doExcel ? 1 : 0) + (doErd ? 1 : 0);
+
+        // ---------- 3. Progress bar ----------
+        // Note: the web client shows only "Please wait" for synchronous code;
+        // the step lines written to the Infolog below show what happened and how long it took.
+        progress = new SysOperationProgress();
+        progress.setCaption('Table relation exporter');
+        progress.setAnimation(#AviUpdate);
+
+        try
+        {
+            // ---------- 4. Collect relation data once (shared by both exports) ----------
+            stepNo++;
+            startTicks = WinAPIServer::getTickCount();
+
+            stats = TableRelationExporter::collectRelationData(filterPrefixes, customPrefixes, includeViews,
+                        relationRows, typeCounts, progress,
+                        strFmt('Step %1 of %2: Reading tables', stepNo, stepCount));
+            tableCount = conPeek(stats, 1);
+
+            info(strFmt('Step %1 of %2: read %3 tables (%4), %5 relations, %6 rows in %7 s.',
+                stepNo, stepCount, tableCount,
+                TableRelationExporter::typeCountsText(typeCounts),
+                conPeek(stats, 5), relationRows.elements(),
+                (WinAPIServer::getTickCount() - startTicks) div 1000));
+
+            if (tableCount == 0)
+            {
+                warning(strFmt('No tables found for: %1', filterText));
+                return;     // finally block closes the progress window
+            }
+
+            // ---------- 5. Run the selected exports ----------
+            if (doExcel)
+            {
+                stepNo++;
+                startTicks = WinAPIServer::getTickCount();
+
+                TableRelationExporter::generateExcelFile(relationRows, filterText, stats, typeCounts,
+                    progress, strFmt('Step %1 of %2: Building Excel file', stepNo, stepCount));
+
+                info(strFmt('Step %1 of %2: Excel file built in %3 s.',
+                    stepNo, stepCount, (WinAPIServer::getTickCount() - startTicks) div 1000));
+            }
+
+            if (doErd)
+            {
+                stepNo++;
+                TableRelationExporter::generateErdFile(relationRows, filterText,
+                    progress, strFmt('Step %1 of %2: Building ERD diagram', stepNo, stepCount));
+            }
+        }
+        finally
+        {
+            progress.kill();        // always close the progress window, also on errors / early return
+        }
+
+        info(strFmt('Done. %1 tables (%2 standard, %3 custom, %4 system), %5 relations, %6 rows.',
+            tableCount, conPeek(stats, 2), conPeek(stats, 3), conPeek(stats, 4),
+            conPeek(stats, 5), relationRows.elements()));
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>startProgressStep</Name>
+				<Source><![CDATA[
+    // =====================================================================
+    //  HELPERS
+    // =====================================================================
+
+    /// <summary>
+    /// Resets the progress bar for a new step.
+    /// </summary>
+    private static void startProgressStep(SysOperationProgress _progress, str _stepText, int _total)
+    {
+        _progress.setText(_stepText);
+        _progress.setTotal(_total);
+        _progress.setCount(0);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parsePrefixes</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Splits a comma-separated text into a list of trimmed, non-empty prefixes.
+    /// </summary>
+    private static List parsePrefixes(str _text)
+    {
+        List            result     = new List(Types::String);
+        ListEnumerator  enumerator = strSplit(_text, ',').getEnumerator();
+        str             prefix;
+
+        while (enumerator.moveNext())
+        {
+            prefix = strLTrim(strRTrim(enumerator.current()));
+
+            if (prefix)
+            {
+                result.addEnd(prefix);
+            }
+        }
+
+        return result;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>matchesAnyPrefix</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Returns true if the name starts with any prefix in the list.
+    /// X++ string comparison (==) is case-insensitive, so 'cust' matches 'CustTable'.
+    /// </summary>
+    private static boolean matchesAnyPrefix(str _name, List _prefixes)
+    {
+        ListEnumerator  enumerator;
+        str             prefix;
+
+        if (!_prefixes || _prefixes.elements() == 0)
+        {
+            return false;
+        }
+
+        enumerator = _prefixes.getEnumerator();
+
+        while (enumerator.moveNext())
+        {
+            prefix = enumerator.current();
+
+            if (subStr(_name, 1, strLen(prefix)) == prefix)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>tableTypeText</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Returns a readable table type. Order matters:
+    /// Map and View first (no storage), then Derived (stored in root table), then storage type.
+    /// If isMap() does not compile, use: _dictTable.tableType() == TableType::Map
+    /// </summary>
+    private static str tableTypeText(SysDictTable _dictTable)
+    {
+        if (_dictTable.isMap())
+        {
+            return 'Map';                       // template only, no SQL storage
+        }
+
+        if (_dictTable.isView())
+        {
+            return 'View';                      // view or data entity
+        }
+
+        if (_dictTable.extends())
+        {
+            return 'Derived';                   // inheritance, data stored in root table
+        }
+
+        switch (_dictTable.tableType())
+        {
+            case TableType::InMemory: return 'InMemory';
+            case TableType::TempDB:   return 'TempDB';
+        }
+
+        return 'Regular';                       // physical SQL table
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>incTypeCount</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Adds 1 to the counter of the given table type.
+    /// </summary>
+    private static void incTypeCount(Map _typeCounts, str _tableType)
+    {
+        int current = _typeCounts.exists(_tableType) ? _typeCounts.lookup(_tableType) : 0;
+
+        _typeCounts.insert(_tableType, current + 1);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>typeCountsText</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Returns the table type counts as text, e.g. "Regular 15314, Derived 353, Map 385".
+    /// </summary>
+    private static str typeCountsText(Map _typeCounts)
+    {
+        MapEnumerator   enumerator = _typeCounts.getEnumerator();
+        str             result;
+
+        while (enumerator.moveNext())
+        {
+            result += (result ? ', ' : '') + strFmt('%1 %2', enumerator.currentKey(), enumerator.currentValue());
+        }
+
+        return result;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>clrText</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Converts a CLR value (e.g. a metadata enum) to text; empty when null.
+    /// </summary>
+    private static str clrText(System.Object _value)
+    {
+        return _value == null ? '' : _value.ToString();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getAxTable</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Reads the table metadata (AxTable). Returns null when not available.
+    /// </summary>
+    private static AxTable getAxTable(str _tableName)
+    {
+        AxTable axTable;
+
+        try
+        {
+            axTable = Microsoft.Dynamics.Ax.Xpp.MetadataSupport::GetTable(_tableName);
+        }
+        catch (Exception::CLRError)
+        {
+            axTable = null;
+        }
+
+        return axTable;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>relationProperties</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Returns relation properties from metadata:
+    /// [cardinality, relatedCardinality, relationshipType, onDelete, validate, role, relatedRole, edtRelation].
+    /// Empty values when the relation is not in the base table metadata (e.g. added by a table extension).
+    /// </summary>
+    private static container relationProperties(AxTable _axTable, str _relationName)
+    {
+        AxTableRelation axRelation;
+
+        if (_axTable == null)
+        {
+            return ['', '', '', '', '', '', '', ''];
+        }
+
+        try
+        {
+            axRelation = _axTable.Relations.getObject(_relationName);
+        }
+        catch (Exception::CLRError)
+        {
+            axRelation = null;
+        }
+
+        if (axRelation == null)
+        {
+            return ['', '', '', '', '', '', '', ''];
+        }
+
+        return [TableRelationExporter::clrText(axRelation.Cardinality),
+                TableRelationExporter::clrText(axRelation.RelatedTableCardinality),
+                TableRelationExporter::clrText(axRelation.RelationshipType),
+                TableRelationExporter::clrText(axRelation.OnDelete),
+                TableRelationExporter::clrText(axRelation.Validate),
+                axRelation.Role,
+                axRelation.RelatedTableRole,
+                TableRelationExporter::clrText(axRelation.EDTRelation)];
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>collectRelationData</Name>
+				<Source><![CDATA[
+    // =====================================================================
+    //  DATA COLLECTION
+    // =====================================================================
+
+    /// <summary>
+    /// Loops through all tables in the runtime dictionary and adds one row per relation field link.
+    ///
+    /// Row layout (container):
+    ///   1 table            2 label             3 tableGroup        4 tableType        5 origin
+    ///   6 relationName     7 relatedTable      8 field             9 relatedFieldOrValue
+    ///  10 constraintType  11 cardinality      12 relatedCardinality 13 relationshipType
+    ///  14 onDelete        15 validate         16 role             17 relatedRole     18 edtRelation
+    ///  19 tableGroupNo (internal, used for alternating colors - not written to Excel)
+    ///
+    /// Tables without relations get one row with empty relation columns.
+    /// </summary>
+    /// <returns>[tableCount, standardCount, customCount, systemCount, relationCount]</returns>
+    private static container collectRelationData(List _filterPrefixes, List _customPrefixes, boolean _includeViews,
+        List _relationRows, Map _typeCounts, SysOperationProgress _progress, str _stepText)
+    {
+        Dictionary      dictionary = new Dictionary();
+        SysDictTable    dictTable;
+        SysDictRelation dictRelation;
+        AxTable         axTable;
+        TableId         tableId, relatedTableId;
+        str             tableName, tableLabel, tableGroup, tableType, origin;
+        str             relationName, relatedTableName, fieldText, relatedText, constraintType;
+        container       props;
+        int             tableIdx, relationIdx, lineIdx, relationCnt, lineCnt, tableGroupNo;
+        int             standardCount, customCount, systemCount, relationCount;
+        int             totalTables = dictionary.tableCnt();
+
+        TableRelationExporter::startProgressStep(_progress, _stepText, totalTables);
+
+        for (tableIdx = 1; tableIdx <= totalTables; tableIdx++)
+        {
+            _progress.incCount();                               // advance bar for every table scanned
+
+            tableId   = dictionary.tableCnt2Id(tableIdx);
+            dictTable = new SysDictTable(tableId);
+
+            if (!dictTable)
+            {
+                continue;
+            }
+
+            tableName = dictTable.name();
+
+            // Prefix filter (empty list = all tables)
+            if (_filterPrefixes.elements() > 0
+                && !TableRelationExporter::matchesAnyPrefix(tableName, _filterPrefixes))
+            {
+                continue;
+            }
+
+            // Skip views / data entities unless requested
+            if (!_includeViews && dictTable.isView())
+            {
+                continue;
+            }
+
+            // ----- Origin: System / Custom / Standard -----
+            if (dictTable.isSystemTable())
+            {
+                origin = 'System';
+                systemCount++;
+            }
+            else if (TableRelationExporter::matchesAnyPrefix(tableName, _customPrefixes))
+            {
+                origin = 'Custom';
+                customCount++;
+            }
+            else
+            {
+                origin = _customPrefixes.elements() ? 'Standard' : 'Not classified';
+                standardCount++;
+            }
+
+            // ----- Table properties -----
+            tableLabel = dictTable.label();
+            tableGroup = enum2Str(dictTable.tableGroup());
+            tableType  = TableRelationExporter::tableTypeText(dictTable);
+            TableRelationExporter::incTypeCount(_typeCounts, tableType);
+
+            _progress.setText(strFmt('%1 - %2', _stepText, tableName));   // show current table
+
+            tableGroupNo++;                                     // used for alternating colors per table
+            relationCnt = dictTable.relationCnt();
+
+            if (relationCnt == 0)
+            {
+                _relationRows.addEnd([tableName, tableLabel, tableGroup, tableType, origin,
+                                      '', '', '', '', '',
+                                      '', '', '', '', '', '', '', '',
+                                      tableGroupNo]);
+                continue;
+            }
+
+            axTable = TableRelationExporter::getAxTable(tableName);   // metadata read only when needed
+
+            // ----- Relations -----
+            for (relationIdx = 1; relationIdx <= relationCnt; relationIdx++)
+            {
+                relationName = dictTable.relation(relationIdx);       // relation name by index
+                dictRelation = new SysDictRelation(tableId);
+
+                if (!dictRelation.loadNameRelation(relationName))
+                {
+                    continue;
+                }
+
+                relationCount++;
+                relatedTableId   = dictRelation.externTable();        // related (parent) table
+                relatedTableName = tableId2Name(relatedTableId);
+                props            = TableRelationExporter::relationProperties(axTable, relationName);
+                lineCnt          = dictRelation.lines();
+
+                if (lineCnt == 0)
+                {
+                    _relationRows.addEnd([tableName, tableLabel, tableGroup, tableType, origin,
+                                          relationName, relatedTableName, '', '', '(no fields)']
+                                          + props + [tableGroupNo]);
+                    continue;
+                }
+
+                // ----- One row per field link (constraint) -----
+                for (lineIdx = 1; lineIdx <= lineCnt; lineIdx++)
+                {
+                    switch (dictRelation.lineType(lineIdx))
+                    {
+                        case TableRelation::Field:
+                            // This.Field == Related.Field
+                            constraintType = 'Field';
+                            fieldText      = fieldId2Name(tableId, dictRelation.lineTableValue(lineIdx));
+                            relatedText    = fieldId2Name(relatedTableId, dictRelation.lineExternTableValue(lineIdx));
+                            break;
+
+                        case TableRelation::ThisFixed:
+                            // This.Field == fixed value
+                            constraintType = 'This fixed';
+                            fieldText      = fieldId2Name(tableId, dictRelation.lineTableValue(lineIdx));
+                            relatedText    = strFmt('= %1', dictRelation.lineExternTableValue(lineIdx));
+                            break;
+
+                        case TableRelation::ExternFixed:
+                            // Related.Field == fixed value
+                            constraintType = 'Related fixed';
+                            fieldText      = strFmt('= %1', dictRelation.lineTableValue(lineIdx));
+                            relatedText    = fieldId2Name(relatedTableId, dictRelation.lineExternTableValue(lineIdx));
+                            break;
+
+                        default:
+                            constraintType = enum2Str(dictRelation.lineType(lineIdx));
+                            fieldText      = int2Str(dictRelation.lineTableValue(lineIdx));
+                            relatedText    = int2Str(dictRelation.lineExternTableValue(lineIdx));
+                    }
+
+                    _relationRows.addEnd([tableName, tableLabel, tableGroup, tableType, origin,
+                                          relationName, relatedTableName, fieldText, relatedText, constraintType]
+                                          + props + [tableGroupNo]);
+                }
+            }
+        }
+
+        return [tableGroupNo, standardCount, customCount, systemCount, relationCount];
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>generateExcelFile</Name>
+				<Source><![CDATA[
+    // =====================================================================
+    //  EXCEL EXPORT
+    // =====================================================================
+
+    /// <summary>
+    /// Builds a styled .xlsx file (Relations + Summary sheets) and sends it to the browser.
+    /// </summary>
+    private static void generateExcelFile(List _relationRows, str _filterText, container _stats, Map _typeCounts,
+        SysOperationProgress _progress, str _stepText)
+    {
+        ListEnumerator  enumerator = _relationRows.getEnumerator();
+        container       rowData;
+        str             tableName, relatedTableName, origin;
+        int             tableGroupNo, rowNo = 1, col;
+
+        // Column headers (A..R) and fixed widths used for large sheets
+        container       headers = ['Table', 'Label', 'Table group', 'Table type', 'Origin',
+                                   'Relation name', 'Related table', 'Field', 'Related field / value', 'Constraint type',
+                                   'Cardinality', 'Related cardinality', 'Relationship type', 'On delete',
+                                   'Validate', 'Role', 'Related role', 'EDT relation'];
+        container       widths  = [35, 30, 14, 10, 14, 30, 35, 30, 30, 14, 12, 14, 16, 12, 9, 25, 25, 10];
+
+        System.IO.MemoryStream stream = new System.IO.MemoryStream();
+
+        // One progress tick per data row
+        TableRelationExporter::startProgressStep(_progress, _stepText, _relationRows.elements());
+
+        using (ExcelPackage package = new ExcelPackage(stream))
+        {
+            ExcelWorksheet relationsSheet = package.get_Workbook().get_Worksheets().Add('Relations');
+            ExcelWorksheet summarySheet   = package.get_Workbook().get_Worksheets().Add('Summary');
+            ExcelRange     cells          = relationsSheet.get_Cells();
+
+            // ----- Header row -----
+            for (col = 1; col <= TableRelationExporter::ColumnCount; col++)
+            {
+                TableRelationExporter::writeHeaderCell(cells, 1, col, conPeek(headers, col));
+            }
+
+            // ----- Data rows -----
+            while (enumerator.moveNext())
+            {
+                rowData = enumerator.current();
+                rowNo++;
+
+                _progress.incCount();
+                if (rowNo mod 500 == 0)                         // update text every 500 rows (performance)
+                {
+                    _progress.setText(strFmt('%1 - row %2 of %3', _stepText, rowNo - 1, _relationRows.elements()));
+                }
+
+                // Write the visible columns
+                for (col = 1; col <= TableRelationExporter::ColumnCount; col++)
+                {
+                    cells.get_Item(rowNo, col).set_Value(conPeek(rowData, col));
+                }
+
+                tableName        = conPeek(rowData, 1);
+                origin           = conPeek(rowData, 5);
+                relatedTableName = conPeek(rowData, 7);
+                tableGroupNo     = conPeek(rowData, TableRelationExporter::ColumnCount + 1);
+
+                // ----- Row color -----
+                if (!relatedTableName)
+                {
+                    TableRelationExporter::colorRow(cells, rowNo, 220, 220, 220);   // grey: no relations
+                }
+                else if (relatedTableName == tableName)
+                {
+                    TableRelationExporter::colorRow(cells, rowNo, 252, 228, 214);   // orange: self-reference
+                }
+                else if (tableGroupNo mod 2)
+                {
+                    TableRelationExporter::colorRow(cells, rowNo, 221, 235, 247);   // blue: odd table
+                }
+                else
+                {
+                    TableRelationExporter::colorRow(cells, rowNo, 226, 239, 218);   // green: even table
+                }
+
+                // Gold, bold Origin cell for custom tables
+                if (origin == 'Custom')
+                {
+                    cells.get_Item(rowNo, 5).get_Style().get_Fill().get_BackgroundColor().SetColor(255, 255, 217, 102);
+                    cells.get_Item(rowNo, 5).get_Style().get_Font().set_Bold(true);
+                }
+            }
+
+            // ----- Layout: filter, frozen header + Table column, column widths -----
+            _progress.setText(strFmt('%1 - formatting and saving', _stepText));
+            cells.get_Item(strFmt('A1:R%1', rowNo)).set_AutoFilter(true);
+            relationsSheet.get_View().FreezePanes(2, 2);
+
+            if (rowNo <= TableRelationExporter::AutoFitRowLimit)
+            {
+                cells.AutoFitColumns();
+            }
+            else
+            {
+                // Fixed widths: AutoFit is very slow on large sheets
+                for (col = 1; col <= TableRelationExporter::ColumnCount; col++)
+                {
+                    relationsSheet.Column(col).set_Width(conPeek(widths, col));
+                }
+            }
+
+            // ----- Summary sheet -----
+            TableRelationExporter::writeSummarySheet(summarySheet.get_Cells(), _filterText, _stats, _typeCounts,
+                _relationRows.elements());
+
+            package.Save();
+
+            stream.Seek(0, System.IO.SeekOrigin::Begin);
+            File::SendFileToUser(stream, 'TableRelations.xlsx');
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>writeHeaderCell</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Writes a header cell: bold white text on dark blue, centered.
+    /// ARGB ints are used instead of System.Drawing.Color to avoid assembly type conflicts.
+    /// </summary>
+    private static void writeHeaderCell(ExcelRange _cells, int _rowNo, int _colNo, str _text)
+    {
+        ExcelRange cell = _cells.get_Item(_rowNo, _colNo);
+
+        cell.set_Value(_text);
+        cell.get_Style().get_Font().set_Bold(true);
+        cell.get_Style().get_Font().get_Color().SetColor(255, 255, 255, 255);              // white
+        cell.get_Style().get_Fill().set_PatternType(ExcelFillStyle::Solid);
+        cell.get_Style().get_Fill().get_BackgroundColor().SetColor(255, 31, 78, 121);      // dark blue
+        cell.get_Style().set_HorizontalAlignment(ExcelHorizontalAlignment::Center);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>colorRow</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Fills a whole data row (A:R) with an RGB color and a thin bottom border.
+    /// </summary>
+    private static void colorRow(ExcelRange _cells, int _rowNo, int _red, int _green, int _blue)
+    {
+        ExcelRange rowRange = _cells.get_Item(strFmt('A%1:R%1', _rowNo));
+
+        rowRange.get_Style().get_Fill().set_PatternType(ExcelFillStyle::Solid);
+        rowRange.get_Style().get_Fill().get_BackgroundColor().SetColor(255, _red, _green, _blue);
+        rowRange.get_Style().get_Border().get_Bottom().set_Style(ExcelBorderStyle::Thin);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>writeSummarySheet</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Fills the Summary sheet: export info, table type breakdown, color legend and notes.
+    /// </summary>
+    private static void writeSummarySheet(ExcelRange _cells, str _filterText, container _stats, Map _typeCounts,
+        int _rowCount)
+    {
+        MapEnumerator   enumerator;
+        int             rowNo;
+
+        // ----- Export info -----
+        TableRelationExporter::writeHeaderCell(_cells, 1, 1, 'Item');
+        TableRelationExporter::writeHeaderCell(_cells, 1, 2, 'Value');
+
+        _cells.get_Item(2, 1).set_Value('Filter');              _cells.get_Item(2, 2).set_Value(_filterText);
+        _cells.get_Item(3, 1).set_Value('Tables');              _cells.get_Item(3, 2).set_Value(conPeek(_stats, 1));
+        _cells.get_Item(4, 1).set_Value('Standard tables');     _cells.get_Item(4, 2).set_Value(conPeek(_stats, 2));
+        _cells.get_Item(5, 1).set_Value('Custom tables');       _cells.get_Item(5, 2).set_Value(conPeek(_stats, 3));
+        _cells.get_Item(6, 1).set_Value('System tables');       _cells.get_Item(6, 2).set_Value(conPeek(_stats, 4));
+        _cells.get_Item(7, 1).set_Value('Relations');           _cells.get_Item(7, 2).set_Value(conPeek(_stats, 5));
+        _cells.get_Item(8, 1).set_Value('Rows (field links)');  _cells.get_Item(8, 2).set_Value(_rowCount);
+        _cells.get_Item(9, 1).set_Value('Generated');
+        _cells.get_Item(9, 2).set_Value(DateTimeUtil::toStr(DateTimeUtil::getSystemDateTime()));
+        _cells.get_Item('A2:A9').get_Style().get_Font().set_Bold(true);
+
+        // ----- Table type breakdown (Regular should match SQLDICTIONARY table count) -----
+        TableRelationExporter::writeHeaderCell(_cells, 11, 1, 'Table type');
+        TableRelationExporter::writeHeaderCell(_cells, 11, 2, 'Tables');
+
+        rowNo      = 11;
+        enumerator = _typeCounts.getEnumerator();
+
+        while (enumerator.moveNext())
+        {
+            rowNo++;
+            _cells.get_Item(rowNo, 1).set_Value(enumerator.currentKey());
+            _cells.get_Item(rowNo, 2).set_Value(enumerator.currentValue());
+        }
+
+        // ----- Color legend -----
+        rowNo += 2;
+        TableRelationExporter::writeHeaderCell(_cells, rowNo, 1, 'Color');
+        TableRelationExporter::writeHeaderCell(_cells, rowNo, 2, 'Meaning');
+        TableRelationExporter::writeLegendRow(_cells, rowNo + 1, 221, 235, 247, 'Relation (odd table group)');
+        TableRelationExporter::writeLegendRow(_cells, rowNo + 2, 226, 239, 218, 'Relation (even table group)');
+        TableRelationExporter::writeLegendRow(_cells, rowNo + 3, 252, 228, 214, 'Self-reference');
+        TableRelationExporter::writeLegendRow(_cells, rowNo + 4, 220, 220, 220, 'Table without relations');
+        TableRelationExporter::writeLegendRow(_cells, rowNo + 5, 255, 217, 102, 'Custom table (Origin column)');
+
+        // ----- Notes -----
+        rowNo += 7;
+        _cells.get_Item(rowNo, 1).set_Value('Notes');
+        _cells.get_Item(rowNo, 1).get_Style().get_Font().set_Bold(true);
+        _cells.get_Item(rowNo + 1, 2).set_Value('Regular = physical SQL table. Derived = stored in root table. Map / TempDB / InMemory = no permanent SQL table.');
+        _cells.get_Item(rowNo + 2, 2).set_Value('Empty relation properties = relation defined in a table extension (not in base metadata).');
+
+        _cells.AutoFitColumns();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>writeLegendRow</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Writes one legend line: colored sample cell + description.
+    /// </summary>
+    private static void writeLegendRow(ExcelRange _cells, int _rowNo, int _red, int _green, int _blue, str _text)
+    {
+        ExcelRange sampleCell = _cells.get_Item(_rowNo, 1);
+
+        sampleCell.get_Style().get_Fill().set_PatternType(ExcelFillStyle::Solid);
+        sampleCell.get_Style().get_Fill().get_BackgroundColor().SetColor(255, _red, _green, _blue);
+        _cells.get_Item(_rowNo, 2).set_Value(_text);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>jsonText</Name>
+				<Source><![CDATA[
+    // =====================================================================
+    //  ERD EXPORT (interactive HTML viewer)
+    // =====================================================================
+
+    /// <summary>
+    /// Escapes a value as a JSON string literal (including the surrounding quotes).
+    /// </summary>
+    private static str jsonText(str _value)
+    {
+        str value = strReplace(_value, '\\', '\\\\');
+        value = strReplace(value, '"', '\\"');
+        value = strReplace(value, '<', '\\u003c');      // never close the <script> block
+        value = strRem(value, '\r\n\t');
+        return '"' + value + '"';
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>generateErdFile</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Builds an interactive ERD page (Cytoscape.js) and sends it to the browser.
+    /// - Blue boxes = tables in the filter, grey = related tables outside the filter,
+    ///   orange = custom, purple = system, dashed border = not a regular SQL table.
+    /// - Line colour = On delete action; arrow points to the referenced (parent) table.
+    /// - Click a table or line to see field links, cardinality and delete action.
+    /// - Search, layout switch, relation-name toggle and PNG export in the toolbar.
+    /// Internet access is needed on the PC opening the file (Cytoscape loads from a CDN).
+    /// </summary>
+    private static void generateErdFile(List _relationRows, str _filterText,
+        SysOperationProgress _progress, str _stepText)
+    {
+        ListEnumerator  enumerator = _relationRows.getEnumerator();
+        Map             nodes      = new Map(Types::String, Types::Container);  // table -> [label, type, origin, inFilter]
+        Map             edges      = new Map(Types::String, Types::Container);  // "Table|Related|Relation" -> [links, props...]
+        MapEnumerator   mapEnumerator;
+        container       rowData, nodeData, edgeData, keyParts;
+        str             tableName, relationName, relatedTableName, edgeKey, linkJson;
+        boolean         first;
+        System.Text.StringBuilder html = new System.Text.StringBuilder();
+
+        // One progress tick per row
+        TableRelationExporter::startProgressStep(_progress, _stepText, _relationRows.elements());
+
+        // ----- Collect tables (nodes) and relations (edges) -----
+        while (enumerator.moveNext())
+        {
+            _progress.incCount();
+            rowData = enumerator.current();
+
+            tableName        = conPeek(rowData, 1);
+            relationName     = conPeek(rowData, 6);
+            relatedTableName = conPeek(rowData, 7);
+
+            // Table in the filter (overwrites a placeholder added as related table)
+            nodes.insert(tableName, [conPeek(rowData, 2), conPeek(rowData, 4), conPeek(rowData, 5), 1]);
+
+            if (!relatedTableName)
+            {
+                continue;                                   // table without relations
+            }
+
+            // Related table outside the filter: no details known
+            if (!nodes.exists(relatedTableName))
+            {
+                nodes.insert(relatedTableName, ['', '', '', 0]);
+            }
+
+            // Field link as JSON: {"f":field,"r":related field,"t":constraint type}
+            linkJson = strFmt('{"f":%1,"r":%2,"t":%3}',
+                TableRelationExporter::jsonText(conPeek(rowData, 8)),
+                TableRelationExporter::jsonText(conPeek(rowData, 9)),
+                TableRelationExporter::jsonText(conPeek(rowData, 10)));
+
+            // One edge per relation; append field links to it
+            edgeKey = strFmt('%1|%2|%3', tableName, relatedTableName, relationName);
+
+            if (edges.exists(edgeKey))
+            {
+                edgeData = edges.lookup(edgeKey);
+                edgeData = conPoke(edgeData, 1, conPeek(edgeData, 1) + ',' + linkJson);
+            }
+            else
+            {
+                // [links, Cardinality, RelatedTableCardinality, RelationshipType, OnDelete]
+                edgeData = [linkJson, conPeek(rowData, 11), conPeek(rowData, 12), conPeek(rowData, 13), conPeek(rowData, 14)];
+            }
+
+            edges.insert(edgeKey, edgeData);
+        }
+
+        // ----- Size check: avoid an unreadable diagram -----
+        if (nodes.elements() > TableRelationExporter::MaxErdTables)
+        {
+            warning(strFmt('ERD skipped: %1 tables found (limit %2). Use a more specific prefix.',
+                nodes.elements(), TableRelationExporter::MaxErdTables));
+            return;
+        }
+
+        _progress.setText(strFmt('%1 - writing HTML', _stepText));
+
+        // ----- Page header, styles and toolbar -----
+        html.AppendLine('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Table relations ERD</title>');
+        html.AppendLine('<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.2/dist/cytoscape.min.js"></script>');
+        html.AppendLine('<style>');
+        html.AppendLine('body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#f4f6fa;color:#1f2937;display:flex;flex-direction:column;height:100vh}');
+        html.AppendLine('header{background:#1f4e79;color:#fff;padding:8px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}');
+        html.AppendLine('header h1{font-size:18px;margin:0}');
+        html.AppendLine('#stats{opacity:.85;font-size:13px}');
+        html.AppendLine('.toolbar{display:flex;gap:8px;align-items:center;margin-left:auto;flex-wrap:wrap;font-size:13px}');
+        html.AppendLine('.toolbar input[type=text],.toolbar select,.toolbar button{padding:5px 8px;border:1px solid #c8d1dc;border-radius:4px;font-size:13px}');
+        html.AppendLine('.toolbar button{background:#fff;cursor:pointer}');
+        html.AppendLine('.toolbar button:hover{background:#e8f0fb}');
+        html.AppendLine('#main{display:flex;flex:1;min-height:0}');
+        html.AppendLine('#cy{flex:1;background:#fff}');
+        html.AppendLine('#side{width:380px;overflow:auto;border-left:1px solid #d8dee8;padding:12px;background:#fafbfd;font-size:13px}');
+        html.AppendLine('#side h3{margin:4px 0;color:#1f4e79}');
+        html.AppendLine('#side h4{margin:14px 0 4px;color:#1f4e79}');
+        html.AppendLine('.legend div{margin:3px 0}');
+        html.AppendLine('.legend span{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:6px;vertical-align:middle}');
+        html.AppendLine('table{border-collapse:collapse;width:100%;margin-top:6px}');
+        html.AppendLine('th,td{border:1px solid #dde3ea;padding:4px 6px;text-align:left;vertical-align:top}');
+        html.AppendLine('th{background:#1f4e79;color:#fff;font-weight:600}');
+        html.AppendLine('tr:nth-child(even) td{background:#f1f5fb}');
+        html.AppendLine('.link{color:#1f6fd1;cursor:pointer;text-decoration:underline}');
+        html.AppendLine('.muted{color:#6b7280}');
+        html.AppendLine('</style></head><body>');
+        html.AppendLine('<header><h1>Table relations ERD</h1><div id="stats"></div>');
+        html.AppendLine('<div class="toolbar">');
+        html.AppendLine('<input type="text" id="search" placeholder="Find table..." list="tableList"><datalist id="tableList"></datalist>');
+        html.AppendLine('<select id="layout"><option value="cose">Organic</option><option value="concentric">Concentric</option><option value="breadthfirst">Hierarchy</option><option value="circle">Circle</option><option value="grid">Grid</option></select>');
+        html.AppendLine('<label><input type="checkbox" id="labels"> Relation names</label>');
+        html.AppendLine('<button id="fit">Fit</button><button id="reset">Show all</button><button id="png">Save PNG</button>');
+        html.AppendLine('</div></header>');
+        html.AppendLine('<div id="main"><div id="cy"></div><div id="side"></div></div>');
+        html.AppendLine('<script>');
+
+        // ----- Diagram data as JSON: const D = {filter, nodes[], edges[]}; -----
+        html.Append('const D = {"filter":' + TableRelationExporter::jsonText(_filterText) + ',"nodes":[');
+
+        first         = true;
+        mapEnumerator = nodes.getEnumerator();
+
+        while (mapEnumerator.moveNext())
+        {
+            nodeData = mapEnumerator.currentValue();
+
+            if (!first)
+            {
+                html.Append(',');
+            }
+            first = false;
+
+            html.Append(strFmt('{"id":%1,"label":%2,"type":%3,"origin":%4,"main":%5}',
+                TableRelationExporter::jsonText(mapEnumerator.currentKey()),
+                TableRelationExporter::jsonText(conPeek(nodeData, 1)),
+                TableRelationExporter::jsonText(conPeek(nodeData, 2)),
+                TableRelationExporter::jsonText(conPeek(nodeData, 3)),
+                conPeek(nodeData, 4)));
+        }
+
+        html.Append('],"edges":[');
+
+        first         = true;
+        mapEnumerator = edges.getEnumerator();
+
+        while (mapEnumerator.moveNext())
+        {
+            keyParts = str2con(mapEnumerator.currentKey(), '|', false);   // false = keep names as text
+            edgeData = mapEnumerator.currentValue();
+
+            if (!first)
+            {
+                html.Append(',');
+            }
+            first = false;
+
+            html.Append(strFmt('{"s":%1,"t":%2,"n":%3,"l":[%4],"c":%5,"rc":%6,"rt":%7,"d":%8}',
+                TableRelationExporter::jsonText(conPeek(keyParts, 1)),
+                TableRelationExporter::jsonText(conPeek(keyParts, 2)),
+                TableRelationExporter::jsonText(conPeek(keyParts, 3)),
+                conPeek(edgeData, 1),
+                TableRelationExporter::jsonText(conPeek(edgeData, 2)),
+                TableRelationExporter::jsonText(conPeek(edgeData, 3)),
+                TableRelationExporter::jsonText(conPeek(edgeData, 4)),
+                TableRelationExporter::jsonText(conPeek(edgeData, 5))));
+        }
+
+        html.AppendLine(']};');
+
+        // ----- Viewer script: styles, layouts, click details, search, PNG export -----
+        html.AppendLine('const ORIGIN_COLOR={Custom:"#e67e22",System:"#7d5ba6"};');
+        html.AppendLine('const MAIN_COLOR="#2e75b6",RELATED_COLOR="#90a4ae";');
+        html.AppendLine('const DEL_COLOR={Cascade:"#d9534f",CascadeRestricted:"#c0392b",Restricted:"#f0ad4e"};');
+        html.AppendLine('function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>"&#"+c.charCodeAt(0)+";");}');
+        html.AppendLine('const els=[];');
+        html.AppendLine('D.nodes.forEach(n=>els.push({group:"nodes",data:{id:n.id,label:n.label,type:n.type,origin:n.origin,main:n.main,');
+        html.AppendLine(' color:n.main?(ORIGIN_COLOR[n.origin]||MAIN_COLOR):RELATED_COLOR,w:Math.max(60,n.id.length*7.5+24),');
+        html.AppendLine(' dashed:(n.type&&n.type!=="Regular")?1:0}}));');
+        html.AppendLine('D.edges.forEach((e,i)=>els.push({group:"edges",data:{id:"e"+i,source:e.s,target:e.t,name:e.n,links:e.l,');
+        html.AppendLine(' card:e.c,rcard:e.rc,rtype:e.rt,del:e.d,color:DEL_COLOR[e.d]||"#7f9bb8"}}));');
+        html.AppendLine('document.getElementById("stats").textContent=D.filter+"  |  "+D.nodes.length+" tables, "+D.edges.length+" relations";');
+        html.AppendLine('const dl=document.getElementById("tableList");');
+        html.AppendLine('D.nodes.map(n=>n.id).sort().forEach(id=>{const o=document.createElement("option");o.value=id;dl.appendChild(o);});');
+        html.AppendLine('const cy=cytoscape({container:document.getElementById("cy"),elements:els,wheelSensitivity:0.2,minZoom:0.05,maxZoom:4,');
+        html.AppendLine(' style:[');
+        html.AppendLine(' {selector:"node",style:{"shape":"round-rectangle","label":"data(id)","width":"data(w)","height":28,"background-color":"data(color)","color":"#fff","font-size":12,"font-weight":"bold","text-valign":"center","text-halign":"center","border-width":1,"border-color":"#1b3a57"}},');
+        html.AppendLine(' {selector:"node[main = 1]",style:{"height":36,"font-size":13}},');
+        html.AppendLine(' {selector:"node[dashed = 1]",style:{"border-style":"dashed","border-width":3,"border-color":"#263238"}},');
+        html.AppendLine(' {selector:"edge",style:{"width":1.8,"curve-style":"bezier","line-color":"data(color)","target-arrow-shape":"triangle","target-arrow-color":"data(color)","source-arrow-shape":"circle","source-arrow-color":"data(color)","arrow-scale":0.8}},');
+        html.AppendLine(' {selector:"edge.lbl",style:{"label":"data(name)","font-size":10,"color":"#263238","text-rotation":"autorotate","text-background-color":"#ffffff","text-background-opacity":0.9,"text-background-padding":2}},');
+        html.AppendLine(' {selector:".faded",style:{"opacity":0.08}},');
+        html.AppendLine(' {selector:"node.focus",style:{"border-width":4,"border-color":"#f1c40f"}},');
+        html.AppendLine(' {selector:"edge.hl",style:{"width":3.5,"label":"data(name)","font-size":11,"color":"#263238","text-rotation":"autorotate","text-background-color":"#fff9e6","text-background-opacity":1,"text-background-padding":2,"z-index":10}}');
+        html.AppendLine(' ]});');
+        html.AppendLine('function runLayout(name){');
+        html.AppendLine(' const o={name:name,animate:true,animationDuration:500,padding:30,fit:true};');
+        html.AppendLine(' if(name==="cose")Object.assign(o,{nodeRepulsion:()=>800000,idealEdgeLength:()=>150,nodeOverlap:40,gravity:0.25,numIter:2500,componentSpacing:100});');
+        html.AppendLine(' if(name==="concentric")Object.assign(o,{concentric:n=>n.data("main")?100+n.degree():n.degree(),levelWidth:()=>3,minNodeSpacing:40});');
+        html.AppendLine(' if(name==="breadthfirst"){const r=cy.nodes().filter(n=>n.indegree(false)===0);Object.assign(o,{directed:true,spacingFactor:1.4},r.length?{roots:r}:{});}');
+        html.AppendLine(' if(name==="grid")o.avoidOverlap=true;');
+        html.AppendLine(' cy.layout(o).run();}');
+        html.AppendLine('const side=document.getElementById("side");');
+        html.AppendLine('function tLink(id){return `<span class="link" data-t="${esc(id)}">${esc(id)}</span>`;}');
+        html.AppendLine('function eLink(d){return `<span class="link" data-e="${d.id}">${esc(d.name)}</span>`;}');
+        html.AppendLine('function linksHtml(l){return l.map(x=>esc(x.f)+" = "+esc(x.r)+(x.t&&x.t!=="Field"?` <span class="muted">(${esc(x.t)})</span>`:"")).join("<br>");}');
+        html.AppendLine('function relRows(list,useSource){return list.map(e=>{const d=e.data();return `<tr><td>${tLink(useSource?d.source:d.target)}</td><td>${eLink(d)}</td><td>${linksHtml(d.links)}</td></tr>`;}).join("");}');
+        html.AppendLine('function clearFocus(){cy.elements().removeClass("faded focus hl");}');
+        html.AppendLine('function showTable(n){');
+        html.AppendLine(' const d=n.data(),out=n.outgoers("edge"),inc=n.incomers("edge");');
+        html.AppendLine(' let h=`<h3>${esc(d.id)}</h3><div class="muted">${esc(d.label)}</div><table>');
+        html.AppendLine(' <tr><td>Table type</td><td>${esc(d.type||"(outside filter)")}</td></tr><tr><td>Origin</td><td>${esc(d.origin||"-")}</td></tr>');
+        html.AppendLine(' <tr><td>Refers to</td><td>${out.length} relation(s)</td></tr><tr><td>Referenced by</td><td>${inc.length} relation(s)</td></tr></table>`;');
+        html.AppendLine(' if(out.length)h+=`<h4>Refers to (foreign keys)</h4><table><tr><th>Related table</th><th>Relation</th><th>Fields</th></tr>${relRows(out,false)}</table>`;');
+        html.AppendLine(' if(inc.length)h+=`<h4>Referenced by</h4><table><tr><th>Table</th><th>Relation</th><th>Fields</th></tr>${relRows(inc,true)}</table>`;');
+        html.AppendLine(' side.innerHTML=h;}');
+        html.AppendLine('function showRelation(e){');
+        html.AppendLine(' const d=e.data();');
+        html.AppendLine(' side.innerHTML=`<h3>${esc(d.name)}</h3><div>${tLink(d.source)} &rarr; ${tLink(d.target)}</div><table>');
+        html.AppendLine(' <tr><td>Field links</td><td>${linksHtml(d.links)}</td></tr><tr><td>Cardinality</td><td>${esc(d.card||"-")}</td></tr>');
+        html.AppendLine(' <tr><td>Related cardinality</td><td>${esc(d.rcard||"-")}</td></tr><tr><td>Relationship type</td><td>${esc(d.rtype||"-")}</td></tr>');
+        html.AppendLine(' <tr><td>On delete</td><td>${esc(d.del||"-")}</td></tr></table>`;}');
+        html.AppendLine('function showOverview(){');
+        html.AppendLine(' side.innerHTML=`<h3>How to read</h3><div class="legend">');
+        html.AppendLine(' <div><span style="background:${MAIN_COLOR}"></span>Table in filter</div><div><span style="background:#e67e22"></span>Custom table</div>');
+        html.AppendLine(' <div><span style="background:#7d5ba6"></span>System table</div><div><span style="background:${RELATED_COLOR}"></span>Related table (outside filter)</div>');
+        html.AppendLine(' <div><span style="border:2px dashed #263238;background:#fff"></span>Not a regular SQL table (TempDB, InMemory, Map, Derived)</div>');
+        html.AppendLine(' <div style="margin-top:8px"><b>Lines</b>: from the table holding the foreign key (&#9679;) to the referenced table (&#9654;)</div>');
+        html.AppendLine(' <div><span style="background:#7f9bb8"></span>On delete: None</div><div><span style="background:#f0ad4e"></span>On delete: Restricted</div>');
+        html.AppendLine(' <div><span style="background:#d9534f"></span>On delete: Cascade</div></div>');
+        html.AppendLine(' <p class="muted">Click a table or line for details. Scroll to zoom, drag to pan, drag tables to rearrange.</p>');
+        html.AppendLine(' <h4>All relations (${cy.edges().length})</h4><table><tr><th>Table</th><th>Relation</th><th>Related table</th></tr>`');
+        html.AppendLine(' +cy.edges().map(e=>{const d=e.data();return `<tr><td>${tLink(d.source)}</td><td>${eLink(d)}</td><td>${tLink(d.target)}</td></tr>`;}).join("")+`</table>`;}');
+        html.AppendLine('function focusNode(n){clearFocus();cy.elements().not(n.closedNeighborhood()).addClass("faded");n.addClass("focus");n.connectedEdges().addClass("hl");showTable(n);}');
+        html.AppendLine('function focusEdge(e){clearFocus();cy.elements().not(e.union(e.connectedNodes())).addClass("faded");e.addClass("hl");showRelation(e);}');
+        html.AppendLine('function goTo(id){const n=cy.nodes().filter(x=>x.id().toLowerCase()===String(id).toLowerCase());');
+        html.AppendLine(' if(n.length){focusNode(n[0]);cy.animate({center:{eles:n[0]},zoom:Math.max(cy.zoom(),1),duration:400});}}');
+        html.AppendLine('cy.on("tap","node",ev=>focusNode(ev.target));');
+        html.AppendLine('cy.on("tap","edge",ev=>focusEdge(ev.target));');
+        html.AppendLine('cy.on("tap",ev=>{if(ev.target===cy){clearFocus();showOverview();}});');
+        html.AppendLine('side.addEventListener("click",ev=>{const t=ev.target.dataset.t,e=ev.target.dataset.e;');
+        html.AppendLine(' if(t)goTo(t);else if(e){const x=cy.getElementById(e);focusEdge(x);cy.animate({center:{eles:x},duration:400});}});');
+        html.AppendLine('document.getElementById("search").addEventListener("change",ev=>goTo(ev.target.value.trim()));');
+        html.AppendLine('const lay=document.getElementById("layout");');
+        html.AppendLine('lay.value=D.nodes.filter(n=>n.main).length<=3?"concentric":"cose";');
+        html.AppendLine('lay.addEventListener("change",()=>runLayout(lay.value));');
+        html.AppendLine('document.getElementById("labels").addEventListener("change",ev=>ev.target.checked?cy.edges().addClass("lbl"):cy.edges().removeClass("lbl"));');
+        html.AppendLine('document.getElementById("fit").onclick=()=>cy.animate({fit:{padding:30},duration:400});');
+        html.AppendLine('document.getElementById("reset").onclick=()=>{clearFocus();showOverview();cy.animate({fit:{padding:30},duration:400});};');
+        html.AppendLine('document.getElementById("png").onclick=()=>{const a=document.createElement("a");a.href=cy.png({full:true,scale:2,bg:"#ffffff"});a.download="TableRelationsERD.png";a.click();};');
+        html.AppendLine('runLayout(lay.value);showOverview();');
+        html.AppendLine('</script></body></html>');
+
+        info(strFmt('%1: %2 tables, %3 relations in diagram.', _stepText, nodes.elements(), edges.elements()));
+
+        File::SendStringAsFileToUser(html.ToString(), 'TableRelationsERD.html');
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

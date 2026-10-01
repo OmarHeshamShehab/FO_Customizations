@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>OHMSAutoMapperTest02UomMatch</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// OHMS Auto Mapper test 02. Reads real units of measure from D365, asks the
+/// local model to match partner-supplied variants against them, and reports timings.
+/// </summary>
+class OHMSAutoMapperTest02UomMatch
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Entry point.
+    /// </summary>
+    /// <param name = "_args">Runnable class arguments. Not used.</param>
+    [SuppressBPWarning('CARBPMethodNotReferenced', 'Entry point of a runnable class.')]
+    public static void main(Args _args)
+    {
+        UnitOfMeasure   uom;
+        List            testValues = new List(Types::String);
+        ListEnumerator  le;
+        str             corpus;
+        str             partnerValue;
+        str             reply;
+        int             uomCount;
+        int             callCount;
+        int64           elapsed;
+        int64           totalMs;
+        int64           minMs = 9999999;
+        int64           maxMs;
+
+        System.Diagnostics.Stopwatch sw;
+
+        while select Symbol from uom
+        {
+            if (uomCount >= 40)
+            {
+                break;
+            }
+            corpus += (corpus ? ', ' : '') + uom.Symbol;
+            uomCount++;
+        }
+
+        if (!uomCount)
+        {
+            error('No units of measure found. Check the company/legal entity.');
+            return;
+        }
+
+        info(strFmt('Corpus built from %1 units of measure.', uomCount));
+
+        testValues.addEnd('CS');
+        testValues.addEnd('case');
+        testValues.addEnd('CTN');
+        testValues.addEnd('carton');
+        testValues.addEnd('BX');
+        testValues.addEnd('PC');
+        testValues.addEnd('each');
+        testValues.addEnd('EA');
+        testValues.addEnd('kilogram');
+        testValues.addEnd('KGS');
+
+        OHMSAutoMapperTest02UomMatch::askModel(corpus, 'warmup');
+
+        le = testValues.getEnumerator();
+        while (le.moveNext())
+        {
+            partnerValue = le.current();
+
+            sw      = System.Diagnostics.Stopwatch::StartNew();
+            reply   = OHMSAutoMapperTest02UomMatch::askModel(corpus, partnerValue);
+            sw.Stop();
+            elapsed = sw.get_ElapsedMilliseconds();
+
+            callCount++;
+            totalMs += elapsed;
+            minMs = min(minMs, elapsed);
+            maxMs = max(maxMs, elapsed);
+
+            info(strFmt('%1  ->  %2   (%3 ms)', partnerValue, reply, elapsed));
+        }
+
+        if (callCount)
+        {
+            info('----------------------------------------');
+            info(strFmt('Calls: %1', callCount));
+            info(strFmt('Total: %1 ms', totalMs));
+            info(strFmt('Avg:   %1 ms', totalMs / callCount));
+            info(strFmt('Min:   %1 ms', minMs));
+            info(strFmt('Max:   %1 ms', maxMs));
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>escapeJson</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Escapes a value so it is safe inside a JSON string literal.
+    /// </summary>
+    /// <param name = "_in">Raw text.</param>
+    /// <returns>Escaped text.</returns>
+    private static str escapeJson(str _in)
+    {
+        str s = _in;
+
+        s = strReplace(s, num2char(92), num2char(92) + num2char(92));
+        s = strReplace(s, num2char(34), num2char(92) + num2char(34));
+        s = strReplace(s, num2char(13), ' ');
+        s = strReplace(s, num2char(10), ' ');
+        s = strReplace(s, num2char(9),  ' ');
+
+        return s;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>askModel</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Sends one match request to the local model endpoint.
+    /// </summary>
+    /// <param name = "_corpus">Comma separated list of valid unit symbols.</param>
+    /// <param name = "_value">The partner supplied value to match.</param>
+    /// <returns>The model reply, trimmed.</returns>
+    private static str askModel(str _corpus, str _value)
+    {
+        str endpoint = 'http://127.0.0.1:5273/v1/chat/completions';
+        str modelId  = 'mistral-nemo-12b-instruct-generic-cpu';
+        str marker   = '"message":{"role":"assistant","content":"';
+        str sysPrompt;
+        str payload;
+        str raw;
+        str result;
+        int startPos;
+        int endPos;
+
+        System.Net.WebClient           webClient;
+        System.Net.WebHeaderCollection headers;
+        System.Text.Encoding           enc;
+        System.Exception               ex;
+
+        sysPrompt  = 'You match a supplier unit code to one of the valid unit symbols. ';
+        sysPrompt += 'Valid symbols: ' + _corpus + '. ';
+        sysPrompt += 'Reply with the single best matching symbol only. ';
+        sysPrompt += 'No explanation. If none match, reply NONE.';
+
+        payload  = '{"model":"' + OHMSAutoMapperTest02UomMatch::escapeJson(modelId) + '",';
+        payload += '"messages":[';
+        payload += '{"role":"system","content":"' + OHMSAutoMapperTest02UomMatch::escapeJson(sysPrompt) + '"},';
+        payload += '{"role":"user","content":"'   + OHMSAutoMapperTest02UomMatch::escapeJson(_value)    + '"}';
+        payload += '],"temperature":0,"max_tokens":20}';
+
+        try
+        {
+            System.Net.ServicePointManager::set_SecurityProtocol(
+                System.Net.SecurityProtocolType::Tls12);
+
+            webClient = new System.Net.WebClient();
+            headers   = webClient.get_Headers();
+            headers.Add('Content-Type', 'application/json');
+
+            enc = System.Text.Encoding::get_UTF8();
+            webClient.set_Encoding(enc);
+
+            raw = webClient.UploadString(endpoint, 'POST', payload);
+
+            startPos = strScan(raw, marker, 1, strLen(raw));
+            if (startPos)
+            {
+                startPos += strLen(marker);
+                endPos    = strScan(raw, '"', startPos, strLen(raw));
+                result    = subStr(raw, startPos, endPos - startPos);
+            }
+            else
+            {
+                result = 'PARSE FAILED';
+            }
+        }
+        catch (Exception::CLRError)
+        {
+            ex = ClrInterop::getLastException();
+            while (ex)
+            {
+                error(ex.get_Message());
+                ex = ex.get_InnerException();
+            }
+            result = 'ERROR';
+        }
+
+        webClient = null;
+        return strLTrim(strRTrim(result));
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
