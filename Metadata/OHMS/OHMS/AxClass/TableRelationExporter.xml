@@ -194,7 +194,8 @@ class TableRelationExporter extends RunBase
         container            stats;
         int                  tableCount, stepCount, stepNo;
         int64                startTicks;
-        str                  filterText;
+        str                  filterText, excelBase64, erdHtml;
+        System.IO.MemoryStream excelStream, downloadStream;
         SysOperationProgress operationProgress;
 
         filterText = exportAllTables
@@ -254,7 +255,7 @@ class TableRelationExporter extends RunBase
                 stepNo++;
                 startTicks = WinAPIServer::getTickCount();
 
-                TableRelationExcelExporter::exportExcelFile(
+                excelBase64 = TableRelationExcelExporter::createExcelFile(
                     relationRows,
                     filterText,
                     stats,
@@ -262,7 +263,7 @@ class TableRelationExporter extends RunBase
                     operationProgress,
                     strFmt('Step %1 of %2: Building Excel file', stepNo, stepCount));
 
-                info(strFmt('Step %1 of %2: Excel file built in %3 s.',
+                info(strFmt('Step %1 of %2: Excel workbook generated in %3 s.',
                     stepNo,
                     stepCount,
                     (WinAPIServer::getTickCount() - startTicks) div 1000));
@@ -272,11 +273,54 @@ class TableRelationExporter extends RunBase
             {
                 stepNo++;
 
-                TableRelationErdExporter::exportErdFile(
+                erdHtml = TableRelationErdExporter::createErdHtml(
                     relationRows,
                     filterText,
                     operationProgress,
                     strFmt('Step %1 of %2: Building ERD diagram', stepNo, stepCount));
+            }
+
+            if (doExcel && doErd && erdHtml)
+            {
+                excelStream   = new System.IO.MemoryStream(System.Convert::FromBase64String(excelBase64));
+                downloadStream = new System.IO.MemoryStream();
+
+                using (System.IO.Compression.ZipArchive archive =
+                    new System.IO.Compression.ZipArchive(
+                        downloadStream,
+                        System.IO.Compression.ZipArchiveMode::Create,
+                        true))
+                {
+                    System.IO.Compression.ZipArchiveEntry excelEntry =
+                        archive.CreateEntry('TableRelations.xlsx');
+                    System.IO.Stream excelEntryStream = excelEntry.Open();
+
+                    excelStream.CopyTo(excelEntryStream);
+                    excelEntryStream.Dispose();
+
+                    System.IO.Compression.ZipArchiveEntry erdEntry =
+                        archive.CreateEntry('TableRelationsERD.html');
+                    System.IO.Stream erdEntryStream = erdEntry.Open();
+                    System.IO.StreamWriter erdWriter =
+                        new System.IO.StreamWriter(erdEntryStream, System.Text.Encoding::UTF8);
+
+                    erdWriter.Write(erdHtml);
+                    erdWriter.Flush();
+                    erdWriter.Dispose();
+                }
+
+                downloadStream.Seek(0, System.IO.SeekOrigin::Begin);
+                File::SendFileToUser(downloadStream, 'TableRelationExport.zip');
+            }
+            else if (doExcel)
+            {
+                downloadStream = new System.IO.MemoryStream(System.Convert::FromBase64String(excelBase64));
+                downloadStream.Seek(0, System.IO.SeekOrigin::Begin);
+                File::SendFileToUser(downloadStream, 'TableRelations.xlsx');
+            }
+            else if (erdHtml)
+            {
+                File::SendStringAsFileToUser(erdHtml, 'TableRelationsERD.html');
             }
         }
         finally

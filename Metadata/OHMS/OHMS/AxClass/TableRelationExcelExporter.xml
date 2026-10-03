@@ -36,10 +36,10 @@ class TableRelationExcelExporter
 ]]></Source>
 			</Method>
 			<Method>
-				<Name>exportExcelFile</Name>
+				<Name>createExcelFile</Name>
 				<Source><![CDATA[
     /// <summary>
-    /// Builds a styled .xlsx file (Relations + Summary sheets) and sends it to the browser.
+    /// Builds a styled .xlsx file (Relations + Summary sheets) and returns its Base64 content.
     /// </summary>
     /// <param name="_relationRows">Collected relation rows to write.</param>
     /// <param name="_filterText">Filter description written to the summary sheet.</param>
@@ -47,7 +47,8 @@ class TableRelationExcelExporter
     /// <param name="_typeCounts">Counts grouped by table type.</param>
     /// <param name="_progress">Progress indicator updated during export.</param>
     /// <param name="_stepText">Text identifying the export step.</param>
-    public static void exportExcelFile(List _relationRows, str _filterText, container _stats, Map _typeCounts,
+    /// <returns>Base64-encoded XLSX workbook content.</returns>
+    public static str createExcelFile(List _relationRows, str _filterText, container _stats, Map _typeCounts,
         SysOperationProgress _progress, str _stepText)
     {
         ListEnumerator  enumerator = _relationRows.getEnumerator();
@@ -63,6 +64,7 @@ class TableRelationExcelExporter
         container       widths  = [35, 30, 14, 10, 14, 30, 35, 30, 30, 14, 12, 14, 16, 12, 9, 25, 25, 10];
 
         System.IO.MemoryStream stream = new System.IO.MemoryStream();
+        str                   fileContent;
 
         // One progress tick per data row
         TableRelationExcelExporter::startProgressStep(_progress, _stepText, _relationRows.elements());
@@ -144,10 +146,10 @@ class TableRelationExcelExporter
                 _relationRows.elements());
 
             package.Save();
-
-            stream.Seek(0, System.IO.SeekOrigin::Begin);
-            File::SendFileToUser(stream, 'TableRelations.xlsx');
+            fileContent = System.Convert::ToBase64String(stream.ToArray());
         }
+
+        return fileContent;
     }
 
 ]]></Source>
