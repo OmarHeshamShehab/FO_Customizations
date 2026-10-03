@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>TableRelationDataCollector</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+using Microsoft.Dynamics.AX.Metadata.MetaModel;
+
+/// <summary>
+/// Collects table and relation metadata from the D365 Finance and Operations runtime dictionary.
+/// Includes exact table selection, optional views, table type/origin classification, relation field links,
+/// and relation properties. Returns rows and counters for the Excel and ERD exporters.
+/// This class only reads metadata; it does not create or modify application data.
+/// </summary>
+class TableRelationDataCollector
+{
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>startProgressStep</Name>
+				<Source><![CDATA[
+    /// <summary>Resets the progress indicator for a collection step.</summary>
+    /// <param name="_progress">Progress indicator to update.</param>
+    /// <param name="_stepText">Text to display for the current step.</param>
+    /// <param name="_total">Total number of items in the step.</param>
+    private static void startProgressStep(SysOperationProgress _progress, str _stepText, int _total)
+    {
+        _progress.setText(_stepText);
+        _progress.setTotal(_total);
+        _progress.setCount(0);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>tableTypeText</Name>
+				<Source><![CDATA[
+    /// <summary>Returns a readable description of the table storage type.</summary>
+    /// <param name="_dictTable">Runtime dictionary table to classify.</param>
+    /// <returns>The table type name.</returns>
+    private static str tableTypeText(SysDictTable _dictTable)
+    {
+        if (_dictTable.isMap())
+        {
+            return 'Map';                       // template only, no SQL storage
+        }
+
+        if (_dictTable.isView())
+        {
+            return 'View';                      // view or data entity
+        }
+
+        if (_dictTable.extends())
+        {
+            return 'Derived';                   // inheritance, data stored in root table
+        }
+
+        switch (_dictTable.tableType())
+        {
+            case TableType::InMemory:
+                return 'InMemory';
+
+            case TableType::TempDB:
+                return 'TempDB';
+        }
+
+        return 'Regular';                       // physical SQL table
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>incTypeCount</Name>
+				<Source><![CDATA[
+    /// <summary>Increments the count for a table type.</summary>
+    /// <param name="_typeCounts">Map of table types to counts.</param>
+    /// <param name="_tableType">Table type whose count is incremented.</param>
+    private static void incTypeCount(Map _typeCounts, str _tableType)
+    {
+        int current = _typeCounts.exists(_tableType) ? _typeCounts.lookup(_tableType) : 0;
+
+        _typeCounts.insert(_tableType, current + 1);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>clrText</Name>
+				<Source><![CDATA[
+    /// <summary>Converts a CLR metadata value to text, returning empty text for null.</summary>
+    /// <param name="_value">CLR value to convert.</param>
+    /// <returns>Value text, or an empty string when the value is null.</returns>
+    private static str clrText(System.Object _value)
+    {
+        return _value == null ? '' : _value.ToString();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getAxTable</Name>
+				<Source><![CDATA[
+    /// <summary>Reads table metadata from the deployed model.</summary>
+    /// <param name="_tableName">Name of the table whose metadata is requested.</param>
+    /// <returns>Table metadata, or null when it is unavailable.</returns>
+    private static AxTable getAxTable(str _tableName)
+    {
+        AxTable axTable;
+
+        try
+        {
+            axTable = Microsoft.Dynamics.Ax.Xpp.MetadataSupport::GetTable(_tableName);
+        }
+        catch (Exception::CLRError)
+        {
+            axTable = null;
+        }
+
+        return axTable;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>relationProperties</Name>
+				<Source><![CDATA[
+    /// <summary>Reads relation properties from deployed table metadata.</summary>
+    /// <param name="_axTable">Table metadata containing the relation.</param>
+    /// <param name="_relationName">Name of the relation to look up.</param>
+    /// <returns>Container of cardinality, relationship, delete, validation, role and EDT properties; empty values are returned when unavailable in base table metadata.</returns>
+    private static container relationProperties(AxTable _axTable, str _relationName)
+    {
+        AxTableRelation axRelation;
+
+        if (_axTable == null)
+        {
+            return ['', '', '', '', '', '', '', ''];
+        }
+
+        try
+        {
+            axRelation = _axTable.Relations.getObject(_relationName);
+        }
+        catch (Exception::CLRError)
+        {
+            axRelation = null;
+        }
+
+        if (axRelation == null)
+        {
+            return ['', '', '', '', '', '', '', ''];
+        }
+
+        return [TableRelationDataCollector::clrText(axRelation.Cardinality),
+                TableRelationDataCollector::clrText(axRelation.RelatedTableCardinality),
+                TableRelationDataCollector::clrText(axRelation.RelationshipType),
+                TableRelationDataCollector::clrText(axRelation.OnDelete),
+                TableRelationDataCollector::clrText(axRelation.Validate),
+                axRelation.Role,
+                axRelation.RelatedTableRole,
+                TableRelationDataCollector::clrText(axRelation.EDTRelation)];
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>collectRelationData</Name>
+				<Source><![CDATA[
+    // =====================================================================
+    //  DATA COLLECTION
+    // =====================================================================
+
+    /// <summary>
+    /// Loops through runtime tables and adds one row per relation field link.
+    /// Row layout: table, label, group, type, origin, relation, related table, field, related field/value,
+    /// constraint type, cardinality, related cardinality, relationship type, on-delete, validate,
+    /// roles, EDT relation, and internal table group number. Tables without relations get one row.
+    /// </summary>
+    /// <param name="_selectedTableNames">Exact table names selected by the user.</param>
+    /// <param name="_exportAllTables">Whether every runtime table should be included.</param>
+    /// <param name="_includeViews">Whether views and data entities are included.</param>
+    /// <param name="_relationRows">Output list that receives relation rows.</param>
+    /// <param name="_typeCounts">Output map that receives counts by table type.</param>
+    /// <param name="_progress">Progress indicator updated during the scan.</param>
+    /// <param name="_stepText">Text identifying the collection step.</param>
+    /// <returns>Container containing table, non-system, system and relation counts, in that order.</returns>
+    public static container collectRelationData(container _selectedTableNames, boolean _exportAllTables,
+        boolean _includeViews, List _relationRows, Map _typeCounts, SysOperationProgress _progress, str _stepText)
+    {
+        Dictionary      dictionary = new Dictionary();
+        Map             selectedTables = new Map(Types::String, Types::Integer);
+        SysDictTable    dictTable;
+        SysDictRelation dictRelation;
+        AxTable         axTable;
+        TableId         tableId, relatedTableId;
+        str             tableName, tableLabel, tableGroup, tableType, origin;
+        str             relationName, relatedTableName, fieldText, relatedText, constraintType;
+        container       props;
+        int             tableIdx, relationIdx, lineIdx, relationCnt, lineCnt, tableGroupNo;
+        int             selectedIdx, nonSystemCount, systemCount, relationCount;
+        int             totalTables = dictionary.tableCnt();
+
+        for (selectedIdx = 1; selectedIdx <= conLen(_selectedTableNames); selectedIdx++)
+        {
+            selectedTables.insert(conPeek(_selectedTableNames, selectedIdx), 1);
+        }
+
+        TableRelationDataCollector::startProgressStep(_progress, _stepText, totalTables);
+
+        for (tableIdx = 1; tableIdx <= totalTables; tableIdx++)
+        {
+            _progress.incCount();                               // advance bar for every table scanned
+
+            tableId   = dictionary.tableCnt2Id(tableIdx);
+            dictTable = new SysDictTable(tableId);
+
+            if (!dictTable)
+            {
+                continue;
+            }
+
+            tableName = dictTable.name();
+
+            // Filter by the exact table names selected in the lookup.
+            if (!_exportAllTables && !selectedTables.exists(tableName))
+            {
+                continue;
+            }
+
+            // Skip views / data entities unless requested
+            if (!_includeViews && dictTable.isView())
+            {
+                continue;
+            }
+
+            // ----- Origin: System / Non-system -----
+            if (dictTable.isSystemTable())
+            {
+                origin = 'System';
+                systemCount++;
+            }
+            else
+            {
+                origin = 'Non-system';
+                nonSystemCount++;
+            }
+
+            // ----- Table properties -----
+            tableLabel = dictTable.label();
+            tableGroup = enum2Str(dictTable.tableGroup());
+            tableType  = TableRelationDataCollector::tableTypeText(dictTable);
+            TableRelationDataCollector::incTypeCount(_typeCounts, tableType);
+
+            _progress.setText(strFmt('%1 - %2', _stepText, tableName));   // show current table
+
+            tableGroupNo++;                                     // used for alternating colors per table
+            relationCnt = dictTable.relationCnt();
+
+            if (relationCnt == 0)
+            {
+                _relationRows.addEnd([tableName, tableLabel, tableGroup, tableType, origin,
+                                      '', '', '', '', '',
+                                      '', '', '', '', '', '', '', '',
+                                      tableGroupNo]);
+                continue;
+            }
+
+            axTable = TableRelationDataCollector::getAxTable(tableName);   // metadata read only when needed
+
+            // ----- Relations -----
+            for (relationIdx = 1; relationIdx <= relationCnt; relationIdx++)
+            {
+                relationName = dictTable.relation(relationIdx);       // relation name by index
+                dictRelation = new SysDictRelation(tableId);
+
+                if (!dictRelation.loadNameRelation(relationName))
+                {
+                    continue;
+                }
+
+                relationCount++;
+                relatedTableId   = dictRelation.externTable();        // related (parent) table
+                relatedTableName = tableId2Name(relatedTableId);
+                props            = TableRelationDataCollector::relationProperties(axTable, relationName);
+                lineCnt          = dictRelation.lines();
+
+                if (lineCnt == 0)
+                {
+                    _relationRows.addEnd([tableName, tableLabel, tableGroup, tableType, origin,
+                                          relationName, relatedTableName, '', '', '(no fields)']
+                                          + props + [tableGroupNo]);
+                    continue;
+                }
+
+                // ----- One row per field link (constraint) -----
+                for (lineIdx = 1; lineIdx <= lineCnt; lineIdx++)
+                {
+                    switch (dictRelation.lineType(lineIdx))
+                    {
+                        case TableRelation::Field:
+                            // This.Field == Related.Field
+                            constraintType = 'Field';
+                            fieldText      = fieldId2Name(tableId, dictRelation.lineTableValue(lineIdx));
+                            relatedText    = fieldId2Name(relatedTableId, dictRelation.lineExternTableValue(lineIdx));
+                            break;
+
+                        case TableRelation::ThisFixed:
+                            // This.Field == fixed value
+                            constraintType = 'This fixed';
+                            fieldText      = fieldId2Name(tableId, dictRelation.lineTableValue(lineIdx));
+                            relatedText    = strFmt('= %1', dictRelation.lineExternTableValue(lineIdx));
+                            break;
+
+                        case TableRelation::ExternFixed:
+                            // Related.Field == fixed value
+                            constraintType = 'Related fixed';
+                            fieldText      = strFmt('= %1', dictRelation.lineTableValue(lineIdx));
+                            relatedText    = fieldId2Name(relatedTableId, dictRelation.lineExternTableValue(lineIdx));
+                            break;
+
+                        default:
+                            constraintType = enum2Str(dictRelation.lineType(lineIdx));
+                            fieldText      = int2Str(dictRelation.lineTableValue(lineIdx));
+                            relatedText    = int2Str(dictRelation.lineExternTableValue(lineIdx));
+                    }
+
+                    _relationRows.addEnd([tableName, tableLabel, tableGroup, tableType, origin,
+                                          relationName, relatedTableName, fieldText, relatedText, constraintType]
+                                          + props + [tableGroupNo]);
+                }
+            }
+        }
+
+        return [tableGroupNo, nonSystemCount, systemCount, relationCount];
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

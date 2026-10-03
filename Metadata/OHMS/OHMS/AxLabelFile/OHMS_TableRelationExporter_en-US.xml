@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxLabelFile xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>OHMS_TableRelationExporter_en-US</Name>
+	<LabelContentFileName>OHMS_TableRelationExporter.en-US.label.txt</LabelContentFileName>
+	<LabelFileId>OHMS_TableRelationExporter</LabelFileId>
+	<RelativeUriInModelStore>OHMS\OHMS\AxLabelFile\LabelResources\en-US\OHMS_TableRelationExporter.en-US.label.txt</RelativeUriInModelStore>
+</AxLabelFile>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <BuildTasksDirectory Condition=" '$(BuildTasksDirectory)' == ''">$(MSBuildProgramFiles32)\MSBuild\Microsoft\Dynamics\AX</BuildTasksDirectory>
+    <Model>OHMS</Model>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <OutputPath>bin</OutputPath>
+    <SchemaVersion>2.0</SchemaVersion>
+    <GenerateCrossReferences>True</GenerateCrossReferences>
+    <RunAppCheckerRules>False</RunAppCheckerRules>
+    <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
+    <DeployOnline>False</DeployOnline>
+    <ProjectGuid>{55fa115e-bc7c-4e97-9e97-630f13374c8f}</ProjectGuid>
+    <Name>TableRelationExplorer</Name>
+    <RootNamespace>TableRelationExplorer</RootNamespace>
+    <StartupType>Class</StartupType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <Configuration>Debug</Configuration>
+    <DBSyncInBuild>True</DBSyncInBuild>
+    <GenerateFormAdaptors>False</GenerateFormAdaptors>
+    <Company>
+    </Company>
+    <Partition>initial</Partition>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DataEntityExpandParentChildRelations>False</DataEntityExpandParentChildRelations>
+    <DataEntityUseLabelTextAsFieldName>False</DataEntityUseLabelTextAsFieldName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Action Menu Items\" />
+    <Folder Include="Classes\" />
+    <Folder Include="Label Files\" />
+    <Folder Include="Menu Extensions\" />
+    <Folder Include="Security Duties\" />
+    <Folder Include="Security Privileges\" />
+    <Folder Include="Security Roles\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AxClass\TableRelationDataCollector">
+      <SubType>Content</SubType>
+      <Name>TableRelationDataCollector</Name>
+      <Link>Classes\TableRelationDataCollector</Link>
+    </Content>
+    <Content Include="AxClass\TableRelationErdExporter">
+      <SubType>Content</SubType>
+      <Name>TableRelationErdExporter</Name>
+      <Link>Classes\TableRelationErdExporter</Link>
+    </Content>
+    <Content Include="AxClass\TableRelationExcelExporter">
+      <SubType>Content</SubType>
+      <Name>TableRelationExcelExporter</Name>
+      <Link>Classes\TableRelationExcelExporter</Link>
+    </Content>
+    <Content Include="AxClass\TableRelationExporter">
+      <SubType>Content</SubType>
+      <Name>TableRelationExporter</Name>
+      <Link>Classes\TableRelationExporter</Link>
+    </Content>
+    <Content Include="AxLabelFile\OHMS_TableRelationExporter_en-US">
+      <SubType>Content</SubType>
+      <Name>OHMS_TableRelationExporter_en-US</Name>
+      <Link>Label Files\OHMS_TableRelationExporter_en-US</Link>
+    </Content>
+    <Content Include="AxMenuExtension\SystemAdministration.OHMS">
+      <SubType>Content</SubType>
+      <Name>SystemAdministration.OHMS</Name>
+      <Link>Menu Extensions\SystemAdministration.OHMS</Link>
+    </Content>
+    <Content Include="AxMenuItemAction\TableRelationExporter">
+      <SubType>Content</SubType>
+      <Name>TableRelationExporter</Name>
+      <Link>Action Menu Items\TableRelationExporter</Link>
+    </Content>
+    <Content Include="AxSecurityDuty\OHMSTableRelationAnalysis">
+      <SubType>Content</SubType>
+      <Name>OHMSTableRelationAnalysis</Name>
+      <Link>Security Duties\OHMSTableRelationAnalysis</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\OHMSTableRelationExporterRun">
+      <SubType>Content</SubType>
+      <Name>OHMSTableRelationExporterRun</Name>
+      <Link>Security Privileges\OHMSTableRelationExporterRun</Link>
+    </Content>
+    <Content Include="AxSecurityRole\OHMSTableRelationAnalyst">
+      <SubType>Content</SubType>
+      <Name>OHMSTableRelationAnalyst</Name>
+      <Link>Security Roles\OHMSTableRelationAnalyst</Link>
+    </Content>
+    <Content Include="OHMS_TableRelationExporter.en-US.label.txt">
+      <SubType>Content</SubType>
+      <Name>OHMS_TableRelationExporter.en-US.label.txt</Name>
+      <DependentUpon>AxLabelFile\OHMS_TableRelationExporter_en-US</DependentUpon>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="$(BuildTasksDirectory)\Microsoft.Dynamics.Framework.Tools.BuildTasks.17.0.targets" />
+</Project>

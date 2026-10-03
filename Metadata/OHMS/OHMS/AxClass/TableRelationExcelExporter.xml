@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>TableRelationExcelExporter</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
+
+/// <summary>
+/// Creates the formatted Excel workbook for the table relation exporter.
+/// Writes relation field links to a Relations worksheet and counts, table types,
+/// color legend and explanatory notes to a Summary worksheet.
+/// </summary>
+class TableRelationExcelExporter
+{
+    private const int AutoFitRowLimit = 20000;
+    private const int ColumnCount = 18;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>startProgressStep</Name>
+				<Source><![CDATA[
+    /// <summary>Resets the progress indicator for an export step.</summary>
+    /// <param name="_progress">Progress indicator to update.</param>
+    /// <param name="_stepText">Text identifying the current step.</param>
+    /// <param name="_total">Total number of items in the step.</param>
+    private static void startProgressStep(SysOperationProgress _progress, str _stepText, int _total)
+    {
+        _progress.setText(_stepText);
+        _progress.setTotal(_total);
+        _progress.setCount(0);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>exportExcelFile</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Builds a styled .xlsx file (Relations + Summary sheets) and sends it to the browser.
+    /// </summary>
+    /// <param name="_relationRows">Collected relation rows to write.</param>
+    /// <param name="_filterText">Filter description written to the summary sheet.</param>
+    /// <param name="_stats">Table and relation counts returned by the collector.</param>
+    /// <param name="_typeCounts">Counts grouped by table type.</param>
+    /// <param name="_progress">Progress indicator updated during export.</param>
+    /// <param name="_stepText">Text identifying the export step.</param>
+    public static void exportExcelFile(List _relationRows, str _filterText, container _stats, Map _typeCounts,
+        SysOperationProgress _progress, str _stepText)
+    {
+        ListEnumerator  enumerator = _relationRows.getEnumerator();
+        container       rowData;
+        str             tableName, relatedTableName;
+        int             tableGroupNo, rowNo = 1, col;
+
+        // Column headers (A..R) and fixed widths used for large sheets
+        container       headers = ['Table', 'Label', 'Table group', 'Table type', 'Origin',
+                                   'Relation name', 'Related table', 'Field', 'Related field / value', 'Constraint type',
+                                   'Cardinality', 'Related cardinality', 'Relationship type', 'On delete',
+                                   'Validate', 'Role', 'Related role', 'EDT relation'];
+        container       widths  = [35, 30, 14, 10, 14, 30, 35, 30, 30, 14, 12, 14, 16, 12, 9, 25, 25, 10];
+
+        System.IO.MemoryStream stream = new System.IO.MemoryStream();
+
+        // One progress tick per data row
+        TableRelationExcelExporter::startProgressStep(_progress, _stepText, _relationRows.elements());
+
+        using (ExcelPackage package = new ExcelPackage(stream))
+        {
+            ExcelWorksheet relationsSheet = package.get_Workbook().get_Worksheets().Add('Relations');
+            ExcelWorksheet summarySheet   = package.get_Workbook().get_Worksheets().Add('Summary');
+            ExcelRange     cells          = relationsSheet.get_Cells();
+
+            // ----- Header row -----
+            for (col = 1; col <= TableRelationExcelExporter::ColumnCount; col++)
+            {
+                TableRelationExcelExporter::writeHeaderCell(cells, 1, col, conPeek(headers, col));
+            }
+
+            // ----- Data rows -----
+            while (enumerator.moveNext())
+            {
+                rowData = enumerator.current();
+                rowNo++;
+
+                _progress.incCount();
+                if (rowNo mod 500 == 0)                         // update text every 500 rows (performance)
+                {
+                    _progress.setText(strFmt('%1 - row %2 of %3', _stepText, rowNo - 1, _relationRows.elements()));
+                }
+
+                // Write the visible columns
+                for (col = 1; col <= TableRelationExcelExporter::ColumnCount; col++)
+                {
+                    cells.get_Item(rowNo, col).set_Value(conPeek(rowData, col));
+                }
+
+                tableName        = conPeek(rowData, 1);
+                relatedTableName = conPeek(rowData, 7);
+                tableGroupNo     = conPeek(rowData, TableRelationExcelExporter::ColumnCount + 1);
+
+                // ----- Row color -----
+                if (!relatedTableName)
+                {
+                    TableRelationExcelExporter::colorRow(cells, rowNo, 220, 220, 220);   // grey: no relations
+                }
+                else if (relatedTableName == tableName)
+                {
+                    TableRelationExcelExporter::colorRow(cells, rowNo, 252, 228, 214);   // orange: self-reference
+                }
+                else if (tableGroupNo mod 2)
+                {
+                    TableRelationExcelExporter::colorRow(cells, rowNo, 221, 235, 247);   // blue: odd table
+                }
+                else
+                {
+                    TableRelationExcelExporter::colorRow(cells, rowNo, 226, 239, 218);   // green: even table
+                }
+
+            }
+
+            // ----- Layout: filter, frozen header + Table column, column widths -----
+            _progress.setText(strFmt('%1 - formatting and saving', _stepText));
+            cells.get_Item(strFmt('A1:R%1', rowNo)).set_AutoFilter(true);
+            relationsSheet.get_View().FreezePanes(2, 2);
+
+            if (rowNo <= TableRelationExcelExporter::AutoFitRowLimit)
+            {
+                cells.AutoFitColumns();
+            }
+            else
+            {
+                // Fixed widths: AutoFit is very slow on large sheets
+                for (col = 1; col <= TableRelationExcelExporter::ColumnCount; col++)
+                {
+                    relationsSheet.Column(col).set_Width(conPeek(widths, col));
+                }
+            }
+
+            // ----- Summary sheet -----
+            TableRelationExcelExporter::writeSummarySheet(summarySheet.get_Cells(), _filterText, _stats, _typeCounts,
+                _relationRows.elements());
+
+            package.Save();
+
+            stream.Seek(0, System.IO.SeekOrigin::Begin);
+            File::SendFileToUser(stream, 'TableRelations.xlsx');
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>writeHeaderCell</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Writes a header cell: bold white text on dark blue, centered.
+    /// ARGB ints are used instead of System.Drawing.Color to avoid assembly type conflicts.
+    /// </summary>
+    /// <param name="_cells">Worksheet cells to format.</param>
+    /// <param name="_rowNo">Row number of the header.</param>
+    /// <param name="_colNo">Column number of the header.</param>
+    /// <param name="_text">Header text.</param>
+    private static void writeHeaderCell(ExcelRange _cells, int _rowNo, int _colNo, str _text)
+    {
+        ExcelRange cell = _cells.get_Item(_rowNo, _colNo);
+
+        cell.set_Value(_text);
+        cell.get_Style().get_Font().set_Bold(true);
+        cell.get_Style().get_Font().get_Color().SetColor(255, 255, 255, 255);              // white
+        cell.get_Style().get_Fill().set_PatternType(ExcelFillStyle::Solid);
+        cell.get_Style().get_Fill().get_BackgroundColor().SetColor(255, 31, 78, 121);      // dark blue
+        cell.get_Style().set_HorizontalAlignment(ExcelHorizontalAlignment::Center);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>colorRow</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Fills a whole data row (A:R) with an RGB color and a thin bottom border.
+    /// </summary>
+    /// <param name="_cells">Worksheet cells containing the row.</param>
+    /// <param name="_rowNo">Row number to color.</param>
+    /// <param name="_red">Red channel from 0 to 255.</param>
+    /// <param name="_green">Green channel from 0 to 255.</param>
+    /// <param name="_blue">Blue channel from 0 to 255.</param>
+    private static void colorRow(ExcelRange _cells, int _rowNo, int _red, int _green, int _blue)
+    {
+        ExcelRange rowRange = _cells.get_Item(strFmt('A%1:R%1', _rowNo));
+
+        rowRange.get_Style().get_Fill().set_PatternType(ExcelFillStyle::Solid);
+        rowRange.get_Style().get_Fill().get_BackgroundColor().SetColor(255, _red, _green, _blue);
+        rowRange.get_Style().get_Border().get_Bottom().set_Style(ExcelBorderStyle::Thin);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>writeSummarySheet</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Fills the Summary sheet: export info, table type breakdown, color legend and notes.
+    /// </summary>
+    /// <param name="_cells">Summary worksheet cells to populate.</param>
+    /// <param name="_filterText">Filter description.</param>
+    /// <param name="_stats">Table and relation counts.</param>
+    /// <param name="_typeCounts">Counts grouped by table type.</param>
+    /// <param name="_rowCount">Number of exported relation rows.</param>
+    private static void writeSummarySheet(ExcelRange _cells, str _filterText, container _stats, Map _typeCounts,
+        int _rowCount)
+    {
+        MapEnumerator   enumerator;
+        int             rowNo;
+
+        // ----- Export info -----
+        TableRelationExcelExporter::writeHeaderCell(_cells, 1, 1, 'Item');
+        TableRelationExcelExporter::writeHeaderCell(_cells, 1, 2, 'Value');
+
+        _cells.get_Item(2, 1).set_Value('Filter');
+        _cells.get_Item(2, 2).set_Value(_filterText);
+        _cells.get_Item(3, 1).set_Value('Tables');
+        _cells.get_Item(3, 2).set_Value(conPeek(_stats, 1));
+        _cells.get_Item(4, 1).set_Value('Non-system tables');
+        _cells.get_Item(4, 2).set_Value(conPeek(_stats, 2));
+        _cells.get_Item(5, 1).set_Value('System tables');
+        _cells.get_Item(5, 2).set_Value(conPeek(_stats, 3));
+        _cells.get_Item(6, 1).set_Value('Relations');
+        _cells.get_Item(6, 2).set_Value(conPeek(_stats, 4));
+        _cells.get_Item(7, 1).set_Value('Rows (field links)');
+        _cells.get_Item(7, 2).set_Value(_rowCount);
+        _cells.get_Item(8, 1).set_Value('Generated');
+        _cells.get_Item(8, 2).set_Value(DateTimeUtil::toStr(DateTimeUtil::getSystemDateTime()));
+        _cells.get_Item('A2:A8').get_Style().get_Font().set_Bold(true);
+
+        // ----- Table type breakdown (Regular should match SQLDICTIONARY table count) -----
+        TableRelationExcelExporter::writeHeaderCell(_cells, 11, 1, 'Table type');
+        TableRelationExcelExporter::writeHeaderCell(_cells, 11, 2, 'Tables');
+
+        rowNo      = 11;
+        enumerator = _typeCounts.getEnumerator();
+
+        while (enumerator.moveNext())
+        {
+            rowNo++;
+            _cells.get_Item(rowNo, 1).set_Value(enumerator.currentKey());
+            _cells.get_Item(rowNo, 2).set_Value(enumerator.currentValue());
+        }
+
+        // ----- Color legend -----
+        rowNo += 2;
+        TableRelationExcelExporter::writeHeaderCell(_cells, rowNo, 1, 'Color');
+        TableRelationExcelExporter::writeHeaderCell(_cells, rowNo, 2, 'Meaning');
+        TableRelationExcelExporter::writeLegendRow(_cells, rowNo + 1, 221, 235, 247, 'Relation (odd table group)');
+        TableRelationExcelExporter::writeLegendRow(_cells, rowNo + 2, 226, 239, 218, 'Relation (even table group)');
+        TableRelationExcelExporter::writeLegendRow(_cells, rowNo + 3, 252, 228, 214, 'Self-reference');
+        TableRelationExcelExporter::writeLegendRow(_cells, rowNo + 4, 220, 220, 220, 'Table without relations');
+
+        // ----- Notes -----
+        rowNo += 6;
+        _cells.get_Item(rowNo, 1).set_Value('Notes');
+        _cells.get_Item(rowNo, 1).get_Style().get_Font().set_Bold(true);
+        _cells.get_Item(rowNo + 1, 2).set_Value('Regular = physical SQL table. Derived = stored in root table. Map / TempDB / InMemory = no permanent SQL table.');
+        _cells.get_Item(rowNo + 2, 2).set_Value('Origin identifies system versus non-system tables.');
+        _cells.get_Item(rowNo + 3, 2).set_Value('Empty relation properties = relation defined in a table extension (not in base metadata).');
+
+        _cells.AutoFitColumns();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>writeLegendRow</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Writes one legend line: colored sample cell + description.
+    /// </summary>
+    /// <param name="_cells">Summary worksheet cells to populate.</param>
+    /// <param name="_rowNo">Row number for the legend entry.</param>
+    /// <param name="_red">Red channel from 0 to 255.</param>
+    /// <param name="_green">Green channel from 0 to 255.</param>
+    /// <param name="_blue">Blue channel from 0 to 255.</param>
+    /// <param name="_text">Legend description.</param>
+    private static void writeLegendRow(ExcelRange _cells, int _rowNo, int _red, int _green, int _blue, str _text)
+    {
+        ExcelRange sampleCell = _cells.get_Item(_rowNo, 1);
+
+        sampleCell.get_Style().get_Fill().set_PatternType(ExcelFillStyle::Solid);
+        sampleCell.get_Style().get_Fill().get_BackgroundColor().SetColor(255, _red, _green, _blue);
+        _cells.get_Item(_rowNo, 2).set_Value(_text);
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

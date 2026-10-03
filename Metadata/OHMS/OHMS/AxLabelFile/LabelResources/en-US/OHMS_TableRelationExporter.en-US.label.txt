@@ -1,0 +1,4 @@
+﻿OHMSTableRelationAnalysis=Analyze table relations
+OHMSTableRelationAnalyst=Table relation analyst
+OHMSTableRelationExporterRun=Run table relation exporter
+TableRelationExporter=Table relation exporter
